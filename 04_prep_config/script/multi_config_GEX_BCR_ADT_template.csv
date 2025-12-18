@@ -1,0 +1,16 @@
+[gene-expression]
+reference,/home/people/helweg/ciir/people/helweg/projects/Gina_project/03_prep_references/out/refdata-gex-GRCh38-2024-A
+create-bam,true
+
+[vdj]
+reference,/home/people/helweg/ciir/people/helweg/projects/Gina_project/03_prep_references/out/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0
+
+[feature]
+reference,/home/people/helweg/ciir/people/helweg/projects/Gina_project/01_prep_feature_ref/out/feature_ref_FEATURE_SUFFIX.csv
+
+[libraries]
+fastq_id,fastqs,feature_types
+GEX-SAMPLE_PREFIX,/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF,Gene Expression
+BCR-SAMPLE_PREFIX,/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF,VDJ-B
+ADT-SAMPLE_PREFIX,/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF,Antibody Capture
+

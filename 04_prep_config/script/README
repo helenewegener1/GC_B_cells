@@ -1,0 +1,14 @@
+Templates made from: https://www.10xgenomics.com/support/software/cell-ranger/latest/advanced/cr-multi-config-csv-
+
+For now the path to the fastq files is the original path: /home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF
+If we decided to go with the folder structure made in 02_prep_fastq; change path to libraries to:
+
+[libraries]
+fastq_id,fastqs,feature_types
+GEX-SAMPLE_PREFIX,/home/people/helweg/ciir/people/helweg/projects/Gina_project/02_prep_fastq/out/GEX-SAMPLE_PREFIX,Gene Expression
+BCR-SAMPLE_PREFIX,/home/people/helweg/ciir/people/helweg/projects/Gina_project/02_prep_fastq/out/BCR-SAMPLE_PREFIX,VDJ-B
+TCR-SAMPLE_PREFIX,/home/people/helweg/ciir/people/helweg/projects/Gina_project/02_prep_fastq/out/TCR-SAMPLE_PREFIX,VDJ-T
+ADT-SAMPLE_PREFIX,/home/people/helweg/ciir/people/helweg/projects/Gina_project/02_prep_fastq/out/ADT-SAMPLE_PREFIX,Antibody Capture
+
+
+

@@ -1,0 +1,8 @@
+*/out
+*/script/*.err
+*/script/*.log
+
+
+
+.DS_Store
+.Rproj.user
