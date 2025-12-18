@@ -6,7 +6,7 @@
 #PBS -l walltime=70:00:00
 #PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/05_run_cellranger/script/run_cellranger.err
 #PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/05_run_cellranger/script/run_cellranger.log
-#PBS -N run_cellranger
+#PBS -N run_cellranger_v9
 
 # Define working directory (which is the out dir here)
 WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out"
