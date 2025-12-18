@@ -1,4 +1,3 @@
-# setwd("~/ciir/people/helweg/projects/Gina_project/")
 
 library(SeuratObject)
 library(Seurat)

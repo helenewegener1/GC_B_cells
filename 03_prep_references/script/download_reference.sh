@@ -4,11 +4,11 @@
 #PBS -l gpus=0
 #PBS -l mem=32GB
 #PBS -l walltime=01:00:00
-#PBS -e /home/projects/dtu_00062/people/helweg/projects/Gina_project/03_prep_references/script/download_cellranger_reference.err
-#PBS -o /home/projects/dtu_00062/people/helweg/projects/Gina_project/03_prep_references/script/download_cellranger_reference.log
+#PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/03_prep_references/script/download_cellranger_reference.err
+#PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/03_prep_references/script/download_cellranger_reference.log
 #PBS -N download_cellranger_reference
 
-WD="/home/people/helweg/ciir/people/helweg/projects/Gina_project/03_prep_references/out"
+WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/03_prep_references/out"
 
 # Navigate to your desired output location
 cd "$WD"

@@ -4,14 +4,14 @@
 #PBS -l gpus=0
 #PBS -l mem=128GB
 #PBS -l walltime=02:00:00
-#PBS -e /home/projects/dtu_00062/people/helweg/projects/Gina_project/02_prep_fastq/script/prep_fastq.err
-#PBS -o /home/projects/dtu_00062/people/helweg/projects/Gina_project/02_prep_fastq/script/prep_fastq.log
+#PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/02_prep_fastq/script/prep_fastq.err
+#PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/02_prep_fastq/script/prep_fastq.log
 #PBS -N prep_fastq
 
 # Copy fastq files into structure expected by cellranger multi
 
 # Define working directory 
-WD="/home/people/helweg/ciir/people/helweg/projects/Gina_project"
+WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells"
 SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
 OUTPUT_BASE_DIR="02_prep_fastq/out"
 

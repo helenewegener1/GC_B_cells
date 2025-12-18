@@ -1,4 +1,4 @@
-setwd("~/Documents/projects/project_Bcells/Gina_project/")
+setwd("~/Documents/projects/project_Bcells/GC_B_cells/")
 
 library(tidyverse)
 library(xlsx)

@@ -5,7 +5,7 @@
 # ==============================================================================
 
 # Define working directory 
-WD="/home/people/helweg/ciir/people/helweg/projects/Gina_project/04_prep_config"
+WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config"
 SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
 CONFIG_DIR="out" 
 
