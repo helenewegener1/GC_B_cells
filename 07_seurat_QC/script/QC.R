@@ -286,8 +286,9 @@ for (sample_name in sample_names){
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
   seurat_obj <- seurat_obj_clustered_list[[sample_name]]
   
-  # new_cluster = c(old clusters)
-  merged_clusters
+  # Create directory for plots of specific sample
+  out_dir <- glue("07_seurat_QC/plot/clusters_for_scDblFinder/{sample_name}")
+  dir.create(out_dir, showWarnings = FALSE)
   
   # Extract old clusters 
   old_clusters <- as.character(seurat_obj$seurat_clusters)
