@@ -1,4 +1,4 @@
-# setwd("~/ciir/people/helweg/projects/GC_B_cells/")
+setwd("~/ciir/people/helweg/projects/GC_B_cells/")
 
 # Load libraries 
 library(SeuratObject)
@@ -454,6 +454,7 @@ g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes # MKI67 in here
 ################################ scDblFinder on cellranger filtered ################################ 
 
 seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
+n_dims <- 10
 
 # Initialize final QC list 
 seurat_obj_QC <- list()
@@ -568,7 +569,7 @@ for (sample_name in sample_names){
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), 
       caption = glue("Doublet percentage: {percentage_doublet}")
     )
-  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
 
   DimPlot(seurat_obj, reduction = 'umap', group.by = "scDblFinder.class", order = TRUE) +
     labs(
@@ -576,7 +577,7 @@ for (sample_name in sample_names){
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"),
       caption = glue("Doublet percentage: {percentage_doublet}")
       )
-  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}_scDblFinder.png"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}/{sample_name}_scDblFinder.png"), width = 7, height = 6)
 
   # Cell cycle score
   seurat_obj <- CellCycleScoring(seurat_obj,
@@ -585,7 +586,7 @@ for (sample_name in sample_names){
 
   DimPlot(seurat_obj, reduction = 'umap', group.by = "Phase", order = TRUE) +
     labs(subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), caption = glue("Doublet percentage: {percentage_doublet}"))
-  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
 
   table(seurat_obj$Phase, seurat_obj$scDblFinder.class)
 
