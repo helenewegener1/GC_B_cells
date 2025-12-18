@@ -150,8 +150,6 @@ for (sample_name in sample_names){
   
 }
 
-saveRDS(seurat_obj_clustered_list, "07_seurat_QC/out/seurat_obj_clustered_list.rds")
-
 # Get number of clusters
 for (sample_name in sample_names){
 
@@ -168,162 +166,167 @@ for (sample_name in sample_names){
 ############################ GINA CLUSTER MERGING ##############################
 ################################################################################
 
-seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
+# Gina got the plots from 07_seurat_QC/plot/clusters.
+# Gina drew which clusters should be merged based on expression. 
+# This was to make sure that doublet finder did not merge two too similar cells and called them a doublet. 
+# Gina's drawing can be seen in 07_seurat_QC/plot/gina_merged_clusters.
 
 merged_clusters <- list(
   
-  "HH117-SILP-INF-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = ""
+  "HH117-SILP-INF-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "3", "4"),
+    "1" = c("1"),
+    "2" = c("5")
   ),
   
-  "HH117-SILP-nonINF-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = ""
+  "HH117-SILP-nonINF-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2"),
+    "1" = c("1", "3")
   ),
   
-  "HH117-SI-MILF-INF-HLADR-AND-CD19" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = ""
+  "HH117-SI-MILF-INF-HLADR-AND-CD19" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "4", "6"),
+    "1" = c("1"),
+    "2" = c("3"),
+    "3" = c("5")
   ),
   
-  "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = "",
-    "8" = ""
+  "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0"),
+    "1" = c("1", "3", "5", "6"),
+    "2" = c("2"),
+    "3" = c("4"), 
+    "4" = c("7"),
+    "5" = c("8")
   ),
   
-  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c(
-    "0" = "0",
-    "1" = "1",
-    "2" = "2",
-    "3" = "2",
-    "4" = "3",
-    "5" = "4", 
-    "6" = "5", 
-    "7" = "6"
+  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0"),
+    "1" = c("1"),
+    "2" = c("2", "3"),
+    "3" = c("4"),
+    "4" = c("5", "6", "7")
   ),
   
-  "HH119-COLP-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = ""
+  "HH119-COLP-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0"),
+    "1" = c("1"),
+    "2" = c("2")
   ),
   
-  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = ""
+  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "4"),
+    "1" = c("1"),
+    "2" = c("3"),
+    "3" = c("5") 
   ),
   
-  "HH119-SILP-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+  "HH119-SILP-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c(),
+    "1" = c(),
+    "2" = c(),
+    "3" = c() 
   ),
   
-  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+    # new_cluster = c(old clusters)
+    "0" = c(),
+    "1" = c(),
+    "2" = c(),
+    "3" = c() 
   ),
   
-  "HH119-SI-PP-CD19-Pool1" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+  "HH119-SI-PP-CD19-Pool1" = list(
+    # new_cluster = c(old clusters)
+    "0" = c(),
+    "1" = c(),
+    "2" = c(),
+    "3" = c() 
   ),
   
-  "HH119-SI-PP-CD19-Pool2" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = ""
+  "HH119-SI-PP-CD19-Pool2" = list(
+    # new_cluster = c(old clusters)
+    "0" = c(),
+    "1" = c(),
+    "2" = c(),
+    "3" = c() 
   ),
   
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = list(
+    # new_cluster = c(old clusters)
+    "0" = c(),
+    "1" = c(),
+    "2" = c(),
+    "3" = c() 
   ),
   
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = ""
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = list(
+    # new_cluster = c(old clusters)
+    "0" = c(),
+    "1" = c(),
+    "2" = c(),
+    "3" = c() 
   ) 
-    
+  
 )
 
 
-sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-seurat_obj <- seurat_obj_clustered_list[[sample_name]]
+for (sample_name in sample_names){
+  
+  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  seurat_obj <- seurat_obj_clustered_list[[sample_name]]
+  
+  # new_cluster = c(old clusters)
+  merged_clusters
+  
+  # Extract old clusters 
+  old_clusters <- as.character(seurat_obj$seurat_clusters)
+  names(old_clusters) <- colnames(seurat_obj)
+  
+  # Extract mapping of new and old clusterss
+  mapping_list <- merged_clusters[[sample_name]]
+  
+  # Create named vector: old cluster -> new cluster
+  cluster_mapping <- unlist(lapply(names(mapping_list), function(new_cluster) {
+    old_clusters <- mapping_list[[new_cluster]]
+    setNames(rep(new_cluster, length(old_clusters)), old_clusters)
+  }))
+  
+  # Map merged clusters  
+  new_clusters <- cluster_mapping[old_clusters]
+  names(new_clusters) <- colnames(seurat_obj)
+  
+  # Add merged clusters to metadata
+  seurat_obj <- AddMetaData(seurat_obj, metadata = as.data.frame(new_clusters), col.name = "merged_clusters")
+  seurat_obj_clustered_list[[sample_name]] <- seurat_obj
+  
+  # Check 
+  table("old" = seurat_obj$seurat_clusters, "new" = seurat_obj$merged_clusters)
+  
+  # Plot
+  p_old <- DimPlot(seurat_obj, reduction = 'umap', group.by = "seurat_clusters", label = TRUE) + NoLegend() + 
+    labs(title = "Seurat clusters old", 
+         subtitle = sample_name)
+  
+  p_new <- DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() + 
+    labs(title = "Seurat clusters merged",
+         caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+  
+  p_final <- p_old + p_new
+  
+  ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_final, width = 15, height = 8)
+  
+}
 
-# Extract old clusters 
-old_clusters <- as.character(seurat_obj$seurat_clusters)
-names(old_clusters) <- colnames(seurat_obj)
-
-# Map merged clusters  
-new_clusters <- merged_clusters[[sample_name]][old_clusters]
-names(new_clusters) <- colnames(seurat_obj)
-
-# Add merged clusters to metadata
-seurat_obj <- AddMetaData(seurat_obj, metadata = as.data.frame(new_clusters), col.name = "merged_clusters")
-
-# Plot
-DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() + 
-  labs(title = "Seurat clusters merged",
-       subtitle = sample_name, 
-       caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
-ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), width = 8, height = 8)
-
+saveRDS(seurat_obj_clustered_list, "07_seurat_QC/out/seurat_obj_clustered_list.rds")
 
 ################################################################################
 ################################################################################
@@ -463,7 +466,7 @@ g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes # MKI67 in here
 # Initialize final QC list 
 seurat_obj_QC <- list()
 
-seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
+# seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
 sample_names <- names(seurat_obj_clustered_list)
 
 for (sample_name in sample_names){
@@ -534,7 +537,9 @@ for (sample_name in sample_names){
   n_cells <- ncol(seurat_obj)
   n_doublets <- table(sce$scDblFinder.class)[["doublet"]]
   percentage_doublet <- round((n_doublets/n_cells) * 100, 1)
-  print(glue("with clusters: {percentage_doublet}"))
+  print(glue("N cells: {n_cells}"))
+  print(glue("N doublet: {n_doublets}"))
+  print(glue("Doublet percentage: {percentage_doublet}"))
   # print("---------------------------------")
     
   # sce <- scDblFinder(sce, verbose = FALSE)
