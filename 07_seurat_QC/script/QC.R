@@ -484,10 +484,10 @@ for (sample_name in sample_names){
   #   sce <- decontX(cell_counts$`Gene Expression`, background = raw_counts$`Gene Expression`)
   # 
   # }
-  # 
-  # # Get seurat object
-  # seurat_obj <- seurat_obj_clustered_list[[sample_name]]
-  # 
+
+  # Get seurat object
+  seurat_obj <- seurat_obj_clustered_list[[sample_name]]
+
   # # Add decontX to contamination "score" to metadata
   # seurat_obj <- AddMetaData(seurat_obj, sce$contamination, "sce_contamination")
 
@@ -568,7 +568,7 @@ for (sample_name in sample_names){
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), 
       caption = glue("Doublet percentage: {percentage_doublet}")
     )
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
 
   DimPlot(seurat_obj, reduction = 'umap', group.by = "scDblFinder.class", order = TRUE) +
     labs(
@@ -576,7 +576,7 @@ for (sample_name in sample_names){
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"),
       caption = glue("Doublet percentage: {percentage_doublet}")
       )
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder.png"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}_scDblFinder.png"), width = 7, height = 6)
 
   # Cell cycle score
   seurat_obj <- CellCycleScoring(seurat_obj,
@@ -585,7 +585,7 @@ for (sample_name in sample_names){
 
   DimPlot(seurat_obj, reduction = 'umap', group.by = "Phase", order = TRUE) +
     labs(subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), caption = glue("Doublet percentage: {percentage_doublet}"))
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
 
   table(seurat_obj$Phase, seurat_obj$scDblFinder.class)
 

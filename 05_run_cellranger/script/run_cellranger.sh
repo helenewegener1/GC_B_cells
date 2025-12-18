@@ -11,7 +11,7 @@
 # Define working directory (which is the out dir here)
 WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out"
 SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
-#CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out"
+CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out"
 
 module load tools
 module load cellranger/9.0.1
@@ -32,7 +32,7 @@ for ID in "${samples_array[@]}"; do
   
   cellranger multi \
       --id="res_${ID}" \
-      --csv="../../04_prep_config/out/multi_config_${ID}.csv" \
+      --csv="${CONFIG_DIR}/multi_config_${ID}.csv" \
       --localcores=32 \
       --localmem=128
     
