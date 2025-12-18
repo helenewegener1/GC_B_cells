@@ -1,4 +1,4 @@
-setwd("~/ciir/people/helweg/projects/GC_B_cells/")
+# setwd("~/ciir/people/helweg/projects/GC_B_cells/")
 
 # Load libraries 
 library(SeuratObject)
@@ -40,7 +40,7 @@ names(detailed_markers) <- c("TFH_cell", "Naive_B_cell", "Memory_B_cell", "GC_B_
 # Load sample to get genes that are in the data.  
 seurat_obj <- seurat_obj_list[["HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"]]
 
-source("09_annotation_pre_integration/script/functions.R")
+source("09_seurat_QC_clusters/script/functions.R")
 
 # Update marker format for the broad markers
 broad_markers <- update_marker_names(broad_markers, seurat_obj)
@@ -121,7 +121,7 @@ for (sample_name in sample_names){
     n_markers <- broad_markers[[markers]] %>% length()
     height <- (n_markers/3) * 4
     
-    ggsave(glue("{out_dir}/{sample_name}_broad_{markers}.pdf"), width = 14, height = height)
+    ggsave(glue("{out_dir}/{sample_name}_broad_{markers}.png"), width = 14, height = height)
     
   }
   
@@ -139,7 +139,7 @@ for (sample_name in sample_names){
     n_markers <- detailed_markers[[markers]] %>% length()
     height <- (n_markers/3) * 4
     
-    ggsave(glue("{out_dir}/{sample_name}_detailed_{markers}.pdf"), width = 14, height = height)
+    ggsave(glue("{out_dir}/{sample_name}_detailed_{markers}.png"), width = 14, height = height)
     
   }
   
@@ -301,30 +301,29 @@ merged_clusters <- list(
   ) 
     
 )
-  
-  
-  
-  
-  
 
 
+sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+seurat_obj <- seurat_obj_clustered_list[[sample_name]]
 
+# Extract old clusters 
+old_clusters <- as.character(seurat_obj$seurat_clusters)
+names(old_clusters) <- colnames(seurat_obj)
 
+# Map merged clusters  
+new_clusters <- merged_clusters[[sample_name]][old_clusters]
+names(new_clusters) <- colnames(seurat_obj)
 
-# # Rename clusters
-# new.cluster.ids <- rep(0, length(seurat_obj_clustered_list)) %>% as.list()
-# names(new.cluster.ids) <- names(seurat_obj_clustered_list)
-# 
-# Idents(seurat_obj_clustered_list[[sample_name]])
-# 
-# seurat_obj_clustered_list[[sample_name]] <-   c(
-#   "0" = "T_cells",
-#   "1" = "B_cells",
-#   "2" = "Monocytes",
-#   "3" = "NK_cells"
-# )
-# 
-# seurat_obj <- RenameIdents(seurat_obj, new.cluster.ids)
+# Add merged clusters to metadata
+seurat_obj <- AddMetaData(seurat_obj, metadata = as.data.frame(new_clusters), col.name = "merged_clusters")
+
+# Plot
+DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() + 
+  labs(title = "Seurat clusters merged",
+       subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), width = 8, height = 8)
+
 
 ################################################################################
 ################################################################################
@@ -403,7 +402,7 @@ merged_clusters <- list(
 #   seurat_temp <- RunUMAP(seurat_temp, dims = 1:20)
 #   
 #   DimPlot(seurat_temp, group.by = "seurat_clusters") + labs(title = "Pre-SoupX")
-#   ggsave(glue("07_seurat_QC/plot/SoupX/pre_SoupX_{sample_name}.pdf"), width = 7, height = 6)
+#   ggsave(glue("07_seurat_QC/plot/SoupX/pre_SoupX_{sample_name}.png"), width = 7, height = 6)
 # 
 #   # Extract and set the clusters
 #   clusters <- seurat_temp@meta.data$seurat_clusters
@@ -431,7 +430,7 @@ merged_clusters <- list(
 #   final_seurat_obj <- RunUMAP(final_seurat_obj, dims = 1:20)
 # 
 #   DimPlot(final_seurat_obj, group.by = "seurat_clusters") + labs(title = "Post-SoupX")
-#   ggsave(glue("07_seurat_QC/plot/SoupX/post_SoupX_{sample_name}.pdf"), width = 7, height = 6)
+#   ggsave(glue("07_seurat_QC/plot/SoupX/post_SoupX_{sample_name}.png"), width = 7, height = 6)
 # 
 # }
 
@@ -529,7 +528,7 @@ for (sample_name in sample_names){
   # Run scDblFinder
   # clusters can also be a number - like N sorted cell types
   # set dbr or not? - if 10x, fine to leave undefined.
-  sce <- scDblFinder(sce, clusters = colData(sce)$seurat_clusters, verbose = FALSE) # CHANGE TO GINA CLUSTERS
+  sce <- scDblFinder(sce, clusters = colData(sce)$merged_clusters, verbose = FALSE) 
   
   # Clustered works best
   n_cells <- ncol(seurat_obj)
@@ -567,13 +566,13 @@ for (sample_name in sample_names){
   DimPlot(seurat_obj)
 
   # Plot
-  DimPlot(seurat_obj, reduction = 'umap', group.by = "seurat_clusters") +
+  DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters") +
     labs(
       title = "scDblFinder", 
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), 
       caption = glue("Doublet percentage: {percentage_doublet}")
     )
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_clusters.pdf"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
 
   DimPlot(seurat_obj, reduction = 'umap', group.by = "scDblFinder.class", order = TRUE) +
     labs(
@@ -581,7 +580,7 @@ for (sample_name in sample_names){
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"),
       caption = glue("Doublet percentage: {percentage_doublet}")
       )
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder.pdf"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder.png"), width = 7, height = 6)
 
   # Cell cycle score
   seurat_obj <- CellCycleScoring(seurat_obj,
@@ -590,7 +589,7 @@ for (sample_name in sample_names){
 
   DimPlot(seurat_obj, reduction = 'umap', group.by = "Phase", order = TRUE) +
     labs(subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), caption = glue("Doublet percentage: {percentage_doublet}"))
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_CellCyclePhase.pdf"), width = 7, height = 6)
+  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
 
   table(seurat_obj$Phase, seurat_obj$scDblFinder.class)
 
