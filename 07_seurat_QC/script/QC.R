@@ -19,6 +19,8 @@ library(decontX)
 library(readxl)
 library(purrr)
 library(patchwork)
+library(png)
+library(grid)
 
 # Load data
 seurat_obj_list <- readRDS("06_seurat_load/out/seurat_obj_list.rds") # cellranger filtered
@@ -238,18 +240,18 @@ merged_clusters <- list(
   
   "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
     # new_cluster = c(old clusters)
-    "0" = c(),
-    "1" = c(),
-    "2" = c(),
-    "3" = c() 
+    "0" = c("0", "1", "6"),
+    "1" = c("2", "7"),
+    "2" = c("3", "5"),
+    "3" = c("4") 
   ),
   
   "HH119-SI-PP-CD19-Pool1" = list(
     # new_cluster = c(old clusters)
-    "0" = c(),
-    "1" = c(),
-    "2" = c(),
-    "3" = c() 
+    "0" = c("0", "1", "5"),
+    "1" = c("2", "3", "4"),
+    "2" = c("6"),
+    "3" = c("7") 
   ),
   
   "HH119-SI-PP-CD19-Pool2" = list(
@@ -312,15 +314,19 @@ for (sample_name in sample_names){
   table("old" = seurat_obj$seurat_clusters, "new" = seurat_obj$merged_clusters)
   
   # Plot
-  p_old <- DimPlot(seurat_obj, reduction = 'umap', group.by = "seurat_clusters", label = TRUE) + NoLegend() + 
-    labs(title = "Seurat clusters old", 
-         subtitle = sample_name)
+  img <- readPNG(glue("07_seurat_QC/plot/gina_merged_clusters/{sample_name}_clusters.png"))
+  p_gina_draw <- ggplot() +
+    annotation_custom(
+      rasterGrob(img)
+    ) +
+    theme_void()
   
   p_new <- DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() + 
     labs(title = "Seurat clusters merged",
+         subtitle = sample_name,
          caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
   
-  p_final <- p_old + p_new
+  p_final <- p_gina_draw + p_new
   
   ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_final, width = 15, height = 8)
   
