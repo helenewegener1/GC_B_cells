@@ -1,9 +1,9 @@
 [gene-expression]
-reference,/home/people/helweg/ciir/people/helweg/projects/Gina_project/03_prep_references/out/refdata-gex-GRCh38-2024-A
+reference,/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/03_prep_references/out/refdata-gex-GRCh38-2024-A
 create-bam,true
 
 [vdj]
-reference,/home/people/helweg/ciir/people/helweg/projects/Gina_project/03_prep_references/out/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0
+reference,/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/03_prep_references/out/refdata-cellranger-vdj-GRCh38-alts-ensembl-7.1.0
 
 [libraries]
 fastq_id,fastqs,feature_types
