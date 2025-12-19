@@ -42,7 +42,7 @@ Idents(seurat_obj) <- "orig.ident"
 seurat_obj <- pre_filter_pipeline(seurat_obj)
 
 # Filter cells based on QC plots
-filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 7000 & percent.mt < 20)
 seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
 
 # Plot QC metrics in violin plots after filtering
@@ -387,7 +387,6 @@ for (sample_name in samples_names){
   print("--------------------------------------")
   
 }
-
 
 saveRDS(seurat_obj_QC_filtered_singlets_list, "08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list.rds")
 saveRDS(seurat_obj_QC_filtered_doublets_list, "08_seurat_QC_filtering/out/seurat_obj_QC_filtered_doublets_list.rds")

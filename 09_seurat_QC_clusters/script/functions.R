@@ -38,31 +38,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
   
   # N cells 
   n_cells <- ncol(seurat_obj)
-  
-  # Caluclate cell cycle scores - Already calculated in QC
-  # seurat_obj <- CellCycleScoring(seurat_obj,
-  #                                s.features = s.genes,
-  #                                g2m.features = g2m.genes)
-  
-  # seurat_obj$S.Score - continuous 
-  # seurat_obj$G2M.Score - continuous 
-  # seurat_obj$Phase - discrete 
-  
-  ############################## Seurat workflow ###############################
-  DefaultAssay(seurat_obj) <- "RNA"
-  
-  seurat_obj <- NormalizeData(seurat_obj, verbose = FALSE)
-  seurat_obj <- FindVariableFeatures(seurat_obj, verbose = FALSE)
-  seurat_obj <- ScaleData(seurat_obj, verbose = FALSE)
-  
-  DefaultAssay(seurat_obj)
-  
-  seurat_obj <- RunPCA(seurat_obj, verbose = FALSE)
-  ElbowPlot(seurat_obj)
-  seurat_obj <- FindNeighbors(seurat_obj, dims = 1:n_dim, verbose = FALSE)
-  seurat_obj <- FindClusters(seurat_obj, resolution = res, verbose = FALSE)
-  seurat_obj <- RunUMAP(seurat_obj, reduction = "pca", dims = 1:n_dim, verbose = FALSE)
-  
+ 
   ################## Feature plots with continuous features ####################
   features <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo", 
                 "scDblFinder.score", "S.Score", "G2M.Score")
@@ -234,27 +210,52 @@ doublet_dual_lineages <- function(seurat_obj, sample_name, marker_1, marker_2) {
 # split on x axis by doublet/singlet class
 # color by cell cycle phase
 # Idea is to detect cells that are marked as doublets but are infact proliferating cells that we want to save. 
-doublet_N_genes <- function(seurat_obj, sample_name) {
+doublet_N_genes <- function(seurat_obj, sample_name, out_dir) {
+  
+  # Doublet percentage across cell cycle phases. 
+  phase_doublet_percentage <- list()
+  for (phase in unique(seurat_obj$Phase)){
+    
+    n_doublets <- sum(seurat_obj$scDblFinder.class == "doublet" & seurat_obj$Phase == phase)
+    n_total <- sum(seurat_obj$Phase == phase)
+    n_doublet_percentage <- round((n_doublets/n_total) * 100, 1)
+    
+    phase_doublet_percentage[[phase]] <- n_doublet_percentage
+    
+  }
+  
+  text_box <- glue("Doublet percentage across cell cycle phases
+                   G1: {phase_doublet_percentage[['G1']]}%
+                   GM2: {phase_doublet_percentage[['G2M']]}%
+                   S: {phase_doublet_percentage[['S']]}%
+                   ")
   
   # nFeature_RNA
+  max_nFeature_RNA <- seurat_obj$nFeature_RNA %>% max()
+  
   seurat_obj[[]] %>% 
     ggplot(aes(x = scDblFinder.class, 
                y = nFeature_RNA)) + 
     geom_violin() + 
     geom_jitter(aes(color = Phase), width = 0.3, alpha = 0.3) + 
     scale_color_manual(values = c("grey", "red", "blue")) + 
-    theme_bw()
+    theme_bw() + 
+    annotate("text", x=1.5, y=max_nFeature_RNA-500, label= text_box) 
   
-  ggsave(glue("09_seurat_QC_clusters/plot/{sample_name}/doublet/{sample_name}_doublet_VS_nFeature_RNA.png"))
+  ggsave(glue("{out_dir}/00_{sample_name}_doublet_VS_phase_nFeature_RNA.png"))
   
-  seurat_obj[[]] %>% 
-    ggplot(aes(x = scDblFinder.class, 
-               y = nCount_RNA)) + 
-    geom_violin() + 
-    geom_jitter(aes(color = Phase), width = 0.3, alpha = 0.3) + 
-    scale_color_manual(values = c("grey", "red", "blue")) + 
-    theme_bw()
+  # nCount_RNA
+  max_nCount_RNA <- seurat_obj$nCount_RNA %>% max()
   
-  ggsave(glue("09_seurat_QC_clusters/plot/{sample_name}/doublet/{sample_name}_doublet_VS_nCount_RNA.png"))
+  seurat_obj[[]] %>%
+    ggplot(aes(x = scDblFinder.class,
+               y = nCount_RNA)) +
+    geom_violin() +
+    geom_jitter(aes(color = Phase), width = 0.3, alpha = 0.3) +
+    scale_color_manual(values = c("grey", "red", "blue")) +
+    theme_bw() + 
+    annotate("text", x=1.5, y=max_nCount_RNA-5000, label= text_box) 
+
+  ggsave(glue("{out_dir}/00_{sample_name}_doublet_VS_phase_nCount_RNA.png"))
   
 }
