@@ -15,7 +15,8 @@ library(ggsci)
 seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 
 # Get sample
-seurat_obj <- seurat_obj_nonDC_list[["HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"]]
+sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+seurat_obj <- seurat_obj_nonDC_list[[sample_name]]
 
 DimPlot(seurat_obj, group.by = "seurat_clusters")
 
@@ -109,7 +110,7 @@ seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>%
   theme_bw() + 
   theme(legend.position = "none") 
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_log_counts_density.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_log_counts_density.png"), width = 10, height = 7)
 
 # log CLR range
 seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
@@ -121,7 +122,7 @@ seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
   theme_bw() + 
   theme(legend.position = "none") 
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_log_CLR_values_density.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_log_CLR_values_density.png"), width = 10, height = 7)
 
 # CLR range
 seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
@@ -133,7 +134,7 @@ seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
   theme_bw() + 
   theme(legend.position = "none") 
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_CLR_values_density.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_CLR_values_density.png"), width = 10, height = 7)
 
 # CLR value range
 ADT_exprs <- seurat_obj[["ADT"]]$counts %>% rowSums() 
@@ -159,7 +160,7 @@ for (fol in fols){
     labs(title = fol,
          subtitle = glue("Summed ADT counts: {ADT_exp}"))
   
-  ggsave(glue("10_ADT_demultiplex/plot/CLR_values_per_fol/{fol}_ADT_CLR_values_density.png"), width = 14, height = 6)
+  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_CLR_values_density.png"), width = 14, height = 6)
   
   # log CLR range
   seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
@@ -178,7 +179,7 @@ for (fol in fols){
     labs(title = fol,
          subtitle = glue("Summed ADT counts: {ADT_exp}"))
   
-  ggsave(glue("10_ADT_demultiplex/plot/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
+  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
   
 }
 
@@ -375,7 +376,7 @@ df_compare_demux_long %>%
   scale_fill_manual(values = c(wes_palette("Moonrise3", n = 5), wes_palette("Moonrise2", n = 2)[2])) +
   annotate("text", x=2500, y=10, label= text_box)
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_barplot_manual_VS_tool.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_barplot_manual_VS_tool.png"), width = 10, height = 7)
 
 # Bar plot only manual 
 text_box = glue(
@@ -396,20 +397,86 @@ df_compare_demux_long %>%
   scale_fill_manual(values = wes_palette("Moonrise3", n = 5)[2:4]) +
   annotate("text", x=1500, y=10, label= text_box)
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_barplot_manual.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_barplot_manual.png"), width = 10, height = 7)
 
+################################################################################ 
 ####################### Doublets: ADT VS DoubletFinder ######################### 
+################################################################################
 
-table(seurat_obj$scDblFinder.class, seurat_obj$manual_ADT_class_cut_close_to_signal)
+table(seurat_obj$scDblFinder.class, seurat_obj$manual_ADT_class_cut_close_to_signal) 
+
+df <- as.data.frame(
+  table(
+    scDblFinder = seurat_obj$scDblFinder.class,
+    ADT_class   = seurat_obj$manual_ADT_class_cut_close_to_signal
+  )
+)
+
+ggplot(df, aes(x = ADT_class, y = scDblFinder, fill = Freq)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = Freq), size = 5) +
+  scale_fill_gradient(low = "grey90", high = "steelblue") +
+  labs(
+    x = "Manual ADT classification",
+    y = "scDblFinder classification",
+    fill = "Cell count"
+  ) +
+  theme_minimal() + 
+  theme(legend.position = "none")
+
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/ADT_vs_scDblFinder_doublets.png"), width = 7, height = 4)
+
+# New column to identify ADT singlets and scDblFinder doublets
+# Potential communicating cells (!!!)
+seurat_obj[[]] <- seurat_obj[[]] %>% 
+  mutate(
+    ADT_singlet_scDblFinder_doublets = ifelse(scDblFinder.class == "doublet" & manual_ADT_class_cut_close_to_signal == "Singlet", TRUE, FALSE)
+  )
+
+seurat_obj$ADT_singlet_scDblFinder_doublets %>% table()
+
+DimPlot(seurat_obj, group.by = "ADT_singlet_scDblFinder_doublets", order = TRUE) + 
+  labs(subtitle = sample_name, caption = "Potential communicating cells") 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_ADT_singlet_scDblFinder_doublets.png"), width = 8, height = 8)
 
 
+
+################################################################################
 ################################### DimPlot #################################### 
+################################################################################
 
-seurat_obj$ADT_classification.global
-DimPlot(seurat_obj, group.by = "manual_ADT_class_cut_close_to_signal")
-DimPlot(seurat_obj, group.by = "ADT_classification.global")
-DimPlot(seurat_obj, group.by = "seurat_clusters")
-seurat_obj$seurat_clusters
+seurat_obj$manual_ADT_ID_cut_close_to_noise
+
+# Negatives seem to cluster together
+DimPlot(seurat_obj, group.by = "manual_ADT_class_cut_close_to_signal") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_ADT_class.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "nFeature_RNA") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_nFeature_RNA.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "percent.mt") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_percent.mt.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "percent.ribo") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_percent.ribo.png"), width = 8, height = 8)
+
+FeaturePlot(
+  seurat_obj,
+  features = c("MALAT1", "FOS"),
+  reduction = "umap"
+)
+
+VlnPlot(seurat_obj, features = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.ribo"),
+        group.by = "manual_ADT_class_cut_close_to_noise", ncol = 2)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/ADT_VlnPlot.png"), width = 12, height = 10)
+
+# DimPlot(seurat_obj, group.by = "ADT_classification.global")
+# DimPlot(seurat_obj, group.by = "seurat_clusters")
+# seurat_obj$seurat_clusters
 
 ######################## Investigate individual cells ########################## 
 
@@ -606,8 +673,8 @@ one_cell %>%
 
 ################################### tSNE ####################################
 
-Idents(seurat_obj) <- "manual_ADT_classification"
-# seurat_obj$manual_ADT
+Idents(seurat_obj) <- "manual_ADT_class_cut_close_to_signal"
+# seurat_obj$manual_ADT_class_cut_close_to_signal
 
 # First, we will remove negative cells from the object
 seurat_obj.subset <- subset(seurat_obj, idents = "Negative", invert = TRUE)
