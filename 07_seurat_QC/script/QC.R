@@ -599,6 +599,9 @@ for (sample_name in sample_names){
 
 saveRDS(seurat_obj_QC, "07_seurat_QC/out/seurat_obj_QC.rds")
 
+# seurat_obj_QC$`HH117-SILP-INF-PC`$merged_clusters
+# seurat_obj$merged_clusters
+
 # doublet check 
 # Doublet class VS nFeature_RNA and nCount_RNA
 
