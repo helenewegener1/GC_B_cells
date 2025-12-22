@@ -4,14 +4,14 @@
 #PBS -l gpus=0
 #PBS -l mem=128GB
 #PBS -l walltime=70:00:00
-#PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/05_run_cellranger/script/run_cellranger.err
-#PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/05_run_cellranger/script/run_cellranger.log
+#PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/05_run_cellranger/script/run_cellranger_v8.err
+#PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/05_run_cellranger/script/run_cellranger_v8.log
 #PBS -N run_cellranger_v8
 
 # Define working directory (which is the out dir here)
 WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out"
 SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
-#CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out"
+CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out_v8"
 
 module load tools
 module load cellranger/8.0.0
@@ -32,7 +32,7 @@ for ID in "${samples_array[@]}"; do
   
   cellranger multi \
       --id="res_${ID}" \
-      --csv="../../04_prep_config/out/multi_config_${ID}.csv" \
+      --csv="${CONFIG_DIR}/multi_config_${ID}.csv" \
       --localcores=32 \
       --localmem=128
     
