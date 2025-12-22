@@ -9,9 +9,9 @@
 #PBS -N run_cellranger_v8
 
 # Define working directory (which is the out dir here)
-WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out"
+WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out_v8"
 SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
-CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out_v8"
+CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out"
 
 module load tools
 module load cellranger/8.0.0
