@@ -41,7 +41,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
  
   ################## Feature plots with continuous features ####################
   features <- c("nFeature_RNA", "nCount_RNA", "percent.mt", "percent.ribo", 
-                "scDblFinder.score", "S.Score", "G2M.Score")
+                "scDblFinder.score", "S.Score", "G2M.Score", "sce_contamination")
   for (feature in features){
     
     FeaturePlot(seurat_obj, features = feature) + 
