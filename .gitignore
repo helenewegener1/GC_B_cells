@@ -1,10 +1,15 @@
 
+*.pdf
+
 */out
 !/out/README
+
 05_run_cellranger/out_v9
 05_run_cellranger/out_v8
 */script/*.err
 */script/*.log
+
+
 
 .DS_Store
 .Rproj.user
