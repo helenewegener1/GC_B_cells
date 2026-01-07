@@ -99,6 +99,8 @@ for (sample_name in sample_names){
   seurat_obj <- FindClusters(seurat_obj, resolution = res, verbose = FALSE)
   seurat_obj <- RunUMAP(seurat_obj, reduction = "pca", dims = 1:n_dim, verbose = FALSE)
   
+  # DimPlot(seurat_obj, label = TRUE, group.by = "seurat_clusters") + NoLegend() 
+  
   # generate plots 
   all_plots(seurat_obj = seurat_obj, sample_name = sample_name, n_dim = n_dim, 
             extra_title = "Singlets", out_dir = out_dir)
@@ -250,15 +252,40 @@ rm(seurat_obj_singlets_clustered_list)
 ################################ DC Annotation #################################
 ################################################################################ 
 
+# Venla annotate after human atlas projection of v.8 object?
+# But for now we do this. 
+
 # Define DC cluster numbers
 # Look at 09_seurat_QC_clusters/plot/clusters/
 
+# All cells
+# seurat_obj_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_all_list.rds")
+# out_dir <- glue("09_seurat_QC_clusters/plot/all_DCs_removed/{sample_name}")
+# dc_clusters_all <- list(
+#   "HH117-SILP-INF-PC"                                = NULL,
+#   "HH117-SILP-nonINF-PC"                             = NULL,
+#   "HH117-SI-MILF-INF-HLADR-AND-CD19"                 = c("1"),
+#   "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = c("1", "3", "5", "6 "),
+#   "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c("5", "8", "9"),
+#   "HH119-COLP-PC"                                    = NULL,
+#   "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"        = NULL,
+#   "HH119-SILP-PC"                                    = NULL,
+#   "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"         = NULL,
+#   "HH119-SI-PP-CD19-Pool1"                           = NULL,
+#   "HH119-SI-PP-CD19-Pool2"                           = NULL,
+#   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"              = NULL,
+#   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL
+# )
+
+# Singlets
+seurat_obj_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
+out_dir <- glue("09_seurat_QC_clusters/plot/singlets_DCs_removed/{sample_name}")
 dc_clusters <- list(
   "HH117-SILP-INF-PC"                                = NULL,
   "HH117-SILP-nonINF-PC"                             = NULL,
   "HH117-SI-MILF-INF-HLADR-AND-CD19"                 = c("1"),
-  "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = c("1", "3", "5", "6 "),
-  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c("5", "8", "9"),
+  "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = c("1", "3", "5", "6"),
+  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c("6"),
   "HH119-COLP-PC"                                    = NULL,
   "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"        = NULL,
   "HH119-SILP-PC"                                    = NULL,
@@ -269,24 +296,22 @@ dc_clusters <- list(
   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL
 )
 
-# Venla annotate after human atlas projection of v.8 object?
-# But for now we do this. 
-seurat_obj_clustered_all_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_all_list.rds")
 
 # Prep to save seurat objects without DCs
-seurat_obj_nonDC_list <- rep(0, length(seurat_obj_clustered_all_list)) %>% as.list()
-names(seurat_obj_nonDC_list) <- names(seurat_obj_clustered_all_list)
+seurat_obj_nonDC_list <- rep(0, length(seurat_obj_list)) %>% as.list()
+names(seurat_obj_nonDC_list) <- names(seurat_obj_list)
+
+sample_names <- names(seurat_obj_list)
 
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  seurat_obj <- seurat_obj_clustered_all_list[[sample_name]]
+  seurat_obj <- seurat_obj_list[[sample_name]]
   
   if (is.null(dc_clusters[[sample_name]])){
     next
   }
   
-  out_dir <- glue("09_seurat_QC_clusters/plot/DCs_removed/{sample_name}")
   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   
   # Create a new logical column
