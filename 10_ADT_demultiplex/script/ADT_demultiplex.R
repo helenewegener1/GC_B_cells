@@ -18,7 +18,7 @@ seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_lis
 sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
 seurat_obj <- seurat_obj_nonDC_list[[sample_name]]
 
-DimPlot(seurat_obj, group.by = "seurat_clusters")
+DimPlot(seurat_obj, group.by = "seurat_clusters", label = TRUE) + NoLegend()
 
 # seurat_obj$scDblFinder.class %>% table()
 # seurat_obj$DC_bool %>% table()
@@ -139,48 +139,67 @@ ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_CLR_values_density.png"),
 # CLR value range
 ADT_exprs <- seurat_obj[["ADT"]]$counts %>% rowSums() 
 fols <- rownames(seurat_obj[["ADT"]]$data)
+
 for (fol in fols){
   
-  # fol <- "Fol-1"
+  # fol <- "Fol-11"
   
-  ADT_exp <- format(ADT_exprs[fol], big.mark = ",")
+  # ADT_exp <- format(ADT_exprs[fol], big.mark = ",")
   
-  seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
-    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>% 
-    mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>% 
+  # log counts
+  seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>%
+    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "counts") %>% 
     filter(ADT == fol) %>%
-    ggplot(aes(x = CLR, fill = ADT_CLR_mean)) + 
+    ggplot(aes(x = log(counts))) + 
     geom_density(alpha = 0.5) + 
-    # facet_wrap(vars(ADT_CLR_mean)) + 
     scale_x_continuous(
-      breaks = seq(0, max(seurat_obj[["ADT"]]$data[fol, ]), by = 0.2)  # adjust 0.2 as needed
+      breaks = seq(0, 10, by = 0.5),        # labeled ticks
+      minor_breaks = seq(0, 10, by = 0.1)   # unlabeled splits
     ) +
   theme_bw() + 
     theme(legend.position = "none") + 
-    labs(title = fol,
-         subtitle = glue("Summed ADT counts: {ADT_exp}"))
+    labs(title = fol, x = "LogNormalzied counts")
   
-  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_CLR_values_density.png"), width = 14, height = 6)
+  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/LogNormalized_counts_per_fol/{fol}_ADT_values_density.png"), width = 14, height = 6)
   
-  # log CLR range
-  seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
-    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>% 
-    mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>% 
-    filter(ADT == fol) %>% 
-    ggplot(aes(x = CLR, fill = ADT_CLR_mean)) + 
-    geom_density(alpha = 0.5) + 
-    scale_x_continuous(trans = "log", breaks = scales::log_breaks(n = 40)) + 
-    # scale_x_continuous(
-    #   breaks = seq(-5, 5, by = 0.2),  # adjust 0.2 as needed
-    #   sec.axis = sec_axis(~exp(.), name = "Original CLR")
-    # ) +
-    theme_bw() + 
-    theme(legend.position = "none") +
-    labs(title = fol,
-         subtitle = glue("Summed ADT counts: {ADT_exp}"))
-  
-  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
-  
+  # # log CLR range
+  # seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
+  #   pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>% 
+  #   mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>% 
+  #   filter(ADT == fol) %>% 
+  #   ggplot(aes(x = CLR, fill = ADT_CLR_mean)) + 
+  #   geom_density(alpha = 0.5) + 
+  #   scale_x_continuous(trans = "log", breaks = scales::log_breaks(n = 40)) + 
+  #   # scale_x_continuous(
+  #   #   breaks = seq(-5, 5, by = 0.2),  # adjust 0.2 as needed
+  #   #   sec.axis = sec_axis(~exp(.), name = "Original CLR")
+  #   # ) +
+  #   theme_bw() + 
+  #   theme(legend.position = "none") +
+  #   labs(title = fol,
+  #        subtitle = glue("Summed ADT counts: {ADT_exp}"))
+  # 
+  # ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
+  # 
+  # # log CLR range
+  # seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
+  #   pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>% 
+  #   mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>% 
+  #   filter(ADT == fol) %>% 
+  #   ggplot(aes(x = CLR, fill = ADT_CLR_mean)) + 
+  #   geom_density(alpha = 0.5) + 
+  #   scale_x_continuous(trans = "log", breaks = scales::log_breaks(n = 40)) + 
+  #   # scale_x_continuous(
+  #   #   breaks = seq(-5, 5, by = 0.2),  # adjust 0.2 as needed
+  #   #   sec.axis = sec_axis(~exp(.), name = "Original CLR")
+  #   # ) +
+  #   theme_bw() + 
+  #   theme(legend.position = "none") +
+  #   labs(title = fol,
+  #        subtitle = glue("Summed ADT counts: {ADT_exp}"))
+  # 
+  # ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
+  # 
 }
 
 ############################## Manual threshold ################################ 
@@ -330,6 +349,54 @@ seurat_obj$manual_ADT_class_cut_close_to_signal %>% table()
 # seurat_obj$manual_ADT_ID_cut_close_to_noise_thresholds <- cell_class
 # seurat_obj$manual_ADT_classification_cut_close_to_noise_thresholds <- seurat_obj$manual_ADT_ID %>% str_replace("Fol-\\d+", "Singlet")
 
+################################# LARS METHOD ################################## 
+
+# Normalize ranges
+# seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "CLR")
+# seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "LogNormalize")
+# seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "RC")
+
+ADT_counts <- seurat_obj@assays$ADT$counts # Raw counts
+ADT_CLR <- seurat_obj@assays$ADT$data # CLR normalized 
+
+# Data wrangle
+ADT_counts_t <- ADT_counts %>% as.matrix() %>% t() %>% 
+  as.data.frame() %>% rownames_to_column("Cell") %>% 
+  pivot_longer(cols = starts_with("Fol"),
+               names_to = "Fol", 
+               values_to = "Count")
+
+# Show the idea
+log_ratios <- ADT_counts_t %>% 
+  filter(Cell == "AAACCAAAGACGAACG-1") %>%
+  # group_by(Cell) %>% 
+  arrange(desc(Count)) %>% 
+  mutate(
+    Fol = factor(Fol, levels = Fol),
+    next_Count = lead(Count),
+    log2_ratio = log2(next_Count / Count),
+    label_y = pmin(Count, next_Count) * 1.05,  # slightly above lower bar
+    label_x = as.numeric(Fol) + 0.5             # between bars
+  )
+
+# plot
+log_ratios %>% 
+  ggplot(aes(x = reorder(Fol, -Count), y = Count)) + 
+  geom_col() +
+  geom_label(
+    data = log_ratios %>% filter(!is.na(log2_ratio)),
+    aes(
+      x = label_x,
+      y = label_y,
+      label = round(log2_ratio, 2)
+    ),
+    inherit.aes = FALSE,
+    size = 3
+  ) +
+  labs(x = "Fol", caption = "Log-ratio of 0: same value\nLog-ratio of -1: half the value") + 
+  theme_bw()
+
+
 ############################### Compare to tools ###############################
 
 seurat_obj$ADT_ID %>% table()
@@ -403,6 +470,8 @@ ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_barplot_manual.png"), wid
 ####################### Doublets: ADT VS DoubletFinder ######################### 
 ################################################################################
 
+table(seurat_obj$scDblFinder.class) 
+table(seurat_obj$manual_ADT_class_cut_close_to_signal) 
 table(seurat_obj$scDblFinder.class, seurat_obj$manual_ADT_class_cut_close_to_signal) 
 
 df <- as.data.frame(
@@ -439,8 +508,6 @@ DimPlot(seurat_obj, group.by = "ADT_singlet_scDblFinder_doublets", order = TRUE)
   labs(subtitle = sample_name, caption = "Potential communicating cells") 
 ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_ADT_singlet_scDblFinder_doublets.png"), width = 8, height = 8)
 
-
-
 ################################################################################
 ################################### DimPlot #################################### 
 ################################################################################
@@ -452,9 +519,26 @@ DimPlot(seurat_obj, group.by = "manual_ADT_class_cut_close_to_signal") +
   labs(subtitle = sample_name) 
 ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_ADT_class.png"), width = 8, height = 8)
 
+DimPlot(seurat_obj, group.by = "manual_ADT_ID_cut_close_to_noise") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_ADT_ID.png"), width = 8, height = 8)
+
+FeatureScatter(seurat_obj, "nCount_RNA", "nFeature_RNA") + theme_classic()
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/FeatureScatter.png"), width = 8, height = 6)
+
+seurat_obj@meta.data$percent.ribo %>% hist()
+
+DimPlot(seurat_obj, group.by = "scDblFinder.class") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_scDblFinder.class.png"), width = 8, height = 8)
+
 FeaturePlot(seurat_obj, features = "nFeature_RNA") + 
   labs(subtitle = sample_name) 
 ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_nFeature_RNA.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "nCount_RNA") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_nCount_RNA.png"), width = 8, height = 8)
 
 FeaturePlot(seurat_obj, features = "percent.mt") + 
   labs(subtitle = sample_name) 
@@ -463,6 +547,16 @@ ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_percent.m
 FeaturePlot(seurat_obj, features = "percent.ribo") + 
   labs(subtitle = sample_name) 
 ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_percent.ribo.png"), width = 8, height = 8)
+
+# seurat_obj$percent.ribo %>% range()
+
+FeaturePlot(seurat_obj, features = "sce_contamination") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_sce_contamination.png"), width = 8, height = 8)
+
+DimPlot(seurat_obj, group.by = "Phase") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_Phase.png"), width = 8, height = 8)
 
 FeaturePlot(
   seurat_obj,
@@ -491,7 +585,7 @@ cell_ADT <- seurat_obj@meta.data[cell_id, ]$ADT_classification
 cell_MULTI_0.7 <- seurat_obj@meta.data[cell_id, ]$MULTI_classification_0.7
 cell_MULTI_autoThresh <- seurat_obj@meta.data[cell_id, ]$MULTI_classification_autoThresh
 cell_manual_ADT <- seurat_obj@meta.data[cell_id, ]$manual_ADT_ID
-# adt_summary <- adt_summary %>% rownames_to_column("Fol")
+adt_summary <- adt_summary %>% rownames_to_column("Fol")
 
 one_cell <- seurat_obj[["ADT"]]$data[,cell_id] %>% as.data.frame() %>% rownames_to_column("Fol")
 colnames(one_cell) <- c("Fol", cell_id)
@@ -658,6 +752,11 @@ one_cell %>%
 #   ggsave(glue("10_ADT_demultiplex/plot/RidgePlot_{ident}.png"), width = 16, height = 20)
 #   
 # }
+
+Idents(seurat_obj) <- "manual_ADT_ID_cut_close_to_signal"
+RidgePlot(seurat_obj, assay = "ADT", features = rownames(seurat_obj[["ADT"]]))
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/RidgePlot.png"), width = 16, height = 20)
+
 # 
 # ################################### DimPlot ####################################
 # 
@@ -687,10 +786,10 @@ seurat_obj.subset <- RunUMAP(seurat_obj.subset, dims = 1:8, perplexity = 100)
 seurat_obj.subset <- RunTSNE(seurat_obj.subset, dims = 1:8, perplexity = 100)
 
 DimPlot(seurat_obj.subset, reduction = "umap") + labs(title = "Manual ADT classification")
-ggsave("10_ADT_demultiplex/plot/DimPlot_Doublet_Singlet_umap.png", width = 9, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/DimPlot_Doublet_Singlet_umap.png"), width = 9, height = 7)
 
 DimPlot(seurat_obj.subset, reduction = "tsne") + labs(title = "Manual ADT classification")
-ggsave("10_ADT_demultiplex/plot/DimPlot_Doublet_Singlet_tsne.png", width = 9, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/DimPlot_Doublet_Singlet_tsne.png"), width = 9, height = 7)
 
 ####################### Export ADT demultiplexed objects ####################### 
 

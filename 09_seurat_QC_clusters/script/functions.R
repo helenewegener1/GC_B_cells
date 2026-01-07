@@ -51,7 +51,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
         caption = glue("N cells: {n_cells}")
       )
     
-    ggsave(glue("{out_dir}/{sample_name}_{feature}.pdf"), width = 8, height = 7)
+    ggsave(glue("{out_dir}/{sample_name}_{feature}.png"), width = 8, height = 7)
     
   }
   
@@ -71,7 +71,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
         caption = glue("N cells: {n_cells}")
       )
     
-    ggsave(glue("{out_dir}/{sample_name}_{group}.pdf"), width = 8, height = 7)
+    ggsave(glue("{out_dir}/{sample_name}_{group}.png"), width = 8, height = 7)
     
   }
   
@@ -89,7 +89,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
     n_markers <- broad_markers[[markers]] %>% length()
     height <- (n_markers/3) * 4
 
-    ggsave(glue("{out_dir}/{sample_name}_broad_{markers}.pdf"), width = 14, height = height)
+    ggsave(glue("{out_dir}/{sample_name}_broad_{markers}.png"), width = 14, height = height)
     
     }
   
@@ -107,7 +107,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
     n_markers <- detailed_markers[[markers]] %>% length()
     height <- (n_markers/3) * 4
     
-    ggsave(glue("{out_dir}/{sample_name}_detailed_{markers}.pdf"), width = 14, height = height)
+    ggsave(glue("{out_dir}/{sample_name}_detailed_{markers}.png"), width = 14, height = height)
     
   }
   
@@ -120,7 +120,7 @@ all_plots <- function(seurat_obj, sample_name, n_dim, extra_title = "", out_dir)
       subtitle = sample_name, 
       caption = glue("N cells: {n_cells}\nN dim: {n_dim}\nResolution: {res}")
     )
-  ggsave(glue("{out_dir}/{sample_name}_clusters.pdf"), width = 8, height = 8)
+  ggsave(glue("{out_dir}/{sample_name}_clusters.png"), width = 8, height = 8)
   
 }
 
