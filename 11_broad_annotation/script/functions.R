@@ -9,7 +9,8 @@ top_DEGs_to_excel <- function(seurat_obj, sample_name, n_DEGs = 100) {
   
   # Find all markers 
   all_markers <- FindAllMarkers(seurat_obj, 
-                                group.by = cluster.name)
+                                group.by = cluster.name, 
+                                only.pos = TRUE)
   
   # Process markers
   top_markers_list <- all_markers %>%
