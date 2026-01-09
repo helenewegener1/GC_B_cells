@@ -18,7 +18,7 @@ sample_names <- names(seurat_obj_singlets_list)
 lapply(sample_names, function(sample_name) {
   
   # sample_name <- "HH119-SI-PP-CD19-Pool2"
-  sample_name <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
+  # sample_name <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
   seurat_obj <- seurat_obj_singlets_list[[sample_name]]
   
   top_DEGs_to_excel(
