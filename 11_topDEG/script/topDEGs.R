@@ -6,7 +6,7 @@ library(stringr)
 library(glue)
 library(ggplot2)
 
-source("11_broad_annotation/script/functions.R")
+source("11_topDEG/script/functions.R")
 
 # Load data
 # seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")

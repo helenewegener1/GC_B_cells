@@ -16,8 +16,10 @@ seurat_obj_singlets_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_cluste
 seurat_obj_singlets_annotated_list <- rep(0, length(seurat_obj_singlets_list)) %>% as.list()
 names(seurat_obj_singlets_annotated_list) <- names(seurat_obj_singlets_list)
 
-
 sample_names <- names(seurat_obj_singlets_list)
+
+# Defining color scheme for each cell type for streamlined plotting
+source("12_broad_annotation/script/color_palette.R")
 
 ################################################################################
 sample_name <- "HH119-SI-PP-CD19-Pool1" 
@@ -56,7 +58,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -97,7 +103,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -138,7 +148,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -180,7 +194,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -221,7 +239,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -258,7 +280,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -300,7 +326,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -318,7 +348,7 @@ cluster_to_celltype <- c(
   "3" = "GC_like_B_cells",
   "4" = "Contamination_mast_cells",
   "5" = "Contamination_MNPs",
-  "6" = "Contamination_γδT_cell", 
+  "6" = "Contamination_γδT_cell"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -334,7 +364,11 @@ seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
 table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -378,7 +412,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -419,7 +457,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -462,7 +504,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -502,7 +548,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -541,7 +591,11 @@ table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
 # table(seurat_obj$celltype_broad)
 
 # See DimPlot
-DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE) + NoLegend() 
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("12_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
 
 # Export
 seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
@@ -586,6 +640,6 @@ seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
 
 
 # Export seurat object list 
-saveRDS(seurat_obj_singlets_annotated_list, "11_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
+saveRDS(seurat_obj_singlets_annotated_list, "12_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
 
 

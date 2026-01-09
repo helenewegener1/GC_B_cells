@@ -36,7 +36,7 @@ top_DEGs_to_excel <- function(seurat_obj, sample_name, n_DEGs = 100) {
   print(top_markers_list_print)
   
   # Export xlsx file 
-  out_file <- glue("11_broad_annotation/out/{sample_name}_Top_{n_DEGs}_DEGs.xlsx")
+  out_file <- glue("11_topDEG/out/{sample_name}_Top_{n_DEGs}_DEGs.xlsx")
   
   # Use openxlsx::write.xlsx, which takes the named list and writes
   # each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
