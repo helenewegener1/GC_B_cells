@@ -71,10 +71,12 @@ for (sample_name in sample_names){
   sample <- sample_name
   patient <- str_split_i(sample_name, "-", 1)
   inflammed <- str_detect(sample_name, "-INF-")
+  # condition <- # Define CRC/UC/CD
   # Tissue
   tissue_1 <- str_split_i(sample_name, "-", 2)
   tissue_2 <- ifelse(nchar(tissue_1) < 4, paste0("-", str_split_i(sample_name, "-", 3)), "")
   tissue <- glue("{tissue_1}{tissue_2}")
+  # group <- paste(patient, ifelse(inflammed, "INF", "UNINF"), tissue, sep = "_")
   
   # print(sample)
   # print(patient)
@@ -87,9 +89,13 @@ for (sample_name in sample_names){
   seurat_obj@meta.data$patient <- patient
   seurat_obj@meta.data$inflammed <- inflammed
   seurat_obj@meta.data$tissue <- tissue
+  # seurat_obj@meta.data$group <- group
+  seurat_obj@meta.data$group <- sub("-Pool[0-9]+$", "", seurat_obj$sample)
 
   seurat_obj_prepped_list[[sample_name]] <- seurat_obj
   
 }
 
 saveRDS(seurat_obj_prepped_list, "13_prep_integration/out/seurat_obj_prepped_list.rds")
+
+
