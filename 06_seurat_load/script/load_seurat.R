@@ -1,11 +1,11 @@
-setwd("~/ciir/people/helweg/projects/Gina_project/")
+setwd("~/ciir/people/helweg/projects/GC_B_cells/")
 
 library(tidyverse)
 library(Seurat)
 library(glue)
 
 # Samples
-samples <- list.files("05_run_cellranger/out_main/") %>% str_split_i("_", 2)
+samples <- list.files("05_run_cellranger/out_v8/") %>% str_split_i("_", 2)
 
 # Prep out list
 seurat_obj_list <- list()
@@ -18,7 +18,7 @@ for (sample in samples){
   # Define path to cellranger output
   # The files in the per_sample_outs directory have been demultiplexed to single samples.
   # Read more about output of cellrange multi: https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-3p-outputs-cellplex
-  OUTS_DIR <- glue("05_run_cellranger/out/res_{sample}/outs/per_sample_outs/res_{sample}")
+  OUTS_DIR <- glue("05_run_cellranger/out_v8/res_{sample}/outs/per_sample_outs/res_{sample}")
   
   # Read GEX counts (the default method for 10x data)
   gex.data <- Read10X(data.dir = glue("{OUTS_DIR}/count/sample_filtered_feature_bc_matrix"))

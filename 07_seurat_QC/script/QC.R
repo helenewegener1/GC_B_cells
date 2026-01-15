@@ -70,6 +70,8 @@ names(seurat_obj_clustered_list) <- names(seurat_obj_list)
 
 sample_names <- names(seurat_obj_list)
 
+res <- 0.1
+
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
@@ -83,8 +85,6 @@ for (sample_name in sample_names){
   # Create directory for plots of specific sample
   out_dir <- glue("07_seurat_QC/plot/clusters/{sample_name}")
   dir.create(out_dir, showWarnings = FALSE)
-  
-  res <- 0.1
   
   # Seurat workflow so I can UMAP
   seurat_obj <- NormalizeData(seurat_obj, verbose = FALSE)
@@ -168,161 +168,174 @@ for (sample_name in sample_names){
 ############################ GINA CLUSTER MERGING ##############################
 ################################################################################
 
-seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
+# Gina got the plots from 07_seurat_QC/plot/clusters.
+# Gina drew which clusters should be merged based on expression.
+# This was to make sure that doublet finder did not merge two too similar cells and called them a doublet.
+# Gina's drawing can be seen in 07_seurat_QC/plot/gina_merged_clusters.
 
 merged_clusters <- list(
-  
-  "HH117-SILP-INF-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = ""
+
+  "HH117-SILP-INF-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "3", "4"),
+    "1" = c("1"),
+    "2" = c("5")
   ),
-  
-  "HH117-SILP-nonINF-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = ""
+
+  "HH117-SILP-nonINF-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2"),
+    "1" = c("1", "3")
   ),
-  
-  "HH117-SI-MILF-INF-HLADR-AND-CD19" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = ""
+
+  "HH117-SI-MILF-INF-HLADR-AND-CD19" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "4", "6"),
+    "1" = c("1"),
+    "2" = c("3"),
+    "3" = c("5")
   ),
-  
-  "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = "",
-    "8" = ""
+
+  "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0"),
+    "1" = c("1", "3", "5", "6"),
+    "2" = c("2"),
+    "3" = c("4"),
+    "4" = c("7"),
+    "5" = c("8")
   ),
-  
-  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c(
-    "0" = "0",
-    "1" = "1",
-    "2" = "2",
-    "3" = "2",
-    "4" = "3",
-    "5" = "4", 
-    "6" = "5", 
-    "7" = "6"
+
+  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0"),
+    "1" = c("1"),
+    "2" = c("2", "3"),
+    "3" = c("4"),
+    "4" = c("5", "6", "7")
   ),
-  
-  "HH119-COLP-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = ""
+
+  "HH119-COLP-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0"),
+    "1" = c("1"),
+    "2" = c("2")
   ),
-  
-  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = ""
+
+  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "4"),
+    "1" = c("1"),
+    "2" = c("3"),
+    "3" = c("5")
   ),
-  
-  "HH119-SILP-PC" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+
+  "HH119-SILP-PC" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "1", "2"),
+    "1" = c("3"),
+    "2" = c("4"),
+    "3" = c("5"),
+    "4" = c("6"),
+    "5" = c("7")
   ),
-  
-  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+
+  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "1", "6"),
+    "1" = c("2", "7"),
+    "2" = c("3", "5"),
+    "3" = c("4")
   ),
-  
-  "HH119-SI-PP-CD19-Pool1" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+
+  "HH119-SI-PP-CD19-Pool1" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "1", "5"),
+    "1" = c("2", "3", "4"),
+    "2" = c("6"),
+    "3" = c("7")
   ),
-  
-  "HH119-SI-PP-CD19-Pool2" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = ""
+
+  "HH119-SI-PP-CD19-Pool2" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "1", "3"),
+    "1" = c("2", "4"),
+    "2" = c("5"),
+    "3" = c("6")
   ),
-  
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = "", 
-    "7" = ""
+
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "3", "5"),
+    "1" = c("1", "6"),
+    "2" = c("4"),
+    "3" = c("7")
   ),
-  
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = c(
-    "0" = "",
-    "1" = "",
-    "2" = "",
-    "3" = "",
-    "4" = "",
-    "5" = "", 
-    "6" = ""
-  ) 
-    
+
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = list(
+    # new_cluster = c(old clusters)
+    "0" = c("0", "2", "3"),
+    "1" = c("1", "6"),
+    "2" = c("4"),
+    "3" = c("5")
+  )
+
 )
 
 
-sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-seurat_obj <- seurat_obj_clustered_list[[sample_name]]
+for (sample_name in sample_names){
 
-# Extract old clusters 
-old_clusters <- as.character(seurat_obj$seurat_clusters)
-names(old_clusters) <- colnames(seurat_obj)
+  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  seurat_obj <- seurat_obj_clustered_list[[sample_name]]
 
-# Map merged clusters  
-new_clusters <- merged_clusters[[sample_name]][old_clusters]
-names(new_clusters) <- colnames(seurat_obj)
+  # Create directory for plots of specific sample
+  out_dir <- glue("07_seurat_QC/plot/03_clusters_for_scDblFinder/")
+  dir.create(out_dir, showWarnings = FALSE)
 
-# Add merged clusters to metadata
-seurat_obj <- AddMetaData(seurat_obj, metadata = as.data.frame(new_clusters), col.name = "merged_clusters")
+  # Extract old clusters
+  old_clusters <- as.character(seurat_obj$seurat_clusters)
+  names(old_clusters) <- colnames(seurat_obj)
 
-# Plot
-DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() + 
-  labs(title = "Seurat clusters merged",
-       subtitle = sample_name, 
-       caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
-ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), width = 8, height = 8)
+  # Extract mapping of new and old clusterss
+  mapping_list <- merged_clusters[[sample_name]]
+
+  # Create named vector: old cluster -> new cluster
+  cluster_mapping <- unlist(lapply(names(mapping_list), function(new_cluster) {
+    old_clusters <- mapping_list[[new_cluster]]
+    setNames(rep(new_cluster, length(old_clusters)), old_clusters)
+  }))
+
+  # Map merged clusters
+  new_clusters <- cluster_mapping[old_clusters]
+  names(new_clusters) <- colnames(seurat_obj)
+
+  # Add merged clusters to metadata
+  seurat_obj <- AddMetaData(seurat_obj, metadata = as.data.frame(new_clusters), col.name = "merged_clusters")
+  seurat_obj_clustered_list[[sample_name]] <- seurat_obj
+
+  # Check
+  table("old" = seurat_obj$seurat_clusters, "new" = seurat_obj$merged_clusters)
+
+  # Plot
+  # img <- readPNG(glue("07_seurat_QC/plot/02_gina_merged_clusters/{sample_name}_clusters.png"))
+  # p_gina_draw <- ggplot() +
+  #   annotation_custom(
+  #     rasterGrob(img)
+  #   ) +
+  #   theme_void()
+
+  p_new <- DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() +
+    labs(title = "Seurat clusters merged",
+         subtitle = sample_name,
+         caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+
+  # p_final <- p_gina_draw + p_new
+
+  ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_new, width = 7, height = 8)
+
+}
+
+saveRDS(seurat_obj_clustered_list, "07_seurat_QC/out/seurat_obj_clustered_list.rds")
 
 
 ################################################################################
@@ -441,66 +454,52 @@ g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes # MKI67 in here
 
 ################################ scDblFinder on cellranger filtered ################################ 
 
-# # N cell types (clusters) expected
-# n_cell_types <- list(
-#   "HH117-SILP-INF-PC" = 1,
-#   "HH117-SILP-nonINF-PC" = 1,
-#   "HH117-SI-MILF-INF-HLADR-AND-CD19" = 2,
-#   "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = 2,
-#   "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = 5,
-#   "HH119-COLP-PC" = 1,
-#   "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = 3,
-#   "HH119-SILP-PC" = 1,
-#   "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = 3,
-#   "HH119-SI-PP-CD19-Pool1" = 2,
-#   "HH119-SI-PP-CD19-Pool2" = 2,
-#   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = 3,
-#   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = 3
-# )
-
-
+seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
+n_dims <- 10
 
 # Initialize final QC list 
 seurat_obj_QC <- list()
 
-seurat_obj_clustered_list <- readRDS("07_seurat_QC/out/seurat_obj_clustered_list.rds")
 sample_names <- names(seurat_obj_clustered_list)
 
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
   # sample_name <- "HH119-SILP-PC"
-  
-  print("---------------------------------------------------------------")
-  print(sample_name)
-  
-  ############################ Ambiant RNA with decontX ############################
+  # print("---------------------------------------------------------------")
+  # print(sample_name)
+  # 
+  # ############################ Ambiant RNA with decontX ############################
   # print("----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----")
   # print("decontX")
-
-  raw_counts <- Read10X(data.dir = glue("05_run_cellranger/out_main/res_{sample_name}/outs/multi/count/raw_feature_bc_matrix"))
-  cell_counts <- Read10X(data.dir = glue("05_run_cellranger/out_main/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/count/sample_filtered_feature_bc_matrix"))
-
+  
+  raw_counts <- Read10X(data.dir = glue("05_run_cellranger/out_v8/res_{sample_name}/outs/multi/count/raw_feature_bc_matrix"))
+  cell_counts <- Read10X(data.dir = glue("05_run_cellranger/out_v8/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/count/sample_filtered_feature_bc_matrix"))
+  
   if (is.null(names(raw_counts))){
-
+    
     sce <- decontX(cell_counts, background = raw_counts)
-
+    
   } else if (length(names(raw_counts)) > 1) {
-
+    
     sce <- decontX(cell_counts$`Gene Expression`, background = raw_counts$`Gene Expression`)
-
+    
   }
-
+  
   # Get seurat object
   seurat_obj <- seurat_obj_clustered_list[[sample_name]]
-
-  # Add decontX to contamination "score" to metadata
+  
+  # # Add decontX to contamination "score" to metadata
   seurat_obj <- AddMetaData(seurat_obj, sce$contamination, "sce_contamination")
-
+  
   # seurat_obj@meta.data$sce_contamination
   
   # print("----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----")
   # print("scDblFinder")
+  
+  # Create directory for plots of specific sample
+  out_dir <- glue("07_seurat_QC/plot/04_scDblFinder/{sample_name}")
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   
   # Get count matrix
   # counts <- seurat_obj@assays$RNA$counts 
@@ -534,9 +533,11 @@ for (sample_name in sample_names){
   n_cells <- ncol(seurat_obj)
   n_doublets <- table(sce$scDblFinder.class)[["doublet"]]
   percentage_doublet <- round((n_doublets/n_cells) * 100, 1)
-  print(glue("with clusters: {percentage_doublet}"))
+  print(glue("N cells: {n_cells}"))
+  print(glue("N doublet: {n_doublets}"))
+  print(glue("Doublet percentage: {percentage_doublet}"))
   # print("---------------------------------")
-    
+  
   # sce <- scDblFinder(sce, verbose = FALSE)
   # 
   # n_cells <- ncol(seurat_obj)
@@ -544,27 +545,24 @@ for (sample_name in sample_names){
   # percentage_doublet <- round((n_doublets/n_cells) * 100, 1)
   # print(glue("without clusters: {percentage_doublet}"))
   # print("---------------------------------")
-
-
+  
+  
   table(sce$scDblFinder.class)
   table(sce$scDblFinder.cluster)
-
+  
   # Access doublets and make metadata
   doublet_metadata <- data.frame(scDblFinder.class = sce$scDblFinder.class,
                                  scDblFinder.score = sce$scDblFinder.score,
                                  scDblFinder.cluster = sce$scDblFinder.cluster,
                                  row.names = colnames(sce)
-                                 )
-
+  )
+  
   # Add doublet analysis to metadata
   seurat_obj <- AddMetaData(seurat_obj, doublet_metadata)
-
+  
   # Number of singlet and doublet - Add to plot
   result <- table(seurat_obj@meta.data$scDblFinder.class, useNA = "ifany")
-
-  seurat_obj <- RunUMAP(seurat_obj, dims = 1:n_dims, verbose = FALSE)
-  DimPlot(seurat_obj)
-
+  
   # Plot
   DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters") +
     labs(
@@ -572,34 +570,37 @@ for (sample_name in sample_names){
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), 
       caption = glue("Doublet percentage: {percentage_doublet}")
     )
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
-
+  ggsave(glue("{out_dir}/{sample_name}_scDblFinder_merged_clusters.png"), width = 7, height = 6)
+  
   DimPlot(seurat_obj, reduction = 'umap', group.by = "scDblFinder.class", order = TRUE) +
     labs(
       title = "scDblFinder", 
       subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"),
       caption = glue("Doublet percentage: {percentage_doublet}")
-      )
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder.png"), width = 7, height = 6)
-
+    )
+  ggsave(glue("{out_dir}/{sample_name}_scDblFinder.png"), width = 7, height = 6)
+  
   # Cell cycle score
   seurat_obj <- CellCycleScoring(seurat_obj,
                                  s.features = s.genes,
                                  g2m.features = g2m.genes)
-
+  
   DimPlot(seurat_obj, reduction = 'umap', group.by = "Phase", order = TRUE) +
     labs(subtitle = glue("N doublets: {result[[2]]}, N singlets: {result[[1]]}"), caption = glue("Doublet percentage: {percentage_doublet}"))
-  ggsave(glue("07_seurat_QC/plot/scDblFinder/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
-
+  ggsave(glue("{out_dir}/{sample_name}_scDblFinder_CellCyclePhase.png"), width = 7, height = 6)
+  
   table(seurat_obj$Phase, seurat_obj$scDblFinder.class)
-
+  
   seurat_obj_QC[[sample_name]] <- seurat_obj
-
+  
 }
 
 #################### Export list of Seurat objects with QC metrices in metadata #################### 
 
 saveRDS(seurat_obj_QC, "07_seurat_QC/out/seurat_obj_QC.rds")
+
+# seurat_obj_QC$`HH117-SILP-INF-PC`$merged_clusters
+# seurat_obj$merged_clusters
 
 # doublet check 
 # Doublet class VS nFeature_RNA and nCount_RNA
