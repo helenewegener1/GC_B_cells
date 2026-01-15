@@ -1,4 +1,4 @@
-setwd("~/ciir/people/helweg/projects/Gina_project/")
+setwd("~/ciir/people/helweg/projects/GC_B_cells/")
 
 library(tidyverse)
 library(Seurat)
