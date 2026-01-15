@@ -15,9 +15,10 @@ library(ggsci)
 seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 
 # Get sample
-seurat_obj <- seurat_obj_nonDC_list[["HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"]]
+sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+seurat_obj <- seurat_obj_nonDC_list[[sample_name]]
 
-DimPlot(seurat_obj, group.by = "seurat_clusters")
+DimPlot(seurat_obj, group.by = "seurat_clusters", label = TRUE) + NoLegend()
 
 # seurat_obj$scDblFinder.class %>% table()
 # seurat_obj$DC_bool %>% table()
@@ -109,7 +110,7 @@ seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>%
   theme_bw() + 
   theme(legend.position = "none") 
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_log_counts_density.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_log_counts_density.png"), width = 10, height = 7)
 
 # log CLR range
 seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
@@ -121,7 +122,7 @@ seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
   theme_bw() + 
   theme(legend.position = "none") 
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_log_CLR_values_density.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_log_CLR_values_density.png"), width = 10, height = 7)
 
 # CLR range
 seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
@@ -133,53 +134,56 @@ seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
   theme_bw() + 
   theme(legend.position = "none") 
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_CLR_values_density.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_CLR_values_density.png"), width = 10, height = 7)
 
 # CLR value range
 ADT_exprs <- seurat_obj[["ADT"]]$counts %>% rowSums() 
 fols <- rownames(seurat_obj[["ADT"]]$data)
+
 for (fol in fols){
   
-  # fol <- "Fol-1"
+  # fol <- "Fol-7"
   
   ADT_exp <- format(ADT_exprs[fol], big.mark = ",")
   
-  seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
-    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>% 
-    mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>% 
-    filter(ADT == fol) %>%
-    ggplot(aes(x = CLR, fill = ADT_CLR_mean)) + 
-    geom_density(alpha = 0.5) + 
-    # facet_wrap(vars(ADT_CLR_mean)) + 
-    scale_x_continuous(
-      breaks = seq(0, max(seurat_obj[["ADT"]]$data[fol, ]), by = 0.2)  # adjust 0.2 as needed
-    ) +
-  theme_bw() + 
-    theme(legend.position = "none") + 
-    labs(title = fol,
-         subtitle = glue("Summed ADT counts: {ADT_exp}"))
-  
-  ggsave(glue("10_ADT_demultiplex/plot/CLR_values_per_fol/{fol}_ADT_CLR_values_density.png"), width = 14, height = 6)
-  
   # log CLR range
-  seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>% 
-    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>% 
-    mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>% 
-    filter(ADT == fol) %>% 
-    ggplot(aes(x = CLR, fill = ADT_CLR_mean)) + 
-    geom_density(alpha = 0.5) + 
-    scale_x_continuous(trans = "log", breaks = scales::log_breaks(n = 40)) + 
+  seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
+    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>%
+    mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>%
+    filter(ADT == fol) %>%
+    ggplot(aes(x = CLR, fill = ADT_CLR_mean)) +
+    geom_density(alpha = 0.5) +
+    scale_x_continuous(trans = "log", breaks = scales::log_breaks(n = 40)) +
     # scale_x_continuous(
     #   breaks = seq(-5, 5, by = 0.2),  # adjust 0.2 as needed
     #   sec.axis = sec_axis(~exp(.), name = "Original CLR")
     # ) +
-    theme_bw() + 
+    theme_bw() +
     theme(legend.position = "none") +
     labs(title = fol,
          subtitle = glue("Summed ADT counts: {ADT_exp}"))
-  
-  ggsave(glue("10_ADT_demultiplex/plot/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
-  
+
+  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
+
+  # log CLR range
+  seurat_obj[["ADT"]]$data %>% t() %>% as.data.frame() %>%
+    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "CLR") %>%
+    mutate(ADT_CLR_mean = glue('{ADT} CLR_mean: {round(adt_summary[ADT,"mean_CLR"], 2)}')) %>%
+    filter(ADT == fol) %>%
+    ggplot(aes(x = CLR, fill = ADT_CLR_mean)) +
+    geom_density(alpha = 0.5) +
+    scale_x_continuous(trans = "log", breaks = scales::log_breaks(n = 40)) +
+    # scale_x_continuous(
+    #   breaks = seq(-5, 5, by = 0.2),  # adjust 0.2 as needed
+    #   sec.axis = sec_axis(~exp(.), name = "Original CLR")
+    # ) +
+    theme_bw() +
+    theme(legend.position = "none") +
+    labs(title = fol,
+         subtitle = glue("Summed ADT counts: {ADT_exp}"))
+
+  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/CLR_values_per_fol/{fol}_ADT_log_CLR_values_density.png"), width = 16, height = 6)
+
 }
 
 ############################## Manual threshold ################################ 
@@ -329,20 +333,238 @@ seurat_obj$manual_ADT_class_cut_close_to_signal %>% table()
 # seurat_obj$manual_ADT_ID_cut_close_to_noise_thresholds <- cell_class
 # seurat_obj$manual_ADT_classification_cut_close_to_noise_thresholds <- seurat_obj$manual_ADT_ID %>% str_replace("Fol-\\d+", "Singlet")
 
+################################# LARS METHOD ################################## 
+
+# “dominant marker” rule in flow cytometry gating
+
+# First, make these plots to determine threshol between noise and signal 
+# for (fol in fols){
+  
+  fol <- "Fol-18"
+
+  # log counts
+  seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>%
+    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "counts") %>% 
+    filter(ADT == fol) %>%
+    ggplot(aes(x = log10(counts))) + 
+    geom_density() +
+    # geom_histogram(alpha = 0.5, binwidth = 0.05) +
+    scale_x_continuous(
+      breaks = seq(0, 10, by = 0.5),        # labeled ticks
+      minor_breaks = seq(0, 10, by = 0.1)   # unlabeled splits
+    ) +
+    theme_bw() + 
+    theme(legend.position = "none") + 
+    labs(title = fol, x = "log10 counts")
+  
+  ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/log10_counts_per_fol/{fol}_ADT_log10_count_values_density.png"), width = 14, height = 6)
+
+# }
+
+# Zero point: Point between noise and signal defined on log10 scale.
+zero_point_log10 <- c(
+  "Fol-1" = 2.6,
+  "Fol-2" = 2.8,
+  "Fol-3" = 2.1,
+  "Fol-4" = 2.4,
+  "Fol-5" = 2.7, 
+  "Fol-6" = 2.5,
+  "Fol-7" = 2.5, 
+  "Fol-8" = 2.5, # check 
+  "Fol-9" = 2.3, 
+  "Fol-10" = 2.2,
+  "Fol-11" = 2.8,
+  "Fol-12" = 2.6, # maybe check this
+  "Fol-13" = 2.8, # maybe check this
+  "Fol-14" = 2.4,
+  "Fol-15" = 1.7,
+  "Fol-16" = 2.5,
+  "Fol-17" = 2.6,  
+  "Fol-18" = 2.4
+)
+
+# Transform zero points to raw counts 
+zero_point <- 10^zero_point_log10 
+
+# Raw counts
+ADT_counts <- seurat_obj@assays$ADT$counts 
+
+# Data wrangle
+ADT_counts_t <- ADT_counts %>% as.matrix() %>% t()
+
+# # LogNormalized counts for plotting 
+# seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "LogNormalize")
+# ADT_LogNormalize <- seurat_obj@assays$ADT$data 
+# ADT_LogNormalize_t <- ADT_LogNormalize %>% as.matrix() %>% t() 
+# 
+# ADT_LogNormalize_t %>% 
+#   as.data.frame() %>% 
+#   pivot_longer(cols = everything(), names_to = "Fol", values_to = "Count") %>% 
+#   ggplot(aes(x = Count, fill = Fol)) +
+#   geom_density(alpha = 0.3) +
+#   facet_wrap(~Fol, scales = "free") +
+#   theme_bw()
+
+# Subtract / Divide by zero-points
+# ADT_counts_t_corrected <- sweep(ADT_counts_t, 2, zero_point[colnames(ADT_counts_t)], FUN = "-")
+# Hashtags with large absolute ranges remain unfairly dominant
+
+ADT_counts_t_corrected <- sweep(ADT_counts_t, 2, zero_point[colnames(ADT_counts_t)], FUN = "/")
+# Keeps values positive (log works)
+# 1 → exactly at the noise threshold
+# >1 → clearly above noise (signal)
+# <1 → below noise (background)
+
+# Make long format and calculate log ratios
+log_ratios <- ADT_counts_t_corrected %>%
+    as.data.frame() %>% 
+    rownames_to_column("Cell") %>%
+    pivot_longer(
+      cols = starts_with("Fol"),
+      names_to = "Fol",
+      values_to = "Count"
+    ) %>% 
+    group_by(Cell) %>%
+    arrange(desc(Count), .by_group = TRUE) %>% 
+    # log ratio
+    mutate(
+      Fol = factor(Fol, levels = Fol),
+      next_Count = lead(Count),
+      log2_ratio = log2(next_Count / Count),
+      label_y = pmin(Count, next_Count) * 1.05,
+      label_x = row_number() + 0.5,
+      rank = row_number()
+    ) %>%
+  # Classification
+  mutate(
+    r12 = log2_ratio[rank == 1],
+    r23 = log2_ratio[rank == 2],
+    top_signal = Count[rank == 1],
+    dominant_ADT_class = case_when(
+      top_signal < 1                ~ "Negative",  # Below the manual "zero point"
+      r12 < -1 & abs(r12) > abs(r23) ~ "Singlet", # add this r12 < -1
+      abs(r23) > abs(r12)           ~ "Doublet",   # Strongest drop is after Rank 2
+      TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+    ),
+    dominant_ADT_ID = case_when(
+      top_signal < 1                ~ "Negative",  # Below the manual "zero point"
+      r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
+      abs(r23) > abs(r12)           ~ "Doublet",   # Strongest drop is after Rank 2
+      TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+    ),
+    dominant_ADT_full_ID = case_when(
+      top_signal < 1                ~ "Negative",  # Below the manual "zero point"
+      r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
+      abs(r23) > abs(r12)           ~ paste0(  # Strongest drop is after Rank 2 --> doublet
+        sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
+        "-",
+        sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
+      ),  
+      TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+      # r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
+      # abs(r12) < 0.5                 ~ paste0(
+      #   sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
+      #   "-",
+      #   sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
+      # ),
+      # TRUE                           ~ "Negative" # Unclear
+    )
+  ) %>% 
+    ungroup()
+
+# plot
+plot_log_ratios <- function(df, cell_nr){
+  
+  cell_name <- colnames(seurat_obj)[cell_nr]
+  
+  manual_label <- seurat_obj$manual_ADT_ID_cut_close_to_signal[cell_nr]
+  
+  df %>% 
+    filter(Cell == cell_name) %>% 
+    ggplot(aes(x = reorder(Fol, -Count), y = Count)) + 
+    geom_col() +
+    geom_label(
+      data = df%>% filter(Cell == cell_name) %>% filter(!is.na(log2_ratio)),
+      aes(
+        x = label_x,
+        y = label_y,
+        label = round(log2_ratio, 2)
+      ),
+      inherit.aes = FALSE,
+      size = 3
+    ) +
+    labs(
+      title = "ADT counts corrected by thershold", 
+      x = "Fol", 
+      subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value", 
+      caption = glue("Manual label: {manual_label}
+                     Dominant ADT: {df$dominant_ADT_full_ID[df$Cell == cell_name][1]}
+                     ")
+      ) + 
+    theme_bw() 
+  
+}
+
+plot_log_ratios(df = log_ratios, cell_nr = 1)
+plot_log_ratios(df = log_ratios, cell_nr = 2)
+plot_log_ratios(df = log_ratios, cell_nr = 3)
+plot_log_ratios(df = log_ratios, cell_nr = 4)
+plot_log_ratios(df = log_ratios, cell_nr = 5) # funky 
+plot_log_ratios(df = log_ratios, cell_nr = 6)
+plot_log_ratios(df = log_ratios, cell_nr = 112)
+plot_log_ratios(df = log_ratios, cell_nr = 8) # Unclear bc r12 is not high enough 
+plot_log_ratios(df = log_ratios, cell_nr = 13) # Fol-5
+plot_log_ratios(df = log_ratios, cell_nr = 1224)
+plot_log_ratios(df = log_ratios, cell_nr = 18) # Doublet
+
+# Plot distribution of r12
+log_ratios %>% 
+  select(Cell, r12, dominant_ADT_class) %>%
+  distinct() %>% 
+  ggplot(aes(x = r12, fill = dominant_ADT_class)) + 
+  geom_density(alpha = 0.5) + 
+  theme_bw()
+  
+
+# Clean up
+df_dominant_ADT <- log_ratios %>% 
+  select(Cell, dominant_ADT_class, dominant_ADT_ID, dominant_ADT_full_ID) %>% 
+  distinct() %>% 
+  # mutate(row_number = row_number()) %>% 
+  column_to_rownames("Cell")
+
+
+# Look at distribution 
+df_dominant_ADT$dominant_ADT_class %>% table()
+df_dominant_ADT$dominant_ADT_ID %>% table()
+
+# Pattern in doublets to check if zero-points needs adjustment 
+df_dominant_ADT$dominant_ADT_full_ID[str_detect(df_dominant_ADT$dominant_ADT_full_ID , "-Fol")] %>% table() %>% sort()
+
+# Compare
+table(seurat_obj$manual_ADT_class_cut_close_to_signal)
+table(df_dominant_ADT$dominant_ADT_class) 
+# table(seurat_obj$manual_ADT_ID_cut_close_to_signal, df_dominant_ADT$dominant_ADT_ID) 
+
+# Add to seurat object
+seurat_obj <- AddMetaData(seurat_obj, metadata = df_dominant_ADT)
+
 ############################### Compare to tools ###############################
 
 seurat_obj$ADT_ID %>% table()
-seurat_obj$MULTI_ID_0.7 %>% table()
+# seurat_obj$MULTI_ID_0.7 %>% table() # Too many negatives
 seurat_obj$MULTI_ID_autoThresh %>% table()
+seurat_obj$dominant_ADT_ID %>% table()
 
 df_compare_demux <- list(
   # DIY = cell_class %>% table(),
-  manual_ADT_ID_cut_close_to_noise = seurat_obj$manual_ADT_ID_cut_close_to_noise %>% table(),
-  manual_ADT_ID_cut_in_middle = seurat_obj$manual_ADT_ID_cut_in_middle %>% table(),
-  manual_ADT_ID_cut_close_to_signal = seurat_obj$manual_ADT_ID_cut_close_to_signal %>% table(),
+  # manual_ADT_ID_cut_close_to_noise = seurat_obj$manual_ADT_ID_cut_close_to_noise %>% table(),
+  # manual_ADT_ID_cut_in_middle = seurat_obj$manual_ADT_ID_cut_in_middle %>% table(),
+  manual_ADT_ID_cut_close_to_signal = seurat_obj$manual_ADT_ID_cut_close_to_signal %>% table(), # Best --> fewest doublets 
   HTO_0.999 = seurat_obj$ADT_ID %>% table(),
-  MULTI_ID_0.7 = seurat_obj$MULTI_ID_0.7 %>% table(), 
-  MULTI_ID_autoThresh = seurat_obj$MULTI_ID_autoThresh %>% table()
+  # MULTI_ID_0.7 = seurat_obj$MULTI_ID_0.7 %>% table(), 
+  MULTI_ID_autoThresh = seurat_obj$MULTI_ID_autoThresh %>% table(),
+  dominant_ADT_ID = seurat_obj$dominant_ADT_ID %>% table()
 ) %>%
   bind_rows(.id = "Method") %>%         # Method column
   as.data.frame()
@@ -356,12 +578,10 @@ df_compare_demux <- df_compare_demux %>% mutate(N_drop_outs = Doublet + Negative
 text_box = glue(
   "
       N drop out
-      Manual cut close to noise: {df_compare_demux[df_compare_demux$Method == 'manual_ADT_ID_cut_close_to_noise', 'N_drop_outs']}
-      Manual cut close to middle: {df_compare_demux[df_compare_demux$Method == 'manual_ADT_ID_cut_in_middle', 'N_drop_outs']}
       Manual cut close to signal: {df_compare_demux[df_compare_demux$Method == 'manual_ADT_ID_cut_close_to_signal', 'N_drop_outs']}
       HTO_0.999: {df_compare_demux[df_compare_demux$Method == 'HTO_0.999', 'N_drop_outs']}
-      MULTI_ID_0.7: {df_compare_demux[df_compare_demux$Method == 'MULTI_ID_0.7', 'N_drop_outs']}
       MULTI_ID_autoThresh: {df_compare_demux[df_compare_demux$Method == 'MULTI_ID_autoThresh', 'N_drop_outs']}
+      dominant_ADT_ID: {df_compare_demux[df_compare_demux$Method == 'dominant_ADT_ID', 'N_drop_outs']}
       "
 )
 
@@ -372,72 +592,168 @@ df_compare_demux_long %>%
   geom_col(position = "dodge") + 
   theme_bw() + 
   # scale_fill_manual(values = c("hotpink", "blue4", "green4", "red4"))
-  scale_fill_manual(values = c(wes_palette("Moonrise3", n = 5), wes_palette("Moonrise2", n = 2)[2])) +
+  scale_fill_manual(values = c(wes_palette("Moonrise3", n = 4))) +
   annotate("text", x=2500, y=10, label= text_box)
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_barplot_manual_VS_tool.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_barplot_manual_VS_tool.png"), width = 10, height = 7)
 
 # Bar plot only manual 
 text_box = glue(
   "
       N drop out
-      Manual cut close to noise: {df_compare_demux[df_compare_demux$Method == 'manual_ADT_ID_cut_close_to_noise', 'N_drop_outs']}
-      Manual cut close to middle: {df_compare_demux[df_compare_demux$Method == 'manual_ADT_ID_cut_in_middle', 'N_drop_outs']}
       Manual cut close to signal: {df_compare_demux[df_compare_demux$Method == 'manual_ADT_ID_cut_close_to_signal', 'N_drop_outs']}
+      dominant_ADT_ID: {df_compare_demux[df_compare_demux$Method == 'dominant_ADT_ID', 'N_drop_outs']}
   "
 )
 
 df_compare_demux_long %>% 
-  filter(startsWith(Method, "manual")) %>% 
+  filter(Method %in% c("manual_ADT_ID_cut_close_to_signal", "dominant_ADT_ID")) %>% 
   ggplot(aes(y = class, x = count, fill = Method)) + 
   geom_col(position = "dodge") + 
   theme_bw() + 
   # scale_fill_manual(values = c("hotpink", "blue4", "green4", "red4"))
-  scale_fill_manual(values = wes_palette("Moonrise3", n = 5)[2:4]) +
+  scale_fill_manual(values = wes_palette("Moonrise3", n = 3)[c(1, 3)]) +
   annotate("text", x=1500, y=10, label= text_box)
 
-ggsave(glue("10_ADT_demultiplex/plot/ADT_barplot_manual.png"), width = 10, height = 7)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/ADT_barplot_manual.png"), width = 10, height = 7)
 
-####################### Doublets: ADT VS DoubletFinder ######################### 
+# ################################################################################ 
+# ####################### Doublets: ADT VS DoubletFinder ######################### 
+# ################################################################################
+# 
+# table(seurat_obj$scDblFinder.class) 
+# 
+# table(seurat_obj$manual_ADT_class_cut_close_to_signal) 
+# table(seurat_obj$scDblFinder.class, seurat_obj$manual_ADT_class_cut_close_to_signal) 
+# 
+# table(seurat_obj$dominant_ADT_class) 
+# table(seurat_obj$dominant_ADT_class, seurat_obj$scDblFinder.class) 
+# 
+# df <- as.data.frame(
+#   table(
+#     scDblFinder = seurat_obj$scDblFinder.class,
+#     ADT_class   = seurat_obj$manual_ADT_class_cut_close_to_signal
+#   )
+# )
+# 
+# ggplot(df, aes(x = ADT_class, y = scDblFinder, fill = Freq)) +
+#   geom_tile(color = "white") +
+#   geom_text(aes(label = Freq), size = 5) +
+#   scale_fill_gradient(low = "grey90", high = "steelblue") +
+#   labs(
+#     x = "Manual ADT classification",
+#     y = "scDblFinder classification",
+#     fill = "Cell count"
+#   ) +
+#   theme_minimal() + 
+#   theme(legend.position = "none")
+# 
+# ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/ADT_vs_scDblFinder_doublets.png"), width = 7, height = 4)
+# 
+# # New column to identify ADT singlets and scDblFinder doublets
+# # Potential communicating cells (!!!)
+# seurat_obj[[]] <- seurat_obj[[]] %>% 
+#   mutate(
+#     ADT_singlet_scDblFinder_doublets = ifelse(scDblFinder.class == "doublet" & manual_ADT_class_cut_close_to_signal == "Singlet", TRUE, FALSE)
+#   )
+# 
+# seurat_obj$ADT_singlet_scDblFinder_doublets %>% table()
+# 
+# DimPlot(seurat_obj, group.by = "ADT_singlet_scDblFinder_doublets", order = TRUE) + 
+#   labs(subtitle = sample_name, caption = "Potential communicating cells") 
+# ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_ADT_singlet_scDblFinder_doublets.png"), width = 8, height = 8)
 
-table(seurat_obj$scDblFinder.class, seurat_obj$manual_ADT_class_cut_close_to_signal)
-
-
+################################################################################
 ################################### DimPlot #################################### 
+################################################################################
 
-seurat_obj$ADT_classification.global
-DimPlot(seurat_obj, group.by = "manual_ADT_class_cut_close_to_signal")
-DimPlot(seurat_obj, group.by = "ADT_classification.global")
-DimPlot(seurat_obj, group.by = "seurat_clusters")
-seurat_obj$seurat_clusters
+seurat_obj$manual_ADT_ID_cut_close_to_noise
 
-######################## Investigate individual cells ########################## 
+# Negatives seem to cluster together
+DimPlot(seurat_obj, group.by = "manual_ADT_class_cut_close_to_signal") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_manual_ADT_class.png"), width = 8, height = 8)
 
-# cell_id <- colnames(seurat_obj)[6] # Singlet 
-# cell_id <- colnames(seurat_obj)[3] # HTO Doublet, MultiSeq singlet
-# cell_id <- colnames(seurat_obj)[10] # HTO Singlet, MultiSeq negative
-cell_id <- colnames(seurat_obj)[32] # Double doublet (Fol 18)
-# cell_id <- colnames(seurat_obj)[1001] # Negative
-# cell_id <- colnames(seurat_obj)[2005] # Fol 18 
+DimPlot(seurat_obj, group.by = "dominant_ADT_class") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_dominant_ADT_class.png"), width = 8, height = 8)
 
-cell_ADT <- seurat_obj@meta.data[cell_id, ]$ADT_classification
-cell_MULTI_0.7 <- seurat_obj@meta.data[cell_id, ]$MULTI_classification_0.7
-cell_MULTI_autoThresh <- seurat_obj@meta.data[cell_id, ]$MULTI_classification_autoThresh
-cell_manual_ADT <- seurat_obj@meta.data[cell_id, ]$manual_ADT_ID
+FeatureScatter(seurat_obj, "nCount_RNA", "nFeature_RNA") + theme_classic()
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/FeatureScatter.png"), width = 8, height = 6)
+
+seurat_obj@meta.data$percent.ribo %>% hist()
+
+DimPlot(seurat_obj, group.by = "scDblFinder.class") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_scDblFinder.class.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "nFeature_RNA") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_nFeature_RNA.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "nCount_RNA") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_nCount_RNA.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "percent.mt") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_percent.mt.png"), width = 8, height = 8)
+
+FeaturePlot(seurat_obj, features = "percent.ribo") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_percent.ribo.png"), width = 8, height = 8)
+
+# seurat_obj$percent.ribo %>% range()
+
+FeaturePlot(seurat_obj, features = "sce_contamination") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_sce_contamination.png"), width = 8, height = 8)
+
+DimPlot(seurat_obj, group.by = "Phase") + 
+  labs(subtitle = sample_name) 
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/UMAP_Phase.png"), width = 8, height = 8)
+
+FeaturePlot(
+  seurat_obj,
+  features = c("MALAT1", "FOS"),
+  reduction = "umap"
+)
+
+VlnPlot(seurat_obj, features = c("nCount_RNA", "nFeature_RNA", "percent.mt", "percent.ribo"),
+        group.by = "manual_ADT_class_cut_close_to_noise", ncol = 2)
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/ADT_VlnPlot.png"), width = 12, height = 10)
+
+# DimPlot(seurat_obj, group.by = "ADT_classification.global")
+# DimPlot(seurat_obj, group.by = "seurat_clusters")
+# seurat_obj$seurat_clusters
+
+######################## Investigate individual cells ##########################
+# 
+# # cell_id <- colnames(seurat_obj)[6] # Singlet 
+# # cell_id <- colnames(seurat_obj)[3] # HTO Doublet, MultiSeq singlet
+# # cell_id <- colnames(seurat_obj)[10] # HTO Singlet, MultiSeq negative
+# cell_id <- colnames(seurat_obj)[32] # Double doublet (Fol 18)
+# # cell_id <- colnames(seurat_obj)[1001] # Negative
+# # cell_id <- colnames(seurat_obj)[2005] # Fol 18 
+# 
+# cell_ADT <- seurat_obj@meta.data[cell_id, ]$ADT_classification
+# cell_MULTI_0.7 <- seurat_obj@meta.data[cell_id, ]$MULTI_classification_0.7
+# cell_MULTI_autoThresh <- seurat_obj@meta.data[cell_id, ]$MULTI_classification_autoThresh
+# cell_manual_ADT <- seurat_obj@meta.data[cell_id, ]$manual_ADT_ID
 # adt_summary <- adt_summary %>% rownames_to_column("Fol")
-
-one_cell <- seurat_obj[["ADT"]]$data[,cell_id] %>% as.data.frame() %>% rownames_to_column("Fol")
-colnames(one_cell) <- c("Fol", cell_id)
-
-one_cell <- left_join(one_cell, adt_summary, by = "Fol")
-
-one_cell %>% 
-  ggplot(aes(x = Fol, y = !!sym(cell_id))) + 
-  geom_col() + 
-  geom_point(aes(x = Fol, y = max_CLR), color = "red2", alpha = 0.5) + 
-  geom_point(aes(x = Fol, y = q99_CLR), color = "blue2", alpha = 0.5) + 
-  theme_bw() + 
-  labs(caption = glue("DIY: {cell_manual_ADT}\nHTODemux: {cell_ADT}\nMULTIseqDemux 0.7: {cell_MULTI_0.7}\nMULTIseqDemux autoThresh: {cell_MULTI_autoThresh}"))
+# 
+# one_cell <- seurat_obj[["ADT"]]$data[,cell_id] %>% as.data.frame() %>% rownames_to_column("Fol")
+# colnames(one_cell) <- c("Fol", cell_id)
+# 
+# one_cell <- left_join(one_cell, adt_summary, by = "Fol")
+# 
+# one_cell %>% 
+#   ggplot(aes(x = Fol, y = !!sym(cell_id))) + 
+#   geom_col() + 
+#   geom_point(aes(x = Fol, y = max_CLR), color = "red2", alpha = 0.5) + 
+#   geom_point(aes(x = Fol, y = q99_CLR), color = "blue2", alpha = 0.5) + 
+#   theme_bw() + 
+#   labs(caption = glue("DIY: {cell_manual_ADT}\nHTODemux: {cell_ADT}\nMULTIseqDemux 0.7: {cell_MULTI_0.7}\nMULTIseqDemux autoThresh: {cell_MULTI_autoThresh}"))
 
 ###################### CONSENSUS OF HTODemux AND HTODemux ######################
 # 
@@ -591,8 +907,16 @@ one_cell %>%
 #   ggsave(glue("10_ADT_demultiplex/plot/RidgePlot_{ident}.png"), width = 16, height = 20)
 #   
 # }
-# 
-# ################################### DimPlot ####################################
+
+Idents(seurat_obj) <- "manual_ADT_ID_cut_close_to_signal"
+RidgePlot(seurat_obj, assay = "ADT", features = rownames(seurat_obj[["ADT"]]))
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/RidgePlot_manual.png"), width = 16, height = 20)
+
+Idents(seurat_obj) <- "dominant_ADT_ID"
+RidgePlot(seurat_obj, assay = "ADT", features = rownames(seurat_obj[["ADT"]]))
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/demultiplexing/RidgePlot_dominant_ADT_ID.png"), width = 16, height = 20)
+
+################################### DimPlot ####################################
 # 
 # DimPlot(seurat_obj, group.by = "ADT_classification.global")
 # DimPlot(seurat_obj, group.by = "MULTI_classification.global")
@@ -606,8 +930,31 @@ one_cell %>%
 
 ################################### tSNE ####################################
 
-Idents(seurat_obj) <- "manual_ADT_classification"
-# seurat_obj$manual_ADT
+# Idents(seurat_obj) <- "manual_ADT_class_cut_close_to_signal"
+Idents(seurat_obj) <- "dominant_ADT_class"
+
+# First, we will remove negative cells from the object
+# seurat_obj.subset <- subset(seurat_obj, idents = "Negative", invert = TRUE)
+seurat_obj.subset <- seurat_obj
+
+# Calculate a tSNE embedding of the HTO data
+DefaultAssay(seurat_obj.subset) <- "ADT"
+seurat_obj.subset <- ScaleData(seurat_obj.subset, features = rownames(seurat_obj.subset), verbose = FALSE)
+seurat_obj.subset <- RunPCA(seurat_obj.subset, features = rownames(seurat_obj.subset), approx = FALSE)
+seurat_obj.subset <- RunUMAP(seurat_obj.subset, dims = 1:8, perplexity = 100)
+seurat_obj.subset <- RunTSNE(seurat_obj.subset, dims = 1:8, perplexity = 100)
+
+DimPlot(seurat_obj.subset, reduction = "umap", group.by = "dominant_ADT_ID", label = TRUE) + NoLegend() + labs(title = "Manual ADT classification")
+DimPlot(seurat_obj.subset, reduction = "umap")
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/DimPlot_Doublet_Singlet_dominant_ADT_umap.png"), width = 9, height = 7)
+
+DimPlot(seurat_obj.subset, reduction = "tsne", group.by = "dominant_ADT_ID", label = TRUE) + NoLegend() + labs(title = "Manual ADT classification")
+DimPlot(seurat_obj.subset, reduction = "tsne")
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/DimPlot_Doublet_Singlet_dominant_ADT_tsne.png"), width = 9, height = 7)
+
+
+################
+Idents(seurat_obj) <- "manual_ADT_class_cut_close_to_signal"
 
 # First, we will remove negative cells from the object
 seurat_obj.subset <- subset(seurat_obj, idents = "Negative", invert = TRUE)
@@ -619,11 +966,14 @@ seurat_obj.subset <- RunPCA(seurat_obj.subset, features = rownames(seurat_obj.su
 seurat_obj.subset <- RunUMAP(seurat_obj.subset, dims = 1:8, perplexity = 100)
 seurat_obj.subset <- RunTSNE(seurat_obj.subset, dims = 1:8, perplexity = 100)
 
-DimPlot(seurat_obj.subset, reduction = "umap") + labs(title = "Manual ADT classification")
-ggsave("10_ADT_demultiplex/plot/DimPlot_Doublet_Singlet_umap.png", width = 9, height = 7)
+DimPlot(seurat_obj.subset, reduction = "umap", group.by = "manual_ADT_ID_cut_close_to_signal", label = TRUE) + NoLegend() + labs(title = "Manual ADT classification")
+DimPlot(seurat_obj.subset, reduction = "umap")
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/DimPlot_Doublet_Singlet_manual_umap.png"), width = 9, height = 7)
 
-DimPlot(seurat_obj.subset, reduction = "tsne") + labs(title = "Manual ADT classification")
-ggsave("10_ADT_demultiplex/plot/DimPlot_Doublet_Singlet_tsne.png", width = 9, height = 7)
+DimPlot(seurat_obj.subset, reduction = "tsne", group.by = "dominant_ADT_ID", label = TRUE) + NoLegend() + labs(title = "Manual ADT classification")
+DimPlot(seurat_obj.subset, reduction = "tsne")
+ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/DimPlot_Doublet_Singlet_manual_tsne.png"), width = 9, height = 7)
+
 
 ####################### Export ADT demultiplexed objects ####################### 
 
