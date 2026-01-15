@@ -19,6 +19,8 @@ library(decontX)
 library(readxl)
 library(purrr)
 library(patchwork)
+library(png)
+library(grid)
 
 # Load data
 seurat_obj_list <- readRDS("06_seurat_load/out/seurat_obj_list.rds") # cellranger filtered
@@ -83,7 +85,7 @@ for (sample_name in sample_names){
   seurat_obj <- seurat_obj_list[[sample_name]]
   
   # Create directory for plots of specific sample
-  out_dir <- glue("07_seurat_QC/plot/clusters/{sample_name}")
+  out_dir <- glue("07_seurat_QC/plot/01_clusters/{sample_name}")
   dir.create(out_dir, showWarnings = FALSE)
   
   # Seurat workflow so I can UMAP
@@ -317,21 +319,21 @@ for (sample_name in sample_names){
   table("old" = seurat_obj$seurat_clusters, "new" = seurat_obj$merged_clusters)
 
   # Plot
-  # img <- readPNG(glue("07_seurat_QC/plot/02_gina_merged_clusters/{sample_name}_clusters.png"))
-  # p_gina_draw <- ggplot() +
-  #   annotation_custom(
-  #     rasterGrob(img)
-  #   ) +
-  #   theme_void()
+  img <- readPNG(glue("07_seurat_QC/plot/02_gina_merged_clusters/{sample_name}_clusters.png"))
+  p_gina_draw <- ggplot() +
+    annotation_custom(
+      rasterGrob(img)
+    ) +
+    theme_void()
 
   p_new <- DimPlot(seurat_obj, reduction = 'umap', group.by = "merged_clusters", label = TRUE) + NoLegend() +
     labs(title = "Seurat clusters merged",
          subtitle = sample_name,
          caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
 
-  # p_final <- p_gina_draw + p_new
+  p_final <- p_gina_draw + p_new
 
-  ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_new, width = 7, height = 8)
+  ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_final, width = 15, height = 8)
 
 }
 
