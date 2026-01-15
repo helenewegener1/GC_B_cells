@@ -11,6 +11,8 @@ compute_QC_metrics <- function(seurat_obj){
 
 plot_qc <- function(seurat_obj, sample_name, version = "raw", filtering = ""){
   
+  out_dir <- glue("08_seurat_QC_filtering/plot/{sample_name}")
+  
   n_cells <- ncol(seurat_obj)
   
   p_ribo <- VlnPlot(seurat_obj, features = "percent.ribo", layer = "counts") + theme(axis.text.x = element_text(angle = 0, hjust = 0.5), legend.position = 'none')
@@ -28,7 +30,7 @@ plot_qc <- function(seurat_obj, sample_name, version = "raw", filtering = ""){
   }
   
   ggsave(plot = p_final,
-         filename = glue("08_seurat_QC_filtering/plot/{sample_name}_{version}_QC_plot.png"), 
+         filename = glue("{out_dir}/{sample_name}_{version}_QC_plot.png"), 
          width = 9, 
          height = 8)
   
@@ -41,6 +43,10 @@ pre_filter_pipeline <- function(seurat_obj){
   # Remove doublets 
   # seurat_obj <- subset(seurat_obj, subset = scDblFinder.class == "singlet")
   
+  # Create directory for plots of specific sample
+  out_dir <- glue("08_seurat_QC_filtering/plot/{sample_name}")
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  
   # Compute QC metrics
   seurat_obj <- compute_QC_metrics(seurat_obj)
   
@@ -51,7 +57,7 @@ pre_filter_pipeline <- function(seurat_obj){
           filtering = "")
   
   FeatureScatter(seurat_obj, feature1 = "nFeature_RNA", feature2 = "percent.mt") 
-  ggsave(glue("08_seurat_QC_filtering/plot/{sample_name}_nFeature_vs_MT_plot.png"), width = 10, height = 8)
+  ggsave(glue("{out_dir}/{sample_name}_nFeature_vs_MT_plot.png"), width = 10, height = 8)
   
   return(seurat_obj)
   
