@@ -603,7 +603,7 @@ saveRDS(seurat_obj_clustered_list, glue("07_seurat_QC/out/seurat_obj_clustered_l
 # 
 # #################### Export list of Seurat objects with QC metrices in metadata #################### 
 # 
-# saveRDS(seurat_obj_QC, "07_seurat_QC/out/seurat_obj_QC_{version}.rds")
+# saveRDS(seurat_obj_QC, glue("07_seurat_QC/out/seurat_obj_QC_{version}.rds"))
 # 
 # # seurat_obj_QC$`HH117-SILP-INF-PC`$merged_clusters
 # # seurat_obj$merged_clusters
