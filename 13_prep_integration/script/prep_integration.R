@@ -90,7 +90,7 @@ for (sample_name in sample_names){
   seurat_obj@meta.data$inflammed <- inflammed
   seurat_obj@meta.data$tissue <- tissue
   # seurat_obj@meta.data$group <- group
-  seurat_obj@meta.data$group <- sub("-Pool[0-9]+$", "", seurat_obj$sample)
+  # seurat_obj@meta.data$group <- sub("-Pool[0-9]+$", "", seurat_obj$sample)
 
   seurat_obj_prepped_list[[sample_name]] <- seurat_obj
   

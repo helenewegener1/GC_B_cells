@@ -7,10 +7,10 @@ library(patchwork)
 
 source("08_seurat_QC_filtering/script/functions.R")
 
-version <- "v8"
+cellRversion <- "v8"
 
 # Load data
-seurat_obj_list <- readRDS(glue("07_seurat_QC/out/seurat_obj_QC_{version}.rds"))
+seurat_obj_list <- readRDS(glue("07_seurat_QC/out/seurat_obj_QC_{cellRversion}.rds"))
 
 # Initialize filtered list
 seurat_obj_QC_filtered_list <- rep(0, length(seurat_obj_list)) %>% as.list()
@@ -352,7 +352,7 @@ rm(seurat_obj_list)
 ########################################## Export list of filtered Seurat objects ##########################################
 
 names(seurat_obj_QC_filtered_list)
-saveRDS(seurat_obj_QC_filtered_list, glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_list_{version}.rds"))
+saveRDS(seurat_obj_QC_filtered_list, glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_list_{cellRversion}.rds"))
 
 samples_names <- names(seurat_obj_QC_filtered_list)
 
@@ -390,8 +390,8 @@ for (sample_name in samples_names){
   
 }
 
-saveRDS(seurat_obj_QC_filtered_singlets_list, glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list_{version}.rds"))
-saveRDS(seurat_obj_QC_filtered_doublets_list, glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_doublets_list_{version}.rds"))
+saveRDS(seurat_obj_QC_filtered_singlets_list, glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list_{cellRversion}.rds"))
+saveRDS(seurat_obj_QC_filtered_doublets_list, glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_doublets_list_{cellRversion}.rds"))
 
 # seurat_obj_QC_filtered_doublets_list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH`$scDblFinder.class %>% length()
 
