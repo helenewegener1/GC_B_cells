@@ -11,7 +11,7 @@ compute_QC_metrics <- function(seurat_obj){
 
 plot_qc <- function(seurat_obj, sample_name, version = "raw", filtering = ""){
   
-  out_dir <- glue("08_seurat_QC_filtering/plot_{version}/{sample_name}")
+  out_dir <- glue("08_seurat_QC_filtering/plot_{cellRversion}/{sample_name}")
   
   n_cells <- ncol(seurat_obj)
   
@@ -22,7 +22,7 @@ plot_qc <- function(seurat_obj, sample_name, version = "raw", filtering = ""){
   
   p_final <- (p_ribo | p_mt) / (p_feature | p_count) + 
     plot_annotation(title = glue("{tools::toTitleCase(version)} QC plots of sample {sample_name}"),
-                    subtitle = version, 
+                    subtitle = cellRversion, 
                     caption = glue("N cells: {n_cells}"))
   
   if (filtering != ""){
@@ -45,7 +45,7 @@ pre_filter_pipeline <- function(seurat_obj){
   # seurat_obj <- subset(seurat_obj, subset = scDblFinder.class == "singlet")
   
   # Create directory for plots of specific sample
-  out_dir <- glue("08_seurat_QC_filtering/plot_{version}/{sample_name}")
+  out_dir <- glue("08_seurat_QC_filtering/plot_{cellRversion}/{sample_name}")
   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   
   # Compute QC metrics

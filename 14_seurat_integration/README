@@ -1,0 +1,42 @@
+Samples:
+
+
+
+# Pool1 contains the same follicles 
+# Pool2 contain other follicles 
+
+# split patient 
+# Cofactor in DEA
+
+HH119-SI-PP-CD19-Pool1
+
+HH119-SI-PP-CD19-Pool2
+
+HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1
+
+HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2
+
+
+
+HH119-SILP-PC
+
+HH119-COLP-PC
+
+HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH
+
+HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH
+
+
+
+
+
+HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH
+
+HH117-SI-MILF-INF-HLADR-AND-CD19
+
+HH117-SI-MILF-nonINF-HLADR-AND-CD19
+
+H117-SILP-INF-PC
+
+HH117-SILP-nonINF-PC
+
