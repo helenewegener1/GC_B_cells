@@ -157,8 +157,6 @@ for (sample_name in sample_names){
 }
 
 # saveRDS(seurat_obj_clustered_list, glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
-seurat_obj_clustered_list <- readRDS(glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
-
 
 # Get number of clusters
 for (sample_name in sample_names){
@@ -183,6 +181,7 @@ for (sample_name in sample_names){
 
 merged_clusters <- merged_clusters_all[[version]]
 
+# sample_names <- names(seurat_obj_clustered_list)
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
@@ -230,13 +229,14 @@ for (sample_name in sample_names){
          subtitle = sample_name,
          caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
   
-  p_final <- p_gina_draw + p_new
+  p_final <- p_gina_draw + p_new + plot_annotation(title = version)
   
-  ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_final, width = 7, height = 12)
+  ggsave(glue("{out_dir}/{sample_name}_merged_clusters.png"), p_final, width = 12, height = 7)
   
 }
 
-saveRDS(seurat_obj_clustered_list, glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
+# saveRDS(seurat_obj_clustered_list, glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
+seurat_obj_clustered_list <- readRDS(glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
 
 
 ################################################################################
@@ -355,7 +355,7 @@ g2m.genes <- Seurat::cc.genes.updated.2019$g2m.genes # MKI67 in here
 
 ################################ scDblFinder on cellranger filtered ################################
 
-seurat_obj_clustered_list <- readRDS(glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
+# seurat_obj_clustered_list <- readRDS(glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
 n_dims <- 10
 
 # Initialize final QC list

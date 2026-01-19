@@ -108,7 +108,6 @@ merged_clusters_all <- list(
   ),
   
   "v8" = list(
-    list(
       
       "HH117-SILP-INF-PC" = list(
         # new_cluster = c(old clusters)
@@ -216,7 +215,6 @@ merged_clusters_all <- list(
       )
       
     )
-  )
   
   
   
