@@ -2,6 +2,7 @@
 library(harmony)
 library(SeuratObject)
 library(Seurat)
+library(SeuratData)
 library(glmGamPoi)
 library(dplyr)
 library(stringr)
@@ -13,52 +14,66 @@ library(SeuratWrappers)
 library(Azimuth)
 library(clustree)
 
-# Load data
-seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
+library(Seurat)
+
+library(SeuratWrappers)
+library(Azimuth)
+library(ggplot2)
+library(patchwork)
+options(future.globals.maxSize = 1e9)
 
 integration_var <- "patient"
 
-############################# RNA integration prep #############################
-
-# Merge objects in list 
-seurat_merged <- merge(seurat_obj_list[[1]], y = seurat_obj_list[-1])
-
-# Layers are joined based on sample 
-Layers(seurat_merged) 
-
-# Join layers so we can split them on the wanted variable
-seurat_merged <- JoinLayers(seurat_merged) 
-
-# Split object on patient variable
-seurat_merged[["RNA"]] <- split(seurat_merged[["RNA"]], f = seurat_merged[[integration_var]] %>% pull())
-
-Layers(seurat_merged[["RNA"]]) # Check that object is split
-DefaultAssay(seurat_merged) <- "RNA"
-
-############################### Seurat workflow ################################ 
-
-n_dim <- 20 
-res <- 0.2
-
-seurat_merged <- NormalizeData(seurat_merged, verbose = FALSE)
-seurat_merged <- FindVariableFeatures(seurat_merged, verbose = FALSE)
-seurat_merged <- ScaleData(seurat_merged, verbose = FALSE)
-seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
-
-ElbowPlot(seurat_merged)
-seurat_merged <- FindNeighbors(seurat_merged, dims = 1:n_dim, verbose = FALSE)
-seurat_merged <- FindClusters(seurat_merged, resolution = res, verbose = FALSE, cluster.name = "unintegrated_clusters")
-seurat_merged <- RunUMAP(seurat_merged, reduction = "pca", dims = 1:n_dim, verbose = FALSE, reduction.name = "umap.unintegrated")
-
-DefaultAssay(seurat_merged)
-
-Reductions(seurat_merged)
-
-# Export merged dataset
+# # Load data
+# seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
+# 
+# ############################# RNA integration prep #############################
+# 
+# # Merge objects in list
+# seurat_merged <- merge(seurat_obj_list[[1]], y = seurat_obj_list[-1])
+# 
+# # Layers are joined based on sample
+# Layers(seurat_merged)
+# 
+# # Join layers so we can split them on the wanted variable
+# seurat_merged <- JoinLayers(seurat_merged)
+# 
+# # Split object on patient variable
+# seurat_merged[["RNA"]] <- split(seurat_merged[["RNA"]], f = seurat_merged[[integration_var]] %>% pull())
+# 
+# Layers(seurat_merged[["RNA"]]) # Check that object is split
+# DefaultAssay(seurat_merged) <- "RNA"
+# 
+# ############################### Seurat workflow ################################
+# 
+# res <- 0.2
+# 
+# seurat_merged <- NormalizeData(seurat_merged, verbose = FALSE)
+# seurat_merged <- FindVariableFeatures(seurat_merged, verbose = FALSE)
+# seurat_merged <- ScaleData(seurat_merged, verbose = FALSE)
+# seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
+# 
+# 
+# # ElbowPlot(seurat_merged)
+# ElbowPlot(seurat_merged, ndims = 50)
+# # DimHeatmap(seurat_merged, dims = 1:30, cells = 500)
+# 
+# n_dim <- 10
+# 
+# seurat_merged <- FindNeighbors(seurat_merged, dims = 1:n_dim, verbose = FALSE)
+# seurat_merged <- FindClusters(seurat_merged, resolution = res, verbose = FALSE, cluster.name = "unintegrated_clusters")
+# seurat_merged <- RunUMAP(seurat_merged, reduction = "pca", dims = 1:n_dim, verbose = FALSE, reduction.name = "umap.unintegrated")
+# 
+# DefaultAssay(seurat_merged)
+# 
+# Reductions(seurat_merged)
+# 
+# # Export merged dataset
 # saveRDS(seurat_merged, "14_seurat_integration/out/seurat_obj_merged_list.rds")
 seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
 
-# Visualize with UMAP stratified by dataset - pre integration
+# Pre integration UMAPs
+## Cell type and sample
 DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = "sample", label = TRUE, ncol = 3, label.size = 2) +
   NoLegend() + 
   labs(title = "UMAP - RNA - pre integration") +
@@ -69,17 +84,17 @@ DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_bro
 
 ggsave("14_seurat_integration/plot/UMAP_PRE_integration_split_sample.png",width = 10, height = 10)
 
+## Cell type and integration var (patient)
 DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = integration_var, label = TRUE, ncol = 3, label.size = 2) +
   NoLegend() + 
   labs(title = "UMAP - RNA - pre integration") 
 
-ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_split_{integration_var}.png"), width = 12, height = 6)
+ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{integration_var}_split.png"), width = 12, height = 7)
 
-
-
+## More UMAPs... 
 for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed")){
   
-  var <- "patient"
+  # var <- "patient"
   
   DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = var) +
     labs(title = "UMAP - RNA - pre integration",
@@ -100,7 +115,6 @@ DefaultAssay(seurat_integrated) <- "RNA"
 
 Layers(seurat_integrated[["RNA"]])
 
-# options(future.globals.maxSize = 8000 * 1024^2)  # 8 GB
 # seurat_integrated <- IntegrateLayers(
 #   object = seurat_integrated,
 #   method = CCAIntegration,
@@ -119,7 +133,14 @@ seurat_integrated <- IntegrateLayers(
   verbose = FALSE
 )
 
-# options(future.globals.maxSize = 8000 * 1024^2)  # 8 GB
+seurat_integrated <- IntegrateLayers(
+  object = seurat_integrated, 
+  method = scVIIntegration,
+  new.reduction = "RNA_scvi",
+  conda_env = "~/miniconda3/envs/scvi-env", 
+  verbose = FALSE
+)
+
 # seurat_integrated <- IntegrateLayers(
 #   object = seurat_integrated,
 #   method = RPCAIntegration,
@@ -177,7 +198,8 @@ for (red in reductions){
   Idents(seurat_integrated) <- integration_var
   
   # Visualize with UMAP stratified by dataset - post integration 
-  vars <- c("sample", integration_var, "inflammed", "tissue", "celltype_broad")
+  vars <- c("sample", "patient", "inflammed", "tissue", "celltype_broad")
+  
   for (var in vars){
     DimPlot(seurat_integrated, reduction = umap_reduction.name, group.by = var) +
       labs(title = glue("UMAP - post {reduction}"), 
