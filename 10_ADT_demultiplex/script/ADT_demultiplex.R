@@ -370,12 +370,12 @@ zero_point_log10 <- c(
   "Fol-5" = 2.7, 
   "Fol-6" = 2.5,
   "Fol-7" = 2.5, 
-  "Fol-8" = 2.5, # check 
+  "Fol-8" = 2, # check 
   "Fol-9" = 2.3, 
   "Fol-10" = 2.2,
   "Fol-11" = 2.8,
-  "Fol-12" = 2.6, # maybe check this
-  "Fol-13" = 2.8, # maybe check this
+  "Fol-12" = 2.5, # maybe check this
+  "Fol-13" = 2.5, # maybe check this
   "Fol-14" = 2.4,
   "Fol-15" = 1.7,
   "Fol-16" = 2.5,
@@ -389,8 +389,20 @@ zero_point <- 10^zero_point_log10
 # Raw counts
 ADT_counts <- seurat_obj@assays$ADT$counts 
 
+# LogNormalized
+seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "LogNormalize")
+# ADT_LogNorm <- seurat_obj@assays$ADT$data
+
 # Data wrangle
 ADT_counts_t <- ADT_counts %>% as.matrix() %>% t()
+# ADT_LogNorm_t <- ADT_LogNorm %>% as.matrix() %>% t() %>% as.data.frame() %>% 
+#   rownames_to_column("Cell") %>%
+#   pivot_longer(
+#     cols = starts_with("Fol"),
+#     names_to = "Fol",
+#     values_to = "LogNorm"
+#   ) 
+
 
 # # LogNormalized counts for plotting 
 # seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "LogNormalize")
@@ -430,37 +442,82 @@ log_ratios <- ADT_counts_t_corrected %>%
     mutate(
       Fol = factor(Fol, levels = Fol),
       next_Count = lead(Count),
-      log2_ratio = log2(next_Count / Count),
+      # log2_ratio = log2(next_Count / Count),
+      diff = Count - next_Count,
       label_y = pmin(Count, next_Count) * 1.05,
       label_x = row_number() + 0.5,
       rank = row_number()
     ) %>%
   # Classification
   mutate(
-    r12 = log2_ratio[rank == 1],
-    r23 = log2_ratio[rank == 2],
     top_signal = Count[rank == 1],
+    diff_12 = diff[rank == 1],
+    diff_23 = diff[rank == 2],
+    
     dominant_ADT_class = case_when(
-      top_signal < 1                ~ "Negative",  # Below the manual "zero point"
-      r12 < -1 & abs(r12) > abs(r23) ~ "Singlet", # add this r12 < -1
-      abs(r23) > abs(r12)           ~ "Doublet",   # Strongest drop is after Rank 2
+      top_signal < 1            ~ "Negative",  # Below the manual "zero point"
+      
+      # abs(diff_12) > abs(diff_23) ~ "Singlet", # diff_12 needs to be at least twice the size of diff_23
+      # abs(diff_23) > abs(diff_12)           ~ "Doublet",   # Strongest drop is after Rank 2
+      
+      abs(diff_12) >= 2 * abs(diff_23) ~ "Singlet", 
+      2*abs(diff_23) > abs(diff_12)    ~ "Doublet",
+      
       TRUE                          ~ "Unclear"    # Ambiguous signal profiles
     ),
     dominant_ADT_ID = case_when(
-      top_signal < 1                ~ "Negative",  # Below the manual "zero point"
-      r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
-      abs(r23) > abs(r12)           ~ "Doublet",   # Strongest drop is after Rank 2
-      TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+      top_signal < 1            ~ "Negative",  # Below the manual "zero point"
+      
+      # abs(diff_12) > abs(diff_23) ~ Fol[1],
+      # abs(diff_23) > abs(diff_12) ~ "Doublet",  
+      
+      abs(diff_12) >= 2 * abs(diff_23) ~ Fol[1], 
+      2*abs(diff_23) > abs(diff_12)    ~ "Doublet",
+      
+      TRUE                          ~ "Unclear"   
     ),
     dominant_ADT_full_ID = case_when(
-      top_signal < 1                ~ "Negative",  # Below the manual "zero point"
-      r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
-      abs(r23) > abs(r12)           ~ paste0(  # Strongest drop is after Rank 2 --> doublet
+      top_signal < 1            ~ "Negative",  # Below the manual "zero point"
+      
+      # abs(diff_12) > abs(diff_23) ~ Fol[1],
+      # abs(diff_23) > abs(diff_12)       ~ paste0(  # Strongest drop is after Rank 2 --> doublet
+      #   sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
+      #   "-",
+      #   sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
+      # ),
+      
+      abs(diff_12) >= 2 * abs(diff_23) ~ Fol[1], 
+      2*abs(diff_23) > abs(diff_12)       ~ paste0(  # Strongest drop is after Rank 2 --> doublet
         sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
         "-",
         sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
-      ),  
+      ),
+
       TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+    )
+    # r12 = log2_ratio[rank == 1],
+    # r23 = log2_ratio[rank == 2],
+    # dominant_ADT_class = case_when(
+    #   top_signal < 1            ~ "Negative",  # Below the manual "zero point"
+    #   r12 < -1 & abs(r12) > abs(r23) ~ "Singlet", # add this r12 < -1
+    #   abs(r23) > abs(r12)           ~ "Doublet",   # Strongest drop is after Rank 2
+    #   TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+    # ),
+    # dominant_ADT_ID = case_when(
+    #   top_signal < 1            ~ "Negative",  # Below the manual "zero point"
+    #   r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
+    #   abs(r23) > abs(r12)           ~ "Doublet",   # Strongest drop is after Rank 2
+    #   TRUE                          ~ "Unclear"    # Ambiguous signal profiles
+    # ),
+    # dominant_ADT_full_ID = case_when(
+    #   top_signal < 1            ~ "Negative",  # Below the manual "zero point"
+    #   r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
+    #   abs(r23) > abs(r12)           ~ paste0(  # Strongest drop is after Rank 2 --> doublet
+    #     sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
+    #     "-",
+    #     sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
+    #   ),  
+    #   TRUE                          ~ "Unclear"    # Ambiguous signal profiles
       # r12 < -1 & abs(r12) > abs(r23) ~ Fol[1],
       # abs(r12) < 0.5                 ~ paste0(
       #   sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
@@ -468,40 +525,74 @@ log_ratios <- ADT_counts_t_corrected %>%
       #   sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
       # ),
       # TRUE                           ~ "Negative" # Unclear
-    )
-  ) %>% 
+    ) %>% 
     ungroup()
+
+
+# log_ratios_all <- log_ratios %>% left_join(ADT_LogNorm_t, by = c("Cell", "Fol")) 
+
+# rules_text <- 'top_signal < 1              --> "Negative"
+# abs(diff_12) > abs(diff_23) --> "Singlet"
+# abs(diff_23) > abs(diff_12) --> "Doublet"
+# else                        --> "Unclear"
+# '
+
+rules_text <- 'top_signal < 1              --> "Negative"
+abs(diff_12) >= 2 * abs(diff_23) --> "Singlet"
+2 * abs(diff_23) > abs(diff_12) --> "Doublet"
+else                        --> "Unclear"
+'
+
 
 # plot
 plot_log_ratios <- function(df, cell_nr){
+  
+  # cell_nr <- 18
   
   cell_name <- colnames(seurat_obj)[cell_nr]
   
   manual_label <- seurat_obj$manual_ADT_ID_cut_close_to_signal[cell_nr]
   
-  df %>% 
+  label_y_text <- df %>% 
+    filter(Cell == cell_name) %>% select(top_signal) %>% pull() %>% unique() / 2
+  
+  cell_name <- "AAACCCATCGTAACGC-1"
+  
+  p <- df %>% 
     filter(Cell == cell_name) %>% 
+    # ggplot(aes(x = reorder(Fol, -Count), y = Count)) + 
     ggplot(aes(x = reorder(Fol, -Count), y = Count)) + 
     geom_col() +
+    geom_label(aes(label = round(Count, 2)), size = 2) + 
     geom_label(
-      data = df%>% filter(Cell == cell_name) %>% filter(!is.na(log2_ratio)),
+      data = df %>% filter(Cell == cell_name) %>% filter(!is.na(Count)),
       aes(
         x = label_x,
         y = label_y,
-        label = round(log2_ratio, 2)
+        label = round(diff, 2)
       ),
       inherit.aes = FALSE,
       size = 3
     ) +
     labs(
-      title = "ADT counts corrected by thershold", 
+      title = glue("Cell {cell_nr}: ADT counts corrected by thershold"), 
+      y = "Normalized counts (counts divided by zero-point-count)",
       x = "Fol", 
-      subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value", 
+      subtitle = "Normalized count of 1: same value as zero-point\ndiff of 1: ",
+      # subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value", 
       caption = glue("Manual label: {manual_label}
                      Dominant ADT: {df$dominant_ADT_full_ID[df$Cell == cell_name][1]}
                      ")
       ) + 
-    theme_bw() 
+    annotate("text", x=13, y=label_y_text, label= rules_text) + 
+    theme_bw()
+  
+  ggsave(filename = glue("10_ADT_demultiplex/plot/HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH/dominant_marker/{cell_nr}.png"),
+         p, 
+         width = 13, 
+         height = 7)
+  
+   return(p)
   
 }
 
@@ -509,21 +600,24 @@ plot_log_ratios(df = log_ratios, cell_nr = 1)
 plot_log_ratios(df = log_ratios, cell_nr = 2)
 plot_log_ratios(df = log_ratios, cell_nr = 3)
 plot_log_ratios(df = log_ratios, cell_nr = 4)
-plot_log_ratios(df = log_ratios, cell_nr = 5) # funky 
+plot_log_ratios(df = log_ratios, cell_nr = 5)
 plot_log_ratios(df = log_ratios, cell_nr = 6)
 plot_log_ratios(df = log_ratios, cell_nr = 112)
 plot_log_ratios(df = log_ratios, cell_nr = 8) # Unclear bc r12 is not high enough 
 plot_log_ratios(df = log_ratios, cell_nr = 13) # Fol-5
 plot_log_ratios(df = log_ratios, cell_nr = 1224)
-plot_log_ratios(df = log_ratios, cell_nr = 18) # Doublet
+plot_log_ratios(df = log_ratios, cell_nr = 18) # Unclear
+plot_log_ratios(df = log_ratios, cell_nr = 9) # doublet
+
+log_ratios %>% filter(dominant_ADT_class == "Doublet") %>% select(Cell) %>% distinct()
 
 # Plot distribution of r12
-log_ratios %>% 
-  select(Cell, r12, dominant_ADT_class) %>%
-  distinct() %>% 
-  ggplot(aes(x = r12, fill = dominant_ADT_class)) + 
-  geom_density(alpha = 0.5) + 
-  theme_bw()
+# log_ratios %>% 
+#   select(Cell, r12, dominant_ADT_class) %>%
+#   distinct() %>% 
+#   ggplot(aes(x = r12, fill = dominant_ADT_class)) + 
+#   geom_density(alpha = 0.5) + 
+#   theme_bw()
   
 
 # Clean up
