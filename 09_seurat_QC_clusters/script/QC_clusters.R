@@ -279,7 +279,6 @@ rm(seurat_obj_singlets_clustered_list)
 
 # Singlets
 seurat_obj_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
-out_dir <- glue("09_seurat_QC_clusters/plot/singlets_DCs_removed/{sample_name}")
 dc_clusters <- list(
   "HH117-SILP-INF-PC"                                = NULL,
   "HH117-SILP-nonINF-PC"                             = NULL,
@@ -309,10 +308,9 @@ for (sample_name in sample_names){
   seurat_obj <- seurat_obj_list[[sample_name]]
   
   if (is.null(dc_clusters[[sample_name]])){
+    seurat_obj_nonDC_list[[sample_name]] <- seurat_obj_nonDC
     next
   }
-  
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   
   # Create a new logical column
   seurat_obj$DC_bool <- ifelse(seurat_obj$seurat_clusters %in% dc_clusters[[sample_name]], TRUE, FALSE)
@@ -326,6 +324,9 @@ for (sample_name in sample_names){
   #        subtitle = sample_name,
   #        caption = glue("N cells: {n_cells}")) 
   # ggsave(glue("{out_dir}/{sample_name}_clusters.png"), width = 8, height = 8)
+  
+  out_dir <- glue("09_seurat_QC_clusters/plot/singlets_DCs_removed/{sample_name}")
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   
   DimPlot(seurat_obj, group.by = "DC_bool", label = TRUE, cols = c("grey", "orange")) + 
     NoLegend() + 
@@ -342,8 +343,6 @@ for (sample_name in sample_names){
   # seurat_obj_DC_list[[sample_name]] <- seurat_obj_DC
   
   # Then, other
-  seurat_obj_nonDC_list <- list()
-  
   seurat_obj_nonDC <- subset(seurat_obj, subset = DC_bool == FALSE)
   seurat_obj_nonDC <- NormalizeData(seurat_obj_nonDC, verbose = FALSE)
   seurat_obj_nonDC <- FindVariableFeatures(seurat_obj_nonDC, verbose = FALSE)
@@ -373,9 +372,13 @@ for (sample_name in sample_names){
 
 }
 
+names(seurat_obj_nonDC_list)
+
 # Save lists of DC and nonDC seurat objects 
 # saveRDS(seurat_obj_DC_list, "09_seurat_QC_clusters/out/seurat_obj_DC_list.rds")
 saveRDS(seurat_obj_nonDC_list, "09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
+
+# seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 
 ################################## Annotation ##################################
 
