@@ -443,16 +443,40 @@ log_ratios <- ADT_counts_t_corrected %>%
       Fol = factor(Fol, levels = Fol),
       next_Count = lead(Count),
       # log2_ratio = log2(next_Count / Count),
+      ratio = next_Count / Count,
       diff = Count - next_Count,
       label_y = pmin(Count, next_Count) * 1.05,
       label_x = row_number() + 0.5,
-      rank = row_number()
+      rank = row_number(),
+      n_above_1 = sum(Count > 1)
     ) %>%
   # Classification
   mutate(
     top_signal = Count[rank == 1],
     diff_12 = diff[rank == 1],
     diff_23 = diff[rank == 2],
+    ratio_12 = ratio[rank == 1],
+    
+    # Helene Gina discussion 
+    HG_ADT_class = case_when(
+      top_signal < 1                  ~ "Negative",  # Below the manual "zero point" --> no signal 
+      n_above_1 == 1                  ~ "Singlet",
+      n_above_1 > 1 & ratio_12 < 0.5  ~ "Singlet",
+      TRUE                            ~ "Doublet"    # Ambiguous signal profiles
+    ), 
+    
+    HG_ADT_full_ID = case_when(
+      
+      top_signal < 1                  ~ "Negative",  # Below the manual "zero point" --> no signal 
+      n_above_1 == 1                  ~ Fol[1],
+      n_above_1 > 1 & ratio_12 < 0.5  ~ Fol[1],
+      TRUE                            ~ paste0(  # Strongest drop is after Rank 2 --> doublet
+        sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
+        "-",
+        sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
+      )    # Ambiguous signal profiles
+
+    ), 
     
     dominant_ADT_class = case_when(
       top_signal < 1            ~ "Negative",  # Below the manual "zero point"
@@ -537,12 +561,17 @@ log_ratios <- ADT_counts_t_corrected %>%
 # else                        --> "Unclear"
 # '
 
-rules_text <- 'top_signal < 1              --> "Negative"
-abs(diff_12) >= 2 * abs(diff_23) --> "Singlet"
-2 * abs(diff_23) > abs(diff_12) --> "Doublet"
-else                        --> "Unclear"
-'
+# rules_text <- 'top_signal < 1              --> "Negative"
+# abs(diff_12) >= 2 * abs(diff_23) --> "Singlet"
+# 2 * abs(diff_23) > abs(diff_12) --> "Doublet"
+# else                        --> "Unclear"
+# '
 
+rules_text <- 'top_signal < 1  --> "Negative"
+n_above_1 == 1 --> "Singlet",
+n_above_1 > 1 & ratio_12 < 0.5 --> "Singlet"
+TRUE --> "Doublet"
+'
 
 # plot
 plot_log_ratios <- function(df, cell_nr){
@@ -556,40 +585,75 @@ plot_log_ratios <- function(df, cell_nr){
   label_y_text <- df %>% 
     filter(Cell == cell_name) %>% select(top_signal) %>% pull() %>% unique() / 2
   
-  cell_name <- "AAACCCATCGTAACGC-1"
+  # cell_name <- "AAACCCATCGTAACGC-1"
   
-  p <- df %>% 
-    filter(Cell == cell_name) %>% 
-    # ggplot(aes(x = reorder(Fol, -Count), y = Count)) + 
-    ggplot(aes(x = reorder(Fol, -Count), y = Count)) + 
+  # p <- df %>%
+  #   filter(Cell == cell_name) %>%
+  #   # ggplot(aes(x = reorder(Fol, -Count), y = Count)) +
+  #   ggplot(aes(x = reorder(Fol, -Count), y = Count)) +
+  #   geom_col() +
+  #   geom_label(aes(label = round(Count, 2)), size = 2) +
+  #   geom_label(
+  #     data = df %>% filter(Cell == cell_name) %>% filter(!is.na(Count)),
+  #     aes(
+  #       x = label_x,
+  #       y = label_y,
+  #       label = round(diff, 2)
+  #     ),
+  #     inherit.aes = FALSE,
+  #     size = 3
+  #   ) +
+  #   labs(
+  #     title = glue("Cell {cell_nr}: ADT counts corrected by thershold"),
+  #     y = "Normalized counts (counts divided by zero-point-count)",
+  #     x = "Fol",
+  #     subtitle = "Normalized count of 1: same value as zero-point\ndiff of 1: ",
+  #     # subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value",
+  #     caption = glue("Manual label: {manual_label}
+  #                    Dominant ADT: {df$dominant_ADT_full_ID[df$Cell == cell_name][1]}
+  #                    ")
+  #     ) +
+  #   annotate("text", x=13, y=label_y_text, label= rules_text) +
+  #   theme_bw()
+  # 
+  # ggsave(filename = glue("10_ADT_demultiplex/plot/HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH/dominant_marker/{cell_nr}.png"),
+  #        p, 
+  #        width = 13, 
+  #        height = 7)
+  
+  
+  p <- df %>%
+    filter(Cell == cell_name) %>%
+    # ggplot(aes(x = reorder(Fol, -Count), y = Count)) +
+    ggplot(aes(x = reorder(Fol, -Count), y = Count)) +
     geom_col() +
-    geom_label(aes(label = round(Count, 2)), size = 2) + 
+    geom_label(aes(label = round(Count, 2)), size = 2) +
     geom_label(
       data = df %>% filter(Cell == cell_name) %>% filter(!is.na(Count)),
       aes(
         x = label_x,
         y = label_y,
-        label = round(diff, 2)
+        label = round(ratio, 2)
       ),
       inherit.aes = FALSE,
       size = 3
     ) +
     labs(
-      title = glue("Cell {cell_nr}: ADT counts corrected by thershold"), 
+      title = glue("Cell {cell_nr}: ADT counts corrected by thershold"),
       y = "Normalized counts (counts divided by zero-point-count)",
-      x = "Fol", 
-      subtitle = "Normalized count of 1: same value as zero-point\ndiff of 1: ",
-      # subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value", 
-      caption = glue("Manual label: {manual_label}
-                     Dominant ADT: {df$dominant_ADT_full_ID[df$Cell == cell_name][1]}
+      x = "Fol",
+      subtitle = "Normalized count of 1: same value as zero-point",
+      # subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value",
+      caption = glue("Dominant ADT: {df$dominant_ADT_full_ID[df$Cell == cell_name][1]}
+                     HG ADT: {df$HG_ADT_full_ID[df$Cell == cell_name][1]}
                      ")
-      ) + 
-    annotate("text", x=13, y=label_y_text, label= rules_text) + 
+    ) +
+    annotate("text", x=13, y=label_y_text, label= rules_text) +
     theme_bw()
   
-  ggsave(filename = glue("10_ADT_demultiplex/plot/HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH/dominant_marker/{cell_nr}.png"),
-         p, 
-         width = 13, 
+  ggsave(filename = glue("10_ADT_demultiplex/plot/HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH/Helene_Gina_method/{cell_nr}.png"),
+         p,
+         width = 13,
          height = 7)
   
    return(p)
@@ -608,6 +672,11 @@ plot_log_ratios(df = log_ratios, cell_nr = 13) # Fol-5
 plot_log_ratios(df = log_ratios, cell_nr = 1224)
 plot_log_ratios(df = log_ratios, cell_nr = 18) # Unclear
 plot_log_ratios(df = log_ratios, cell_nr = 9) # doublet
+plot_log_ratios(df = log_ratios, cell_nr = 26) 
+
+for (cell_nr in sample(1:8000, size = 10)){
+  plot_log_ratios(df = log_ratios, cell_nr = cell_nr)
+}
 
 log_ratios %>% filter(dominant_ADT_class == "Doublet") %>% select(Cell) %>% distinct()
 
@@ -622,15 +691,19 @@ log_ratios %>% filter(dominant_ADT_class == "Doublet") %>% select(Cell) %>% dist
 
 # Clean up
 df_dominant_ADT <- log_ratios %>% 
-  select(Cell, dominant_ADT_class, dominant_ADT_ID, dominant_ADT_full_ID) %>% 
+  # select(Cell, dominant_ADT_class, dominant_ADT_ID, dominant_ADT_full_ID) %>% 
+  select(Cell, HG_ADT_class, HG_ADT_full_ID) %>% 
   distinct() %>% 
   # mutate(row_number = row_number()) %>% 
   column_to_rownames("Cell")
 
 
 # Look at distribution 
-df_dominant_ADT$dominant_ADT_class %>% table()
-df_dominant_ADT$dominant_ADT_ID %>% table()
+# df_dominant_ADT$dominant_ADT_class %>% table()
+# df_dominant_ADT$dominant_ADT_ID %>% table()
+df_dominant_ADT$HG_ADT_class %>% table(useNA = "always")
+df_dominant_ADT$HG_ADT_full_ID %>% table(useNA = "always")
+
 
 # Pattern in doublets to check if zero-points needs adjustment 
 df_dominant_ADT$dominant_ADT_full_ID[str_detect(df_dominant_ADT$dominant_ADT_full_ID , "-Fol")] %>% table() %>% sort()

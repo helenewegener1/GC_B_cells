@@ -11,18 +11,20 @@ library(readxl)
 library(scRepertoire)
 
 # Load data
-seurat_obj_list <- readRDS("07_seurat_QC/out/seurat_obj_QC.rds")
-# seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_roughQC_list.rds")
+# seurat_obj_list <- readRDS("07_seurat_QC/out/seurat_obj_QC.rds")
+seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list.rds")
 
 # Investigate non-unique chains across contigs which should be filtered on umi. 
+
+# ------------------------------------------------------------------------------
+#                                      BCR
+# ------------------------------------------------------------------------------
 
 # Subset cells with BCR respectively. 
 bcr_mask <- lapply(names(seurat_obj_list), function(x) {"bcr_v_gene_contig_1" %in% colnames(seurat_obj_list[[x]]@meta.data)}) %>% unlist()
 
 # Extract seurat objects with BCR data 
 bcr_seurat_obj_list <- seurat_obj_list[bcr_mask]
-
-################################# scRepertorie - BCR ################################# 
 
 # Loading Data into scRepertoire
 b_contigs.list <- list()
@@ -204,3 +206,5 @@ clonalCompare(combined.BCR,
   scale_x_discrete(labels = fols) + 
   labs(title = glue("BCR: Compare {sample_name}")) + 
   theme(legend.position = "none")
+
+
