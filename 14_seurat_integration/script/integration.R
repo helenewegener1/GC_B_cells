@@ -1,4 +1,11 @@
 # Load libraries 
+
+# library(reticulate)
+# use_condaenv("~/miniconda3/envs/scvi-conda/", required = TRUE)
+# py_config()
+# sc <- import('scanpy', convert = FALSE)
+# scvi <- import("scvi", convert = FALSE)
+
 library(harmony)
 library(SeuratObject)
 library(Seurat)
@@ -13,13 +20,6 @@ library(SeuratWrappers)
 # remotes::install_github('satijalab/azimuth', ref = 'master')
 library(Azimuth)
 library(clustree)
-
-library(Seurat)
-
-library(SeuratWrappers)
-library(Azimuth)
-library(ggplot2)
-library(patchwork)
 options(future.globals.maxSize = 1e9)
 
 integration_var <- "patient"
@@ -70,44 +70,46 @@ integration_var <- "patient"
 # 
 # # Export merged dataset
 # saveRDS(seurat_merged, "14_seurat_integration/out/seurat_obj_merged_list.rds")
-seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
-
-# Pre integration UMAPs
-## Cell type and sample
-DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = "sample", label = TRUE, ncol = 3, label.size = 2) +
-  NoLegend() + 
-  labs(title = "UMAP - RNA - pre integration") +
-  theme(
-    plot.title = element_text(size = 10),     # title font
-    strip.text = element_text(size = 6)      # facet labels (the sample names)
-  )
-
-ggsave("14_seurat_integration/plot/UMAP_PRE_integration_split_sample.png",width = 10, height = 10)
-
-## Cell type and integration var (patient)
-DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = integration_var, label = TRUE, ncol = 3, label.size = 2) +
-  NoLegend() + 
-  labs(title = "UMAP - RNA - pre integration") 
-
-ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{integration_var}_split.png"), width = 12, height = 7)
-
-## More UMAPs... 
-for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed")){
-  
-  # var <- "patient"
-  
-  DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = var) +
-    labs(title = "UMAP - RNA - pre integration",
-         subtitle = var) + theme(legend.text = element_text(size = 6))
-  
-  ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{var}.png"),
-         width = 8,
-         height = 7)
-  
-}
+# seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
+# 
+# # Pre integration UMAPs
+# ## Cell type and sample
+# DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = "sample", label = TRUE, ncol = 3, label.size = 2) +
+#   NoLegend() + 
+#   labs(title = "UMAP - RNA - pre integration") +
+#   theme(
+#     plot.title = element_text(size = 10),     # title font
+#     strip.text = element_text(size = 6)      # facet labels (the sample names)
+#   )
+# 
+# ggsave("14_seurat_integration/plot/UMAP_PRE_integration_split_sample.png",width = 10, height = 10)
+# 
+# ## Cell type and integration var (patient)
+# DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = integration_var, label = TRUE, ncol = 3, label.size = 2) +
+#   NoLegend() + 
+#   labs(title = "UMAP - RNA - pre integration") 
+# 
+# ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{integration_var}_split.png"), width = 12, height = 7)
+# 
+# ## More UMAPs... 
+# for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed")){
+#   
+#   # var <- "patient"
+#   
+#   DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = var) +
+#     labs(title = "UMAP - RNA - pre integration",
+#          subtitle = var) + theme(legend.text = element_text(size = 6))
+#   
+#   ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{var}.png"),
+#          width = 8,
+#          height = 7)
+#   
+# }
 
 
 ################################# Integration ##################################
+n_dim <- 10
+seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
 
 seurat_integrated <- seurat_merged
 
@@ -133,13 +135,13 @@ seurat_integrated <- IntegrateLayers(
   verbose = FALSE
 )
 
-seurat_integrated <- IntegrateLayers(
-  object = seurat_integrated, 
-  method = scVIIntegration,
-  new.reduction = "RNA_scvi",
-  conda_env = "~/miniconda3/envs/scvi-env", 
-  verbose = FALSE
-)
+# seurat_integrated <- IntegrateLayers(
+#   object = seurat_integrated, 
+#   method = scVIIntegration,
+#   new.reduction = "RNA_scvi",
+#   conda_env = "~/miniconda3/envs/scvi-env", 
+#   verbose = FALSE
+# )
 
 # seurat_integrated <- IntegrateLayers(
 #   object = seurat_integrated,
