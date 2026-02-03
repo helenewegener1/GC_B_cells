@@ -34,7 +34,7 @@ for (sample_name in names(bcr_seurat_obj_list)){
   # sample_name <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
   
   # Load contig annotation file for sample 
-  b_contigs <- read.csv(glue("05_run_cellranger/out/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_b/filtered_contig_annotations.csv"))
+  b_contigs <- read.csv(glue("05_run_cellranger/out_v9/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_b/filtered_contig_annotations.csv"))
   
   # Load Seurat object
   seurat_obj <- seurat_obj_list[[sample_name]]
@@ -64,7 +64,7 @@ for (sample_name in names(bcr_seurat_obj_list)){
 # Check names of contig list 
 names(b_contigs.list)
 
-# combineBCR - - one line per cell
+# combineBCR - one line per cell
 # Combine using the default similarity clustering
 combined.BCR <- combineBCR(b_contigs.list, 
                            samples = names(b_contigs.list), 
@@ -101,7 +101,7 @@ clonalQuant(
   labs(title = "BCR: Relative numbers of unique clones", 
        x = "")
 
-ggsave("12_vdj/plot/BCR_scRepertoire/clonalQuant.png", width = 15, height = 10)
+ggsave("20_VDJ/plot/BCR_scRepertoire/clonalQuant.png", width = 15, height = 10)
 
 # Group by sample_high_level - overlook individual follicles.
 # clonalQuant(
@@ -141,7 +141,7 @@ for (sample_name in names(bcr_seurat_obj_list)) {
     scale_color_discrete(labels = labels) + 
     theme_dark()
   
-  ggsave(glue("12_vdj/plot/BCR_scRepertoire/clonalAbundance_{sample_name}.png"), width = 10, height = 6.5)
+  ggsave(glue("20_VDJ/plot/BCR_scRepertoire/{sample_name}_clonalAbundance.png"), width = 10, height = 6.5)
   
   # Scaled 
   clonalAbundance(combined.BCR_subset, 
@@ -152,7 +152,7 @@ for (sample_name in names(bcr_seurat_obj_list)) {
     scale_color_discrete(labels = labels) + 
     theme_dark()
   
-  ggsave(glue("12_vdj/plot/BCR_scRepertoire/clonalAbundance_scaled_{sample_name}.png"), width = 10, height = 6.5)
+  ggsave(glue("20_VDJ/plot/BCR_scRepertoire/{sample_name}_clonalAbundance_scaled.png"), width = 10, height = 6.5)
   
   ############################## clonalAbundance ############################### 
   # Distribution of Sequence Lengths: looking at the length distribution of the CDR3 sequences
@@ -165,7 +165,7 @@ for (sample_name in names(bcr_seurat_obj_list)) {
       labs(title = glue("BCR: Sequence Lengths of {chain}"), subtitle = sample_name) +
       scale_fill_discrete(labels = labels) 
     
-    ggsave(glue("12_vdj/plot/BCR_scRepertoire/clonalLength_{sample_name}_{chain}.png"), width = 10, height = 6.5)
+    ggsave(glue("20_VDJ/plot/BCR_scRepertoire/{sample_name}_clonalLength_{chain}.png"), width = 10, height = 6.5)
     
   }
   
