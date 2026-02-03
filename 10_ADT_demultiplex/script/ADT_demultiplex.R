@@ -704,7 +704,6 @@ df_dominant_ADT <- log_ratios %>%
 df_dominant_ADT$HG_ADT_class %>% table(useNA = "always")
 df_dominant_ADT$HG_ADT_full_ID %>% table(useNA = "always")
 
-
 # Pattern in doublets to check if zero-points needs adjustment 
 df_dominant_ADT$dominant_ADT_full_ID[str_detect(df_dominant_ADT$dominant_ADT_full_ID , "-Fol")] %>% table() %>% sort()
 
