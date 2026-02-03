@@ -12,7 +12,8 @@ library(scRepertoire)
 
 # Load data
 # seurat_obj_list <- readRDS("07_seurat_QC/out/seurat_obj_QC.rds")
-seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list.rds")
+# seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list.rds")
+seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 
 # Investigate non-unique chains across contigs which should be filtered on umi. 
 

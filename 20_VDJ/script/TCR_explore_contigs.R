@@ -11,8 +11,9 @@ library(readxl)
 library(scRepertoire)
 
 # Load data
-seurat_obj_list <- readRDS("07_seurat_QC/out/seurat_obj_QC.rds")
-# seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_roughQC_list.rds")
+# seurat_obj_list <- readRDS("07_seurat_QC/out/seurat_obj_QC.rds")
+# seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_doublets_list.rds")
+seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 
 # Investigate non-unique chains across contigs which should be filtered on umi. 
 
@@ -33,7 +34,7 @@ for (sample_name in names(tcr_seurat_obj_list)){
   # sample_name <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
   
   # Load contig annotation file for sample 
-  t_contigs <- read.csv(glue("05_run_cellranger/out/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_t/filtered_contig_annotations.csv"))
+  t_contigs <- read.csv(glue("05_run_cellranger/out_v9/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_t/filtered_contig_annotations.csv"))
   
   # Load Seurat object
   seurat_obj <- seurat_obj_list[[sample_name]]
@@ -95,18 +96,25 @@ clonalQuant(
   labs(title = "TCR: Relative numbers of unique clones", 
        x = "")
 
-ggsave("12_vdj/plot/TCR_scRepertoire/clonalQuant.png", width = 15, height = 10)
+ggsave("20_VDJ/plot/TCR_scRepertoire/clonalQuant.png", width = 15, height = 10)
 
 # Group by sample_high_level - overlook individual follicles. 
 # clonalQuant(
-#   combined.TCR, 
+#   combined.TCR,
 #   group.by = "sample_high_level",
-#   cloneCall="strict", 
+#   cloneCall="strict",
 #   chain = "both",
 #   scale = TRUE # relative percentage of unique clones scaled by the total repertoire size
-# ) + 
-#   labs(title = "TCR: Relative numbers of unique clones", 
+# ) +
+#   labs(title = "TCR: Relative numbers of unique clones",
 #        x = "")
+
+# Combined plots 
+
+clonalAbundance(combined.TCR, 
+                cloneCall = "gene", 
+                scale = FALSE)
+ggsave("20_VDJ/plot/TCR_scRepertoire/clonalAbundance.png", width = 10, height = 6.5)
 
 # Split by samples since too many sample in one plot with each follicle. 
 for (sample_name in names(tcr_seurat_obj_list)) {
@@ -135,7 +143,7 @@ for (sample_name in names(tcr_seurat_obj_list)) {
     scale_color_discrete(labels = labels) + 
     theme_dark()
   
-  ggsave(glue("12_vdj/plot/TCR_scRepertoire/clonalAbundance_{sample_name}.png"), width = 10, height = 6.5)
+  ggsave(glue("20_VDJ/plot/TCR_scRepertoire/clonalAbundance_{sample_name}.png"), width = 10, height = 6.5)
   
   # Scaled 
   clonalAbundance(combined.TCR_subset, 
@@ -146,7 +154,7 @@ for (sample_name in names(tcr_seurat_obj_list)) {
     scale_color_discrete(labels = labels) + 
     theme_dark()
   
-  ggsave(glue("12_vdj/plot/TCR_scRepertoire/clonalAbundance_scaled_{sample_name}.png"), width = 10, height = 6.5)
+  ggsave(glue("20_VDJ/plot/TCR_scRepertoire/clonalAbundance_scaled_{sample_name}.png"), width = 10, height = 6.5)
   
   ############################## clonalAbundance ############################### 
   # Distribution of Sequence Lengths: looking at the length distribution of the CDR3 sequences
@@ -157,9 +165,40 @@ for (sample_name in names(tcr_seurat_obj_list)) {
     labs(title = "TCR: Sequence Lengths", subtitle = sample_name) +
     scale_fill_discrete(labels = labels) 
   
-  ggsave(glue("12_vdj/plot/TCR_scRepertoire/clonalLength_scaled_{sample_name}.png"), width = 10, height = 6.5)
+  ggsave(glue("20_VDJ/plot/TCR_scRepertoire/clonalLength_scaled_{sample_name}.png"), width = 10, height = 6.5)
   
 }
+
+# Compare samples
+group_A <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+group_B <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
+
+clonalCompare(combined.TCR, 
+              top.clones = 10, 
+              samples = c(
+                group_A,
+                group_B
+              ), 
+              cloneCall="aa", 
+              graph = "alluvial") + 
+  scale_x_discrete(labels = c(group_A, group_B)) +
+  labs(title = glue("TCR: Compare {sample_name}"),
+       subtitle = glue("{group_A} vs {group_B}"))
+
+group_A <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
+group_B <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
+
+clonalCompare(combined.TCR, 
+              top.clones = 10, 
+              samples = c(
+                group_A,
+                group_B
+              ), 
+              cloneCall="aa", 
+              graph = "alluvial") + 
+  scale_x_discrete(labels = c(group_A, group_B)) +
+  labs(title = glue("TCR: Compare {sample_name}"),
+       subtitle = glue("{group_A} vs {group_B}"))
 
 # Compare  
 sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
@@ -179,7 +218,7 @@ clonalCompare(combined.TCR,
        subtitle = glue("{group_A} vs {group_B}")) + 
   theme(legend.position = "none")
 
-# All follicols 
+# All follicles 
 fols <- names(combined.TCR)[names(combined.TCR) %>% startsWith(sample_name)] %>% str_split_i("_", 2)
 
 clonalCompare(combined.TCR, 
