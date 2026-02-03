@@ -20,6 +20,20 @@ seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_lis
 sample_names <- names(seurat_obj_nonDC_list)
 sample_names
 
+# Check samples that have ADT data available 
+for (sample_name in sample_names){
+  
+  seurat_obj <- seurat_obj_nonDC_list[[sample_name]]
+  
+  # Check sample has an ADT assay
+  if ("ADT" %in% names(seurat_obj@assays)) {
+    print(sample_name)
+  }
+}
+
+# seurat_obj_nonDC_list$`HH119-SI-PP-CD19-Pool1`@assays$ADT$counts
+# seurat_obj_nonDC_list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH`@assays$ADT$counts
+
 # ---------------------------------------------------------------------------
 # Plot log_10 counts for each ADT for each sample to define zero points
 # ---------------------------------------------------------------------------
@@ -29,6 +43,7 @@ seurat_obj_ADT <- list()
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  # sample_name <- "HH117-SILP-INF-PC"
   seurat_obj <- seurat_obj_nonDC_list[[sample_name]]
   
   # Check sample has an ADT assay
@@ -59,7 +74,7 @@ for (sample_name in sample_names){
   # Plot distribution of each ADT 
   for (fol in fols){
     
-    # fol <- "Fol-18"
+    # fol <- "Fol-3"
     seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>%
       pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "counts") %>% 
       filter(ADT == fol) %>%
@@ -72,7 +87,11 @@ for (sample_name in sample_names){
       ) +
       theme_bw() + 
       theme(legend.position = "none") + 
-      labs(title = fol, x = "log10 counts")
+      labs(
+        title = fol, 
+        subtitle = sample_name, 
+        x = "log10 counts"
+      )
     
     ggsave(glue("{output_dir}/{fol}_ADT_log10_count_values_density.png"), width = 14, height = 6)
     
@@ -81,7 +100,6 @@ for (sample_name in sample_names){
 }
 
 names(seurat_obj_ADT)
-names(seurat_obj_nonDC_list)[!(names(seurat_obj_nonDC_list) %in% names(seurat_obj_ADT))]
 
 saveRDS(seurat_obj_ADT, "10_ADT_demultiplex/out/seurat_obj_ADT.rds")
 
@@ -94,9 +112,140 @@ source("10_ADT_demultiplex/script/ADT_zero_points.R")
 # ---------------------------------------------------------------------------
 # Demultiplexing
 # ---------------------------------------------------------------------------
-seurat_obj_ADT <- readRDS("10_ADT_demultiplex/out/seurat_obj_ADT.rds")
-names(seurat_obj_ADT)
 
+# seurat_obj_ADT <- readRDS("10_ADT_demultiplex/out/seurat_obj_ADT.rds")
+sample_names_ADT <- names(seurat_obj_ADT)
+
+source("10_ADT_demultiplex/script/functions.R")
+
+for (sample_name in sample_names_ADT){
+  
+  # Define object of sample
+  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  seurat_obj <- seurat_obj_ADT[[sample_name]]
+  
+  # Get raw ADT counts 
+  ADT_counts <- seurat_obj@assays$ADT$counts 
+  
+  # Data wrangle
+  ADT_counts_t <- ADT_counts %>% as.matrix() %>% t()
+  
+  # Divide by zero-points
+  ## Keeps values positive (log works)
+  ## 1 → exactly at the noise threshold
+  ## >1 → above noise (signal)
+  ## <1 → below noise (background)
+  zero_point <- ADT_zero_point[[sample_name]]
+  ADT_counts_t_corrected <- sweep(ADT_counts_t, 2, zero_point[colnames(ADT_counts_t)], FUN = "/")
+  
+  # Make long format and calculate log ratios
+  ADT_demultiplexed <- ADT_counts_t_corrected %>%
+    as.data.frame() %>% 
+    rownames_to_column("Cell") %>%
+    pivot_longer(
+      cols = starts_with("Fol"),
+      names_to = "Fol",
+      values_to = "Count"
+    ) %>% 
+    group_by(Cell) %>%
+    arrange(desc(Count), .by_group = TRUE) %>% 
+    # ratio 
+    mutate(
+      Fol = factor(Fol, levels = Fol),
+      next_Count = lead(Count),
+      ratio = next_Count / Count,
+      label_y = pmin(Count, next_Count) * 1.05,
+      label_x = row_number() + 0.5,
+      rank = row_number(),
+      n_above_1 = sum(Count > 1)
+    ) %>%
+    # Classification
+    mutate(
+      top_signal = Count[rank == 1],
+      ratio_12 = ratio[rank == 1],
+      
+      # Helene Gina discussion 
+      HG_ADT_class = case_when(
+        top_signal < 1                  ~ "Negative",  # Below the manual "zero point" --> no signal 
+        n_above_1 == 1                  ~ "Singlet",
+        n_above_1 > 1 & ratio_12 < 0.5  ~ "Singlet",
+        TRUE                            ~ "Doublet"    # Ambiguous signal profiles
+      ), 
+      
+      HG_ADT_full_ID = case_when(
+        
+        top_signal < 1                  ~ "Negative",  # Below the manual "zero point" --> no signal 
+        n_above_1 == 1                  ~ Fol[1],
+        n_above_1 > 1 & ratio_12 < 0.5  ~ Fol[1],
+        TRUE                            ~ paste0(  # Strongest drop is after Rank 2 --> doublet
+          sort(c(Fol[1], Fol[2]))[1],  # first in canonical order
+          "-",
+          sort(c(Fol[1], Fol[2]))[2]   # second in canonical order
+        )    # Ambiguous signal profiles
+        
+      )
+    ) %>% 
+    ungroup()
+  
+  # Stats
+  ADT_demultiplexed %>% 
+    select(Fol, Count) %>% 
+    mutate(above_zero_point = ifelse(Count >= 1, TRUE, FALSE)) %>% 
+    group_by(Fol) %>% 
+    summarize(N_above_zero_point = count(above_zero_point)) %>% 
+    ggplot(aes(x = reorder(Fol, -N_above_zero_point), y = N_above_zero_point)) + 
+    geom_col() + 
+    labs(
+      subtitle = sample_name, 
+      x = "",
+      y = "N cells above zero-point"
+    ) + 
+    theme_bw()
+  
+  ggsave(
+    glue("10_ADT_demultiplex/plot/{sample_name}/N_above_zero_point_{sample_name}.png"),
+    width = 10, 
+    height = 6
+  )
+  
+  outdir_plot <- glue("10_ADT_demultiplex/plot/{sample_name}/Helene_Gina_method")
+  dir.create(outdir_plot, recursive = TRUE, showWarnings = FALSE)
+  
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 1)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 2)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 3)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 4)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 5)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 6)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 112)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 8) # Unclear bc r12 is not high enough 
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 13) # Fol-5
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 1224)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 18) # Unclear
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 9) # doublet
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 26) 
+  
+  for (cell_nr in sample(1:8000, size = 10)){
+    plot_ADT_cells(df = ADT_demultiplexed, cell_nr = cell_nr)
+  }
+  
+}
+
+# Clean up
+df_dominant_ADT <- ADT_demultiplexed %>% 
+  select(Cell, HG_ADT_class, HG_ADT_full_ID) %>% 
+  distinct() %>% 
+  column_to_rownames("Cell")
+
+# Look at distribution 
+df_dominant_ADT$HG_ADT_class %>% table(useNA = "always")
+df_dominant_ADT$HG_ADT_full_ID %>% table(useNA = "always")
+
+# Pattern in doublets to check if zero-points needs adjustment 
+df_dominant_ADT$HG_ADT_full_ID[str_detect(df_dominant_ADT$HG_ADT_full_ID , "-Fol")] %>% table() %>% sort()
+
+# Add to seurat object
+seurat_obj <- AddMetaData(seurat_obj, metadata = df_dominant_ADT)
 
 
 ############################ Run demultplexing tools ########################### 
@@ -497,7 +646,7 @@ ADT_counts_t_corrected <- sweep(ADT_counts_t, 2, zero_point[colnames(ADT_counts_
 # <1 → below noise (background)
 
 # Make long format and calculate log ratios
-log_ratios <- ADT_counts_t_corrected %>%
+ADT_demultiplexed <- ADT_counts_t_corrected %>%
     as.data.frame() %>% 
     rownames_to_column("Cell") %>%
     pivot_longer(
@@ -622,7 +771,7 @@ log_ratios <- ADT_counts_t_corrected %>%
     ungroup()
 
 
-# log_ratios_all <- log_ratios %>% left_join(ADT_LogNorm_t, by = c("Cell", "Fol")) 
+# ADT_demultiplexed_all <- ADT_demultiplexed %>% left_join(ADT_LogNorm_t, by = c("Cell", "Fol")) 
 
 # rules_text <- 'top_signal < 1              --> "Negative"
 # abs(diff_12) > abs(diff_23) --> "Singlet"
@@ -643,7 +792,7 @@ TRUE --> "Doublet"
 '
 
 # plot
-plot_log_ratios <- function(df, cell_nr){
+plot_ADT_cells <- function(df, cell_nr){
   
   # cell_nr <- 18
   
@@ -729,28 +878,28 @@ plot_log_ratios <- function(df, cell_nr){
   
 }
 
-plot_log_ratios(df = log_ratios, cell_nr = 1)
-plot_log_ratios(df = log_ratios, cell_nr = 2)
-plot_log_ratios(df = log_ratios, cell_nr = 3)
-plot_log_ratios(df = log_ratios, cell_nr = 4)
-plot_log_ratios(df = log_ratios, cell_nr = 5)
-plot_log_ratios(df = log_ratios, cell_nr = 6)
-plot_log_ratios(df = log_ratios, cell_nr = 112)
-plot_log_ratios(df = log_ratios, cell_nr = 8) # Unclear bc r12 is not high enough 
-plot_log_ratios(df = log_ratios, cell_nr = 13) # Fol-5
-plot_log_ratios(df = log_ratios, cell_nr = 1224)
-plot_log_ratios(df = log_ratios, cell_nr = 18) # Unclear
-plot_log_ratios(df = log_ratios, cell_nr = 9) # doublet
-plot_log_ratios(df = log_ratios, cell_nr = 26) 
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 1)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 2)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 3)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 4)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 5)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 6)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 112)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 8) # Unclear bc r12 is not high enough 
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 13) # Fol-5
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 1224)
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 18) # Unclear
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 9) # doublet
+plot_ADT_cells(df = ADT_demultiplexed, cell_nr = 26) 
 
 for (cell_nr in sample(1:8000, size = 10)){
-  plot_log_ratios(df = log_ratios, cell_nr = cell_nr)
+  plot_ADT_cells(df = ADT_demultiplexed, cell_nr = cell_nr)
 }
 
-log_ratios %>% filter(dominant_ADT_class == "Doublet") %>% select(Cell) %>% distinct()
+ADT_demultiplexed %>% filter(dominant_ADT_class == "Doublet") %>% select(Cell) %>% distinct()
 
 # Plot distribution of r12
-# log_ratios %>% 
+# ADT_demultiplexed %>% 
 #   select(Cell, r12, dominant_ADT_class) %>%
 #   distinct() %>% 
 #   ggplot(aes(x = r12, fill = dominant_ADT_class)) + 
@@ -759,7 +908,7 @@ log_ratios %>% filter(dominant_ADT_class == "Doublet") %>% select(Cell) %>% dist
   
 
 # Clean up
-df_dominant_ADT <- log_ratios %>% 
+df_dominant_ADT <- ADT_demultiplexed %>% 
   # select(Cell, dominant_ADT_class, dominant_ADT_ID, dominant_ADT_full_ID) %>% 
   select(Cell, HG_ADT_class, HG_ADT_full_ID) %>% 
   distinct() %>% 
