@@ -279,6 +279,7 @@ rm(seurat_obj_singlets_clustered_list)
 
 # Singlets
 seurat_obj_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
+
 dc_clusters <- list(
   "HH117-SILP-INF-PC"                                = NULL,
   "HH117-SILP-nonINF-PC"                             = NULL,
@@ -305,10 +306,11 @@ sample_names <- names(seurat_obj_list)
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  # sample_name <- "HH117-SILP-INF-PC"
   seurat_obj <- seurat_obj_list[[sample_name]]
   
   if (is.null(dc_clusters[[sample_name]])){
-    seurat_obj_nonDC_list[[sample_name]] <- seurat_obj_nonDC
+    seurat_obj_nonDC_list[[sample_name]] <- seurat_obj
     next
   }
   
