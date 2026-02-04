@@ -10,6 +10,8 @@
 */script/*.err
 */script/*.log
 
+10_ADT_demultiplex/plot/*/individual_cell_annotation
+
 
 
 .DS_Store

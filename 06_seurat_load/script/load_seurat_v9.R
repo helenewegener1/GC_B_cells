@@ -151,7 +151,7 @@ for (sample in samples){
   # E.g., Use the 'clonotype' and 'raw_clonotype_id' columns from the filtered_contig_annotations.csv
   # and link them to the cell barcodes (BCR-CELL_BARCODE-1, TCR-CELL_BARCODE-1). 
   # Be mindful of the barcode naming convention differences between GEX and VDJ outputs!
-  
+
   # Add seurat object to list 
   seurat_obj_list[[sample]] <- seurat_obj
   
