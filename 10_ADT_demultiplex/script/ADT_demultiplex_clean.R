@@ -302,7 +302,7 @@ for (sample_name in sample_names_ADT) {
 
   # Create heatmap
   pdf(glue("10_ADT_demultiplex/plot/{sample_name}/doublet_pattern_heatmap.pdf"), width = 8, height = 7, useDingbats = FALSE)
-  pheatmap(heatmap_data, cluster_rows = F, cluster_cols = F, display_numbers = T, main = sample_name)
+  pheatmap(heatmap_data, cluster_rows = F, cluster_cols = F, display_numbers = T, main = sample_name, number_format = "%.f")
   dev.off()
   
   # ------------------------------
