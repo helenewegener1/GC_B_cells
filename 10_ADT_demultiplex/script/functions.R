@@ -35,9 +35,7 @@ plot_ADT_cells <- function(df, cell_nr){
       x = "Fol",
       subtitle = "Normalized count of 1: same value as zero-point",
       # subtitle = "Log-ratio of 0: same value\nLog-ratio of -1: half the value",
-      caption = glue("Dominant ADT: {df$dominant_ADT_full_ID[df$Cell == cell_name][1]}
-                     HG ADT: {df$HG_ADT_full_ID[df$Cell == cell_name][1]}
-                     ")
+      caption = glue("Demultiplexed ADT: {df$manual_ADT_full_ID[df$Cell == cell_name][1]}")
     ) +
     annotate("text", x=13, y=label_y_text, label= rules_text) +
     theme_bw()
@@ -49,4 +47,17 @@ plot_ADT_cells <- function(df, cell_nr){
   
   return(p)
   
+}
+
+# Plotting function for demultiplexing stats
+plot_barplot <- function(data, var_name) {
+  p <- ggplot(data, aes(x = reorder(!!sym(var_name), !!sym(var_name), function(x) -length(x)))) +
+    geom_bar() +
+    geom_text(stat = "count", aes(label = after_stat(count)), vjust = -0.5) +
+    theme_bw() + 
+    labs(subtitle = sample_name, x = var_name)
+  
+  # ggsave(glue("10_ADT_demultiplex/plot/{sample_name}/barplot_{var_name}.png"), plot = p, width = 10, height = 6)
+  
+  return(p)
 }
