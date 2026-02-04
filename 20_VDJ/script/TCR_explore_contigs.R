@@ -14,12 +14,13 @@ library(scRepertoire)
 # seurat_obj_list <- readRDS("07_seurat_QC/out/seurat_obj_QC.rds")
 # seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_doublets_list.rds")
 seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
+seurat_obj_ADT_demulti<- readRDS("10_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
 
 # Investigate non-unique chains across contigs which should be filtered on umi. 
 
 # Subset cells with TCR respectively. 
 # Which samples have TCR data 
-tcr_mask <- lapply(names(seurat_obj_list), function(x) {"tcr_v_gene_contig_1" %in% colnames(seurat_obj_list[[x]]@meta.data)}) %>% unlist()
+tcr_mask <- lapply(names(seurat_obj_ADT_demulti), function(x) {"tcr_v_gene_contig_1" %in% colnames(seurat_obj_ADT_demulti[[x]]@meta.data)}) %>% unlist()
 
 # Extract seurat objects with TCR data 
 tcr_seurat_obj_list <- seurat_obj_list[tcr_mask]
@@ -60,6 +61,9 @@ for (sample_name in names(tcr_seurat_obj_list)){
   }
   
 }
+
+
+
 
 # Check names of contig list 
 names(t_contigs.list) 
