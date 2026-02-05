@@ -46,8 +46,14 @@ seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
 
 
 # ElbowPlot(seurat_merged)
-ElbowPlot(seurat_merged, ndims = 50)
-DimHeatmap(seurat_merged, dims = 1:20, cells = 500)
+ElbowPlot(seurat_merged, ndims = 50) + theme_classic()
+ggsave("14_seurat_integration/PCs_explanied/ElbowPlot.png", width = 10, height = 7)
+
+pdf("14_seurat_integration/PCs_explanied/DimHeatmap.pdf", width = 12, height = 14)
+DimHeatmap(seurat_merged, dims = 1:10, cells = 500)
+DimHeatmap(seurat_merged, dims = 11:20, cells = 500)
+DimHeatmap(seurat_merged, dims = 21:30, cells = 500)
+dev.off()
 
 n_dim <- 30
 
@@ -58,6 +64,38 @@ seurat_merged <- RunUMAP(seurat_merged, reduction = "pca", dims = 1:n_dim, verbo
 DefaultAssay(seurat_merged)
 
 Reductions(seurat_merged)
+
+################################ PCs explained #################################
+
+library(writexl)
+
+pct <- seurat_merged[["pca"]]@stdev / sum(seurat_merged[["pca"]]@stdev) * 100
+pca_df <- data.frame(
+  PC = 1:length(pct),
+  Variance_Percent = pct,
+  Cumulative_Percent = cumsum(pct)
+)
+
+write_xlsx(pca_df, "14_seurat_integration/PCs_explanied/PCA_variance.xlsx")
+
+
+# Alternative: All PCs in one sheet (wide format)
+# This creates columns: PC1_gene, PC2_gene, etc.
+all_pcs <- data.frame(Rank = 1:100)
+
+n_pcs <- ncol(seurat_merged[["pca"]]@feature.loadings)
+
+for(i in 1:n_pcs) {
+  top_genes <- TopFeatures(seurat_merged[["pca"]], dim = i, nfeatures = 100,
+                           projected = FALSE, 
+                           balanced = FALSE) # Returns only top positive genes 
+  all_pcs[[paste0("PC", i)]] <- top_genes
+}
+
+write_xlsx(all_pcs, "14_seurat_integration/PCs_explanied/PC_top100_all_in_one.xlsx")
+
+
+################################################################################
 
 # Export merged dataset
 # saveRDS(seurat_merged, "14_seurat_integration/out/seurat_obj_merged_list.rds")

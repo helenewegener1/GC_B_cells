@@ -24,92 +24,95 @@ options(future.globals.maxSize = 1e9)
 
 integration_var <- "patient"
 
-# # Load data
-# seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
-# 
-# ############################# RNA integration prep #############################
-# 
-# # Merge objects in list
-# seurat_merged <- merge(seurat_obj_list[[1]], y = seurat_obj_list[-1])
-# 
-# # Layers are joined based on sample
-# Layers(seurat_merged)
-# 
-# # Join layers so we can split them on the wanted variable
-# seurat_merged <- JoinLayers(seurat_merged)
-# 
-# # Split object on patient variable
-# seurat_merged[["RNA"]] <- split(seurat_merged[["RNA"]], f = seurat_merged[[integration_var]] %>% pull())
-# 
-# Layers(seurat_merged[["RNA"]]) # Check that object is split
-# DefaultAssay(seurat_merged) <- "RNA"
-# 
-# ############################### Seurat workflow ################################
-# 
-# res <- 0.2
-# 
-# seurat_merged <- NormalizeData(seurat_merged, verbose = FALSE)
-# seurat_merged <- FindVariableFeatures(seurat_merged, verbose = FALSE)
-# seurat_merged <- ScaleData(seurat_merged, verbose = FALSE)
-# seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
-# 
-# 
-# # ElbowPlot(seurat_merged)
-# ElbowPlot(seurat_merged, ndims = 50)
-# # DimHeatmap(seurat_merged, dims = 1:30, cells = 500)
-# 
-# n_dim <- 10
-# 
-# seurat_merged <- FindNeighbors(seurat_merged, dims = 1:n_dim, verbose = FALSE)
-# seurat_merged <- FindClusters(seurat_merged, resolution = res, verbose = FALSE, cluster.name = "unintegrated_clusters")
-# seurat_merged <- RunUMAP(seurat_merged, reduction = "pca", dims = 1:n_dim, verbose = FALSE, reduction.name = "umap.unintegrated")
-# 
-# DefaultAssay(seurat_merged)
-# 
-# Reductions(seurat_merged)
-# 
-# # Export merged dataset
+# Load data
+seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
+
+############################# RNA integration prep #############################
+
+# Merge objects in list
+seurat_merged <- merge(seurat_obj_list[[1]], y = seurat_obj_list[-1])
+
+# Layers are joined based on sample
+Layers(seurat_merged)
+
+# Join layers so we can split them on the wanted variable
+seurat_merged <- JoinLayers(seurat_merged)
+
+# Split object on patient variable
+seurat_merged[["RNA"]] <- split(seurat_merged[["RNA"]], f = seurat_merged[[integration_var]] %>% pull())
+
+Layers(seurat_merged[["RNA"]]) # Check that object is split
+DefaultAssay(seurat_merged) <- "RNA"
+
+############################### Seurat workflow ################################
+
+res <- 0.2
+
+seurat_merged <- NormalizeData(seurat_merged, verbose = FALSE)
+seurat_merged <- FindVariableFeatures(seurat_merged, verbose = FALSE)
+seurat_merged <- ScaleData(seurat_merged, verbose = FALSE)
+seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
+
+
+# ElbowPlot(seurat_merged)
+ElbowPlot(seurat_merged, ndims = 50)
+# DimHeatmap(seurat_merged, dims = 1:30, cells = 500)
+
+n_dim <- 20
+
+seurat_merged <- FindNeighbors(seurat_merged, dims = 1:n_dim, verbose = FALSE)
+seurat_merged <- FindClusters(seurat_merged, resolution = res, verbose = FALSE, cluster.name = "unintegrated_clusters")
+seurat_merged <- RunUMAP(seurat_merged, reduction = "pca", dims = 1:n_dim, verbose = FALSE, reduction.name = "umap.unintegrated")
+
+DefaultAssay(seurat_merged)
+
+Reductions(seurat_merged)
+
+# Export merged dataset
 # saveRDS(seurat_merged, "14_seurat_integration/out/seurat_obj_merged_list.rds")
 # seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
-# 
-# # Pre integration UMAPs
-# ## Cell type and sample
-# DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = "sample", label = TRUE, ncol = 3, label.size = 2) +
-#   NoLegend() + 
-#   labs(title = "UMAP - RNA - pre integration") +
-#   theme(
-#     plot.title = element_text(size = 10),     # title font
-#     strip.text = element_text(size = 6)      # facet labels (the sample names)
-#   )
-# 
-# ggsave("14_seurat_integration/plot/UMAP_PRE_integration_split_sample.png",width = 10, height = 10)
-# 
-# ## Cell type and integration var (patient)
-# DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = integration_var, label = TRUE, ncol = 3, label.size = 2) +
-#   NoLegend() + 
-#   labs(title = "UMAP - RNA - pre integration") 
-# 
-# ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{integration_var}_split.png"), width = 12, height = 7)
-# 
-# ## More UMAPs... 
-# for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed")){
-#   
-#   # var <- "patient"
-#   
-#   DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = var) +
-#     labs(title = "UMAP - RNA - pre integration",
-#          subtitle = var) + theme(legend.text = element_text(size = 6))
-#   
-#   ggsave(glue("14_seurat_integration/plot/UMAP_PRE_integration_{var}.png"),
-#          width = 8,
-#          height = 7)
-#   
-# }
+
+outdir_plot <- glue("14_seurat_integration/plot_{n_dim}PCs")
+dir.create(outdir_plot, showWarnings = F, recursive = T)
+dir.create(glue("{outdir_plot}/clusters/clustree"), showWarnings = F, recursive = T)
+
+# Pre integration UMAPs
+## Cell type and sample
+DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = "sample", label = TRUE, ncol = 3, label.size = 2) +
+  NoLegend() +
+  labs(title = "UMAP - RNA - pre integration") +
+  theme(
+    plot.title = element_text(size = 10),     # title font
+    strip.text = element_text(size = 6)      # facet labels (the sample names)
+  )
+
+ggsave(glue("{outdir_plot}/UMAP_PRE_integration_split_sample.png"),width = 10, height = 10)
+
+## Cell type and integration var (patient)
+DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_broad", split.by = integration_var, label = TRUE, ncol = 3, label.size = 2) +
+  NoLegend() +
+  labs(title = "UMAP - RNA - pre integration")
+
+ggsave(glue("{outdir_plot}/UMAP_PRE_integration_{integration_var}_split.png"), width = 12, height = 7)
+
+## More UMAPs...
+for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed")){
+
+  # var <- "patient"
+
+  DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = var) +
+    labs(title = "UMAP - RNA - pre integration",
+         subtitle = var) + theme(legend.text = element_text(size = 6))
+
+  ggsave(glue("{outdir_plot}/UMAP_PRE_integration_{var}.png"),
+         width = 8,
+         height = 7)
+
+}
 
 
 ################################# Integration ##################################
-n_dim <- 10
-seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
+# seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
 
 seurat_integrated <- seurat_merged
 
@@ -117,23 +120,18 @@ DefaultAssay(seurat_integrated) <- "RNA"
 
 Layers(seurat_integrated[["RNA"]])
 
-# seurat_integrated <- IntegrateLayers(
-#   object = seurat_integrated,
-#   method = CCAIntegration,
-#   orig.reduction = "pca",
-#   new.reduction = "RNA_integrated.cca",
-#   assay = "RNA",
-#   verbose = FALSE
-# )
+Idents(seurat_integrated) %>% unique()
 
 seurat_integrated <- IntegrateLayers(
   object = seurat_integrated, 
   method = HarmonyIntegration,
   orig.reduction = "pca", 
   new.reduction = "RNA_harmony",
+  # group.by.vars = "patient",
   assay = "RNA", 
   verbose = FALSE
 )
+
 
 # seurat_integrated <- IntegrateLayers(
 #   object = seurat_integrated, 
@@ -143,23 +141,7 @@ seurat_integrated <- IntegrateLayers(
 #   verbose = FALSE
 # )
 
-# seurat_integrated <- IntegrateLayers(
-#   object = seurat_integrated,
-#   method = RPCAIntegration,
-#   orig.reduction = "pca",
-#   new.reduction = "RNA_integrated.rpca",
-#   assay = "RNA",
-#   verbose = FALSE
-# )
-# 
-# seurat_integrated <- IntegrateLayers(
-#   object = seurat_integrated,
-#   method = FastMNNIntegration,
-#   orig.reduction = "pca",
-#   new.reduction = "RNA_integrated.mnn",
-#   assay = "RNA",
-#   verbose = FALSE
-# )
+
 
 ################### Export list of integrated Seurat objects ################### 
  
@@ -208,7 +190,7 @@ for (red in reductions){
            subtitle = var) + 
       theme(legend.text = element_text(size = 8))
     
-    ggsave(glue("14_seurat_integration/plot/UMAP_{reduction}_{var}.png"), 
+    ggsave(glue("{outdir_plot}/UMAP_{reduction}_{var}.png"), 
            width = 8, 
            height = 7)
   }
@@ -218,7 +200,7 @@ for (red in reductions){
     labs(title = glue("UMAP - post {reduction}")) + 
     theme(legend.text = element_text(size = 8))
   
-  ggsave(glue("14_seurat_integration/plot/UMAP_{reduction}_{integration_var}_split.png"), 
+  ggsave(glue("{outdir_plot}/UMAP_{reduction}_{integration_var}_split.png"), 
          width = 12, 
          height = 7)
   
@@ -235,7 +217,7 @@ for (red in reductions){
       labs(title = glue("UMAP - post {reduction}"),
            subtitle = glue("{cluster.name}_res.{res}"))
     
-    ggsave(glue(glue("14_seurat_integration/plot/clusters/UMAP_{reduction}_{assay}_snn_res_{res}.png")), 
+    ggsave(glue(glue("{outdir_plot}/clusters/UMAP_{reduction}_{assay}_snn_res_{res}.png")), 
            width = 8, 
            height = 7)
     
@@ -251,7 +233,7 @@ for (red in reductions){
 # dev.off()
 
 cluster.name <- "RNA_harmony_clusters"
-pdf(file = glue("14_seurat_integration/plot/clusters/clustree/clustree_{cluster.name}.pdf"), width = 12, height = 12)
+pdf(file = glue("{outdir_plot}/clusters/clustree/clustree_{cluster.name}.pdf"), width = 12, height = 12)
 clustree(seurat_integrated, assay = "RNA", return = "plot", prefix = glue("{cluster.name}_res."))
 dev.off()
 
@@ -269,29 +251,29 @@ dev.off()
 
 Reductions(seurat_integrated)
 
-saveRDS(seurat_integrated, "14_seurat_integration/out/seurat_integrated_v5_RNA.rds")
+saveRDS(seurat_integrated, glue("14_seurat_integration/out/seurat_integrated_{n_dim}PCs.rds"))
 # seurat_integrated <- readRDS("11_seurat_integration/out/seurat_integrated_v5_RNA.rds")
 
 ############################ Investigate clusters  #############################
 
-VlnPlot(
-  seurat_integrated,
-  features = "rna_CD8A", group.by = "unintegrated_clusters", raster=FALSE
-) + NoLegend() + ggtitle("CD8A - Unintegrated Clusters")
-
-vars <- c("percent.ribo", "percent.mt", "G2M.Score", "S.Score")
-var <- "percent.mt"
-VlnPlot(
-  seurat_integrated,
-  features = var, group.by = "unintegrated_clusters", raster=FALSE
-) + NoLegend() + ggtitle(glue("{var} - Unintegrated Clusters"))
-
-p2 <- VlnPlot(
-  seurat_integrated, "rna_CD8A",
-  group.by = "RNA_harmony_clusters"
-) + NoLegend() + ggtitle("CD8A - CCA Clusters")
-
-p1 | p2 
+# VlnPlot(
+#   seurat_integrated,
+#   features = "rna_CD8A", group.by = "unintegrated_clusters", raster=FALSE
+# ) + NoLegend() + ggtitle("CD8A - Unintegrated Clusters")
+# 
+# vars <- c("percent.ribo", "percent.mt", "G2M.Score", "S.Score")
+# var <- "percent.mt"
+# VlnPlot(
+#   seurat_integrated,
+#   features = var, group.by = "unintegrated_clusters", raster=FALSE
+# ) + NoLegend() + ggtitle(glue("{var} - Unintegrated Clusters"))
+# 
+# p2 <- VlnPlot(
+#   seurat_integrated, "rna_CD8A",
+#   group.by = "RNA_harmony_clusters"
+# ) + NoLegend() + ggtitle("CD8A - CCA Clusters")
+# 
+# p1 | p2 
 
 ######################## Save as h5ad file for python #########################
 
