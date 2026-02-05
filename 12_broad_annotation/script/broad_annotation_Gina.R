@@ -8,6 +8,8 @@ library(ggplot2)
 # Load data
 # seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 seurat_obj_singlets_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
+seurat_obj_singlets_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
+
 
 # TODO: Remember to clean up clusters in this flow OR at an earlier point.
 # Like removing contaminating clusters. 
