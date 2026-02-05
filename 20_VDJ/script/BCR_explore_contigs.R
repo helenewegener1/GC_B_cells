@@ -9,6 +9,7 @@ library(ggplot2)
 library(patchwork)
 library(readxl)
 library(scRepertoire)
+library(gtools)
 
 # Load data
 seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds") # Broad annotation
@@ -166,7 +167,7 @@ for (group in c("sample_high_level", "patient")){
   # Manual calculation example:
   # CTaa is a combination of the heavy and light chain --> paste(cdr3_aa1, cdr3_aa2, sep = "_")
   # CTstrict is the most stringent clonotype definition in scRepertoire. It combines both the V(D)J gene usage AND the nucleotide CDR3 sequences.
-  # THURSDAY: FIGURE OUT WHICH DEFINITION OF CLONOTYPES THERE ARE AND WHICH YOU WANT TO USE 
+  # FIGURE OUT WHICH DEFINITION OF CLONOTYPES THERE ARE AND WHICH YOU WANT TO USE 
   # total_clones <- combined.BCR.filtered$`HH117-SILP-INF-PC`$CTstrict %>% length()
   # unique_clones <- combined.BCR.filtered$`HH117-SILP-INF-PC`$CTstrict %>% unique() %>% length() 
   # unique_clones/total_clones * 100
@@ -191,21 +192,37 @@ for (group in c("sample_high_level", "patient")){
   
 }
 
-# Compare clones
-clonalCompare(combined.BCR.filtered, 
-              top.clones = 10, 
-              group.by = "sample_high_level",
-              cloneCall="aa", 
-              graph = "alluvial") + 
-  labs(title = "BCR: Compare all samples") + 
-  theme(
-    legend.position = "none",
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
+# Compare clones within each patient 
+res <- lapply(
+  c("HH117", "HH119"), function(x) {
+    
+    HH_mask <- grep(x, names(combined.BCR.filtered))
+    combined.BCR.filtered_HH <- combined.BCR.filtered[HH_mask]
+    # names(combined.BCR.filtered_HH119)
+    
+    clonalCompare(combined.BCR.filtered_HH, 
+                  top.clones = 10, 
+                  group.by = "sample_high_level",
+                  cloneCall="aa", 
+                  graph = "alluvial") + 
+      labs(title = "BCR: Compare {x}") + 
+      theme(
+        legend.position = "none",
+        axis.text.x = element_text(angle = 45, hjust = 1)
+      )
+    
+    ggsave(glue("20_VDJ/plot/BCR_scRepertoire/clonalCompare_{x}.png"), width = 13, height = 7.5)
+    
+    return(combined.BCR.filtered_HH)
+    
+  }
+)
 
-ggsave("20_VDJ/plot/clonalCompare.png", width = 13, height = 7.5)
+combined.BCR.filtered_HH117 <- res[[1]]
+names(combined.BCR.filtered_HH117)
 
-
+combined.BCR.filtered_HH119 <- res[[2]]
+names(combined.BCR.filtered_HH119)
 
 # Split by samples since too many sample in one plot with each follicle. 
 for (sample_name in names(bcr_seurat_obj_list)) {
@@ -228,19 +245,27 @@ for (sample_name in names(bcr_seurat_obj_list)) {
     names_fols_mask <- grep("Doublet|Negative", names(combined.BCR_subset), invert = TRUE)
     combined.BCR_subset <- combined.BCR_subset[names_fols_mask]
     # names(combined.BCR_subset)
+
+    # Sort naturally by the numeric part
+    sorted_x <- mixedsort(names(combined.BCR_subset), decreasing = TRUE)
+    combined.BCR_subset <- combined.BCR_subset[sorted_x]
+    names(combined.BCR_subset)
     
-    # Set order of follicles 
-    # fol_order <- c("Fol-19", "Fol-23", ...)
-    fol_order <- names(combined.BCR_subset) %>% sort()
-    combined.BCR_subset <- combined.BCR_subset[fol_order]
+    n_cells <- lapply(combined.BCR_subset, function(x) nrow(x))
     
     labels <- combined.BCR_subset[startsWith(names(combined.BCR_subset), sample_name)] %>% names() %>% str_split_i("_", 2)
+    
+    labels_final <- paste(labels, "-", n_cells, "cells")
     
   } else if (length(names(combined.BCR_subset)) == 1) {
     
     labels <- sample_name
+    
+    n_cells <- nrow(combined.BCR_subset)
+    
+    labels_final <- paste(labels, "-", n_cells, "cells")
   
-    }
+  }
   
   # Not scaled
   clonalAbundance(combined.BCR_subset, 
@@ -248,7 +273,8 @@ for (sample_name in names(bcr_seurat_obj_list)) {
                   scale = FALSE) + 
     labs(title = "BCR: Clonal abundance - The total number of clones at specific frequencies",
          subtitle = sample_name) + 
-    scale_color_discrete(labels = labels) + 
+    # scale_color_discrete(labels = labels) +
+    scale_color_discrete(labels = labels_final) +
     theme_dark()
   
   ggsave(glue("{outdir}/{sample_name}_clonalAbundance.png"), width = 10, height = 6.5)
@@ -259,7 +285,8 @@ for (sample_name in names(bcr_seurat_obj_list)) {
                   scale = TRUE) + 
     labs(title = "BCR: Scaled clonal abundance - The total number of clones at specific frequencies",
          subtitle = sample_name) + 
-    scale_color_discrete(labels = labels) + 
+    # scale_color_discrete(labels = labels) + 
+    scale_color_discrete(labels = labels_final) + 
     theme_dark()
   
   ggsave(glue("{outdir}/{sample_name}_clonalAbundance_scaled.png"), width = 10, height = 6.5)
@@ -272,7 +299,7 @@ for (sample_name in names(bcr_seurat_obj_list)) {
                  chain = chain, 
                  scale = TRUE) + 
       labs(title = glue("BCR: Sequence Lengths of {chain}"), subtitle = sample_name) +
-      scale_fill_discrete(labels = labels)
+      scale_fill_discrete(labels = labels_final)
     
     ggsave(glue("{outdir}/{sample_name}_clonalLength_{chain}.png"), width = 10, height = 6.5)
     
@@ -286,9 +313,12 @@ for (sample_name in names(bcr_seurat_obj_list)) {
                 ), 
                 cloneCall="aa", 
                 graph = "alluvial") + 
-    scale_x_discrete(labels = labels) +
+    scale_x_discrete(labels = labels_final) +
     labs(title = glue("BCR: Compare {sample_name}")) + 
-    theme(legend.position = "none")
+    theme(
+      legend.position = "none", 
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
   ggsave(glue("{outdir}/{sample_name}_clonalCompare.png"), width = 13, height = 7.5)
   
 }
