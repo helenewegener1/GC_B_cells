@@ -205,7 +205,7 @@ res <- lapply(
                   group.by = "sample_high_level",
                   cloneCall="aa", 
                   graph = "alluvial") + 
-      labs(title = "BCR: Compare {x}") + 
+      labs(title = glue("BCR: Compare {x}")) + 
       theme(
         legend.position = "none",
         axis.text.x = element_text(angle = 45, hjust = 1)
