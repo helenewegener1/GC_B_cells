@@ -191,6 +191,20 @@ for (group in c("sample_high_level", "patient")){
   
 }
 
+# Compare clones
+clonalCompare(combined.BCR.filtered, 
+              top.clones = 10, 
+              group.by = "sample_high_level",
+              cloneCall="aa", 
+              graph = "alluvial") + 
+  labs(title = "BCR: Compare all samples") + 
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave("20_VDJ/plot/clonalCompare.png", width = 13, height = 7.5)
+
 
 
 # Split by samples since too many sample in one plot with each follicle. 
@@ -209,10 +223,24 @@ for (sample_name in names(bcr_seurat_obj_list)) {
   dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
   
   if (length(names(combined.BCR_subset)) > 1){
-    labels <- combined.BCR.filtered[startsWith(names(combined.BCR.filtered), sample_name)] %>% names() %>% str_split_i("_", 2)
+    
+    # Exclude Doublet and Negative subsets
+    names_fols_mask <- grep("Doublet|Negative", names(combined.BCR_subset), invert = TRUE)
+    combined.BCR_subset <- combined.BCR_subset[names_fols_mask]
+    # names(combined.BCR_subset)
+    
+    # Set order of follicles 
+    # fol_order <- c("Fol-19", "Fol-23", ...)
+    fol_order <- names(combined.BCR_subset) %>% sort()
+    combined.BCR_subset <- combined.BCR_subset[fol_order]
+    
+    labels <- combined.BCR_subset[startsWith(names(combined.BCR_subset), sample_name)] %>% names() %>% str_split_i("_", 2)
+    
   } else if (length(names(combined.BCR_subset)) == 1) {
+    
     labels <- sample_name
-  }
+  
+    }
   
   # Not scaled
   clonalAbundance(combined.BCR_subset, 
