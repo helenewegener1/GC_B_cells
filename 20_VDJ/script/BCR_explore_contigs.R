@@ -195,6 +195,7 @@ for (combined.BCR.name in combined.BCR.names){
     next
   }
   
+  sample_name <- combined.BCR.name %>% str_split_i("_", 1)
   sample_name_sheet_name <- sheet_names[[sample_name]]
   fol_name <- combined.BCR.name %>% str_split_i("_", 2)
   
