@@ -142,7 +142,7 @@ head(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol
 combined.BCR.filtered <- combineBCR(b_contigs.list,
                                     samples = names(b_contigs.list), 
                                     removeNA = TRUE,
-                                    threshold = 0.85, # Default is 0.85. Oliver used default. 
+                                    # threshold = 0.85, # Default is 0.85. Oliver used default. 
                                     # filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains. 
                                     filterMulti = TRUE # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others. 
 ) 
@@ -168,6 +168,64 @@ combined.BCR.filtered <- addVariable(combined.BCR.filtered,
 
 # The CTstrict column contains cluster IDs (e.g., "cluster.1")
 head(combined.BCR.filtered[[1]][, c("barcode", "CTstrict", "IGH", "cdr3_aa1")])
+
+# ------------------------------------------------------------------------------
+# Follicle frequence after filtering 
+# ------------------------------------------------------------------------------
+
+combined.BCR.names <- names(combined.BCR.filtered)
+
+fol_freq_list <- list()
+
+for (combined.BCR.name in combined.BCR.names){
+  
+  # combined.BCR.name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1"
+  # combined.BCR.name <- "HH117-SILP-INF-PC"
+  combined.BCR.filtered.sample <- combined.BCR.filtered[[combined.BCR.name]]
+  
+  if (str_detect(combined.BCR.name, "_", negate = TRUE)){
+    next
+  }
+  
+  sample_name_sheet_name <- combined.BCR.name %>% str_split_i("_", 1) %>% str_sub(1, 31)
+  fol_name <- combined.BCR.name %>% str_split_i("_", 2)
+  
+  fol_freq_line <- c(fol_name, nrow(combined.BCR.filtered.sample))
+  
+  fol_freq_list[[sample_name_sheet_name]] <- rbind(fol_freq_list[[sample_name_sheet_name]], fol_freq_line)
+  
+}
+
+# Get in order 
+
+fol_freq_df_list <- lapply(fol_freq_list, function(x) {
+  as.data.frame(x) %>% 
+    mutate(
+      fol_num = as.numeric(str_extract(V1, "(?<=Fol-)\\d+")),
+      order_val = case_when(
+        V1 == "Doublet" ~ Inf,      # Doublet goes second to last
+        V1 == "Negative" ~ Inf + 1, # Negative goes last
+        TRUE ~ fol_num                # Fol-X ordered by number
+      )
+    ) %>%
+    arrange(order_val) %>%
+    select(-fol_num, -order_val) %>% 
+    rename(Fol = V1, Count = V2) %>% 
+    remove_rownames()
+})
+
+# Export xlsx file 
+out_file <- glue("20_VDJ/table/BCR_filtered_fol_freq.xlsx")
+
+# Use openxlsx::write.xlsx, which takes the named list and writes
+# each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
+openxlsx::write.xlsx(
+  x = fol_freq_df_list,
+  file = out_file,
+  overwrite = TRUE # Overwrite the file if it already exists
+)
+
+################################################################################
 
 # Quantifying Unique Clones
 # clonalQuant() returns the total or relative numbers of unique clones
@@ -331,5 +389,22 @@ for (sample_name in names(bcr_seurat_obj_list)) {
       axis.text.x = element_text(angle = 45, hjust = 1)
     )
   ggsave(glue("{outdir}/{sample_name}_clonalCompare.png"), width = 13, height = 7.5)
+  
+  # Clonal scatter 
+  # clonalScatter(combined.BCR_subset, 
+  #               cloneCall ="gene", 
+  #               x.axis = "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-18", 
+  #               y.axis = "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-19",
+  #               dot.size = "total",
+  #               graph = "proportion")
+  
+  clonalHomeostasis(combined.BCR_subset, 
+                    cloneCall = "gene") + 
+    scale_x_discrete(labels = labels_final) + 
+    labs(title = glue("BCR: Clonal homeostasis {sample_name}")) + 
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    ) 
+  ggsave(glue("{outdir}/{sample_name}_clonalHomeostasis.png"), width = 13, height = 7.5)
   
 }
