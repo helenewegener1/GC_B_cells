@@ -413,6 +413,14 @@ sample_names <- names(seurat_obj_ADT_demultiplexed_all)
 
 fol_freq_list <- list()
 
+sheet_names <- list(
+  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = "HH117",
+  "HH119-SI-PP-CD19-Pool1" = "HH119-CD19-Pool1",        
+  "HH119-SI-PP-CD19-Pool2" = "HH119-CD19-Pool2",               
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = "HH119-GC-AND-PB-AND-TFH-Pool1",
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = "HH119-GC-AND-PB-AND-TFH-Pool2"
+)
+
 for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
@@ -439,7 +447,7 @@ for (sample_name in sample_names){
     arrange(order_val) %>%
     select(-fol_num, -order_val)
   
-  sample_name_sheet_name <- str_sub(sample_name, 1, 31)
+  sample_name_sheet_name <- sheet_names[[sample_name]]
   fol_freq_list[[sample_name_sheet_name]] <- fol_freq_ordered
   
 }
