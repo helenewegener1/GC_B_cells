@@ -177,6 +177,14 @@ combined.BCR.names <- names(combined.BCR.filtered)
 
 fol_freq_list <- list()
 
+sheet_names <- list(
+  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = "HH117",
+  "HH119-SI-PP-CD19-Pool1" = "HH119-CD19-Pool1",        
+  "HH119-SI-PP-CD19-Pool2" = "HH119-CD19-Pool2",               
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = "HH119-GC-AND-PB-AND-TFH-Pool1",
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = "HH119-GC-AND-PB-AND-TFH-Pool2"
+)
+
 for (combined.BCR.name in combined.BCR.names){
   
   # combined.BCR.name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1"
@@ -187,7 +195,7 @@ for (combined.BCR.name in combined.BCR.names){
     next
   }
   
-  sample_name_sheet_name <- combined.BCR.name %>% str_split_i("_", 1) %>% str_sub(1, 31)
+  sample_name_sheet_name <- sheet_names[[sample_name]]
   fol_name <- combined.BCR.name %>% str_split_i("_", 2)
   
   fol_freq_line <- c(fol_name, nrow(combined.BCR.filtered.sample))
