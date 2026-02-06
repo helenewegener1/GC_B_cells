@@ -402,3 +402,60 @@ not_ADT_samples <- names(seurat_obj_nonDC_list)[!names(seurat_obj_nonDC_list) %i
 seurat_obj_ADT_demultiplexed_all <- c(seurat_obj_nonDC_list[not_ADT_samples], seurat_obj_ADT_demultiplexed)
 
 saveRDS(seurat_obj_ADT_demultiplexed_all, "10_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
+
+# ---------------------------------------------------------------------------
+# Stats - cells per follicle
+# ---------------------------------------------------------------------------
+
+seurat_obj_ADT_demultiplexed_all <- readRDS("10_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
+
+sample_names <- names(seurat_obj_ADT_demultiplexed_all)
+
+fol_freq_list <- list()
+
+for (sample_name in sample_names){
+  
+  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  # sample_name <- "HH117-SILP-INF-PC"
+  seurat_obj <- seurat_obj_ADT_demultiplexed_all[[sample_name]]
+  
+  if (!"ADT" %in% names(seurat_obj@assays)){
+    next
+  }
+  
+  fol_freq <- seurat_obj$manual_ADT_ID %>% table() %>% as.data.frame() 
+  colnames(fol_freq) <- c("Fol", "Count")
+  
+  # Extract number from "Fol-X", then order: Fol groups numerically, then Doublet, then Negative
+  fol_freq_ordered <- fol_freq %>%
+    mutate(
+      fol_num = as.numeric(str_extract(Fol, "(?<=Fol-)\\d+")),
+      order_val = case_when(
+        Fol == "Doublet" ~ Inf,      # Doublet goes second to last
+        Fol == "Negative" ~ Inf + 1, # Negative goes last
+        TRUE ~ fol_num                # Fol-X ordered by number
+      )
+    ) %>%
+    arrange(order_val) %>%
+    select(-fol_num, -order_val)
+  
+  sample_name_sheet_name <- str_sub(sample_name, 1, 31)
+  fol_freq_list[[sample_name_sheet_name]] <- fol_freq_ordered
+  
+}
+
+# Export xlsx file 
+out_file <- glue("10_ADT_demultiplex/out/fol_freq.xlsx")
+
+# Use openxlsx::write.xlsx, which takes the named list and writes
+# each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
+openxlsx::write.xlsx(
+  x = fol_freq_list,
+  file = out_file,
+  overwrite = TRUE # Overwrite the file if it already exists
+)
+
+
+
+
+
