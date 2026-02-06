@@ -223,7 +223,7 @@ fol_freq_df_list <- lapply(fol_freq_list, function(x) {
 })
 
 # Export xlsx file 
-out_file <- glue("20_VDJ/table/BCR_filtered_fol_freq.xlsx")
+out_file <- "20_VDJ/table/BCR_filtered_fol_freq.xlsx"
 
 # Use openxlsx::write.xlsx, which takes the named list and writes
 # each element as a separate sheet (sheet name = list name, i.e., Cluster ID)

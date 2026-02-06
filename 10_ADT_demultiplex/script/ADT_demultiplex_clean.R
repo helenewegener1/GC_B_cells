@@ -453,7 +453,7 @@ for (sample_name in sample_names){
 }
 
 # Export xlsx file 
-out_file <- glue("10_ADT_demultiplex/table/fol_freq.xlsx")
+out_file <- "10_ADT_demultiplex/table/fol_freq.xlsx"
 
 # Use openxlsx::write.xlsx, which takes the named list and writes
 # each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
