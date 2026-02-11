@@ -7,8 +7,10 @@
 
 05_run_cellranger/out_v9
 05_run_cellranger/out_v8
+
 */script/*.err
 */script/*.log
+
 
 10_ADT_demultiplex/plot/*/individual_cell_annotation
 
