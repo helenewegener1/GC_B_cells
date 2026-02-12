@@ -128,7 +128,6 @@ combined.TCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1
 combined.TCR.filtered <- combineTCR(t_contigs.list,
                                     samples = names(t_contigs.list), 
                                     removeNA = TRUE,
-                                    # threshold = 0.85, # Default is 0.85. Oliver used default. 
                                     # filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains. 
                                     filterMulti = TRUE # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others. 
 ) 

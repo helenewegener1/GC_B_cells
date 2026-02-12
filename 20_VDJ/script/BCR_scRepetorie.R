@@ -79,8 +79,10 @@ names(combined.BCR.filtered_HH117)
 combined.BCR.filtered_HH119 <- res[[2]]
 names(combined.BCR.filtered_HH119)
 
+sample_names <- names(combined.BCR.filtered) %>% str_split_i("_", 1) %>% unique()
+
 # Split by samples since too many sample in one plot with each follicle. 
-for (sample_name in names(bcr_seurat_obj_list)) {
+for (sample_name in sample_names) {
   
   # sample_name <- "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"

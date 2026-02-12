@@ -12,16 +12,15 @@ library(scRepertoire)
 library(gtools)
 
 # Load data
-seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds") # Broad annotation
-seurat_obj_ADT_demulti <- readRDS("10_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds") # Follicol information 
+seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
 
 # Investigate non-unique chains across contigs which should be filtered on umi. 
 
 # Subset cells with BCR respectively. 
-bcr_mask <- lapply(names(seurat_obj_ADT_demulti), function(x) {"bcr_v_gene_contig_1" %in% colnames(seurat_obj_ADT_demulti[[x]]@meta.data)}) %>% unlist()
+bcr_mask <- lapply(names(seurat_obj_list), function(x) {"bcr_v_gene_contig_1" %in% colnames(seurat_obj_list[[x]]@meta.data)}) %>% unlist()
 
 # Extract seurat objects with BCR data 
-bcr_seurat_obj_list <- seurat_obj_ADT_demulti[bcr_mask]
+bcr_seurat_obj_list <- seurat_obj_list[bcr_mask]
 
 # Loading Data into scRepertoire
 b_contigs.list <- list()
@@ -33,7 +32,7 @@ for (sample_name in names(bcr_seurat_obj_list)){
   b_contigs <- read.csv(glue("05_run_cellranger/out_v9/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_b/filtered_contig_annotations.csv"))
   
   # Load Seurat object
-  seurat_obj <- seurat_obj_ADT_demulti[[sample_name]]
+  seurat_obj <- seurat_obj_list[[sample_name]]
   
   # If sample is muliplexed, split contigs into list of contig files. 
   if ("manual_ADT_ID" %in% colnames(seurat_obj@meta.data)){
@@ -153,12 +152,12 @@ is.na(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fo
 
 head(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`, n = 5)
 
-# Adding Variables for Plotting: sample_high_level
+# Adding Variables: sample_high_level
 combined.BCR.filtered <- addVariable(combined.BCR.filtered,
                                      variable.name = "sample_high_level",
                                      variables = str_split_i(names(combined.BCR.filtered), "_", 1))
 
-# Adding Variables for Plotting: Inflamed / non-inflamed
+# Adding Variables: Inflamed / non-inflamed
 patient_number <- str_split_i(names(b_contigs.list), "-", 1)
 patient_number <- ifelse(patient_number == "HH117", "HH117_Crohns", "HH117_Control")
 
@@ -166,10 +165,14 @@ combined.BCR.filtered <- addVariable(combined.BCR.filtered,
                                      variable.name = "patient",
                                      variables = patient_number)
 
+# Adding Variables: Broad cell type
+
+
 # The CTstrict column contains cluster IDs (e.g., "cluster.1")
 head(combined.BCR.filtered[[1]][, c("barcode", "CTstrict", "IGH", "cdr3_aa1")])
 
 saveRDS(combined.BCR.filtered, "20_VDJ/out/combined.BCR.filtered.rds")
+# combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
 
 # ------------------------------------------------------------------------------
 # Follicle frequence after filtering 
