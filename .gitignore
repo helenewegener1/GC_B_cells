@@ -12,7 +12,7 @@
 */script/*.log
 
 
-10_ADT_demultiplex/plot/*/individual_cell_annotation
+11_ADT_demultiplex/plot/*/individual_cell_annotation
 
 14_seurat_integration/*
 !14_seurat_integration/script
