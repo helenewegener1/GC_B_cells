@@ -36,6 +36,7 @@ celltype_counts %>%
   theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
   labs(
     title = "Number of Cells per Sample by Cell Type",
+    subtitle = "Filtered seurat object", 
     x = "",
     y = "Number of cells",
     fill = "Cell Type"
@@ -46,31 +47,31 @@ ggsave("20_VDJ/plot/N_cell_stat/N_cells_celltypes.png", width = 12, height = 7)
 # ------------------------------------------------------------------------------
 # Cell frequency with BCR after filtering (No fol information)
 # ------------------------------------------------------------------------------
-combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
-source("20_VDJ/script/functions.R")
-
-# Apply the function
-combined.BCR.combined_follicles <- combine_follicles(combined.BCR.filtered)
-
-cell_counts_combined <- data.frame(
-  sample = names(combined.BCR.combined_follicles),
-  n_cells = sapply(combined.BCR.combined_follicles, nrow),
-  type = "Combined"
-)
-
-# Plot comparison
-ggplot(cell_counts_combined, aes(x = sample, y = n_cells)) +
-  geom_col(fill = "steelblue") +
-  geom_text(aes(label = n_cells), vjust = -0.5, size = 3) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 70, hjust = 1, size = 8)) +
-  labs(
-    title = "Cell Counts After combineBCR",
-    x = "",
-    y = "Number of cells"
-  )
-
-ggsave("20_VDJ/plot/N_cell_stat/N_cells_combined_BCR_filtered.png", width = 12, height = 7)
+# combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
+# source("20_VDJ/script/functions.R")
+# 
+# # Apply the function
+# combined.BCR.combined_follicles <- combine_follicles(combined.BCR.filtered)
+# 
+# cell_counts_combined <- data.frame(
+#   sample = names(combined.BCR.combined_follicles),
+#   n_cells = sapply(combined.BCR.combined_follicles, nrow),
+#   type = "Combined"
+# )
+# 
+# # Plot comparison
+# ggplot(cell_counts_combined, aes(x = sample, y = n_cells)) +
+#   geom_col(fill = "steelblue") +
+#   geom_text(aes(label = n_cells), vjust = -0.5, size = 3) +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 70, hjust = 1, size = 8)) +
+#   labs(
+#     title = "Cell Counts After combineBCR",
+#     x = "",
+#     y = "Number of cells"
+#   )
+# 
+# ggsave("20_VDJ/plot/N_cell_stat/N_cells_combined_BCR_filtered.png", width = 12, height = 7)
 
 # ------------------------------------------------------------------------------
 # Cell frequency after filtering - per follicle

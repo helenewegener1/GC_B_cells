@@ -29,10 +29,10 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells", 
   "1" = "Naïve_memory_B_cells",
-  "2" = "GC_like_B_cells",
-  "3" = "GC_like_B_cells",
+  "2" = "GC_B_cells",
+  "3" = "GC_B_cells",
   "4" = "Naïve_memory_B_cells",
-  "5" = "GC_like_B_cells",
+  "5" = "GC_B_cells",
   "6" = "PCs_PBs",
   "7" = "Contamination_ambiguous"#(T_cell-MNP signature) 
 )
@@ -75,9 +75,9 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells",
   "1" = "Naïve_memory_B_cells",
-  "2" = "GC_like_B_cells",
+  "2" = "GC_B_cells",
   "3" = "Naïve_memory_B_cells",
-  "4" = "GC_like_B_cells",
+  "4" = "GC_B_cells",
   "5" = "PCs_PBs"
   #"6" = "Plasma_cells"/ I don't have a 6th cluster 
 )
@@ -118,13 +118,13 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "GC_like_B_cells",
+  "0" = "GC_B_cells",
   "1" = "Tfh_like_cells",
-  "2" = "GC_like_B_cells",
+  "2" = "GC_B_cells",
   "3" = "PCs_PBs",
-  "4" = "GC_like_B_cells",
+  "4" = "GC_B_cells",
   "5" = "Tfh_like_cells",
-  "6" = "GC_like_B_cells" # yes, there might be some contamination here but we keep for now
+  "6" = "GC_B_cells" # yes, there might be some contamination here but we keep for now
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -163,11 +163,11 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "GC_like_B_cells",
-  "1" = "GC_like_B_cells",
+  "0" = "GC_B_cells",
+  "1" = "GC_B_cells",
   "2" = "Tfh_like_cells",
-  "3" = "GC_like_B_cells",
-  "4" = "GC_like_B_cells",
+  "3" = "GC_B_cells",
+  "4" = "GC_B_cells",
   "5" = "Naïve_memory_B_cells",
   "6" = "PCs_PBs",
   "7" = "Tfh_like_cells"
@@ -298,8 +298,8 @@ cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells", 
   "1" = "Naïve_memory_B_cells",
   "2" = "Tfh_like_cells",
-  "3" = "GC_like_B_cells",
-  "4" = "GC_like_B_cells",
+  "3" = "GC_B_cells",
+  "4" = "GC_B_cells",
   "5" = "PCs_PBs",
   "6" = "Naïve_memory_B_cells", 
   "7" = "Tfh_like_cells"
@@ -344,7 +344,7 @@ cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs",
   "2" = "PCs_PBs",
-  "3" = "GC_like_B_cells",
+  "3" = "GC_B_cells",
   "4" = "Contamination_mast_cells",
   "5" = "Contamination_MNPs",
   "6" = "Contamination_γδT_cell"
