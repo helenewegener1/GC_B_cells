@@ -11,6 +11,9 @@
 */script/*.err
 */script/*.log
 
+07_seurat_QC/plot_v8/
+07_seurat_QC/plot/
+05_run_cellranger/web_summaries/
 
 11_ADT_demultiplex/plot/*/individual_cell_annotation
 
