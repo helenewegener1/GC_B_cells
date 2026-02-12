@@ -53,7 +53,6 @@ seurat_merged <- FindVariableFeatures(seurat_merged, verbose = FALSE)
 seurat_merged <- ScaleData(seurat_merged, verbose = FALSE)
 seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
 
-
 # ElbowPlot(seurat_merged)
 ElbowPlot(seurat_merged, ndims = 50)
 # DimHeatmap(seurat_merged, dims = 1:30, cells = 500)
@@ -185,6 +184,9 @@ for (red in reductions){
   vars <- c("sample", "patient", "inflammed", "tissue", "celltype_broad")
   
   for (var in vars){
+    
+    # var <- "patient"
+    
     DimPlot(seurat_integrated, reduction = umap_reduction.name, group.by = var) +
       labs(title = glue("UMAP - post {reduction}"), 
            subtitle = var) + 

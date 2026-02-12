@@ -7,7 +7,8 @@ library(glue)
 library(ggplot2)
 
 # Load data
-seurat_obj_list <- readRDS("12_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
+# seurat_obj_list <- readRDS("12_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
+seurat_obj_list <- read("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
 
 sample_names <- names(seurat_obj_list)
 
@@ -25,28 +26,7 @@ for (sample_name in sample_names){
   
   seurat_obj <- seurat_obj_list[[sample_name]]
   note <- ""
-  
-  # Remove the DCs if there are any
-  if ("DCs_MNPs" %in% seurat_obj$celltype_broad) {
-    
-    seurat_obj_subset <- subset(seurat_obj, celltype_broad != "DCs_MNPs")
-    
-    # Seurat workflow after subsetting
-    seurat_obj_subset <- NormalizeData(seurat_obj_subset, verbose = FALSE)
-    seurat_obj_subset <- FindVariableFeatures(seurat_obj_subset, verbose = FALSE)
-    seurat_obj_subset <- ScaleData(seurat_obj_subset, verbose = FALSE)
-    seurat_obj_subset <- RunPCA(seurat_obj_subset, verbose = FALSE)
-    
-    seurat_obj_subset <- FindNeighbors(seurat_obj_subset,  dims = 1:n_dim, verbose = FALSE)
-    seurat_obj_subset <- FindClusters(seurat_obj_subset, resolution = res, verbose = FALSE)
-    seurat_obj_subset <- RunUMAP(seurat_obj_subset, reduction = "pca", dims = 1:n_dim, verbose = FALSE)
-    
-    seurat_obj_list[[sample_name]] <- seurat_obj_subset
-    
-    note <- "DCs removed"
-    
-  }
-  
+
   n_cells <- ncol(seurat_obj_list[[sample_name]])
   DimPlot(seurat_obj_list[[sample_name]], group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
     labs(subtitle = sample_name, 
