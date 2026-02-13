@@ -88,7 +88,7 @@ Reductions(seurat_merged)
 # saveRDS(seurat_merged, "14_seurat_integration/out/seurat_obj_merged_list.rds")
 # seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
 
-outdir_plot <- glue("14_seurat_integration/plot_rmIg_{n_dim}PCs")
+outdir_plot <- glue("14_seurat_integration/plot/plot_rmIg_{n_dim}PCs")
 dir.create(outdir_plot, showWarnings = F, recursive = T)
 dir.create(glue("{outdir_plot}/clusters/clustree"), showWarnings = F, recursive = T)
 

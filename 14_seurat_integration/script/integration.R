@@ -57,7 +57,7 @@ seurat_merged <- RunPCA(seurat_merged, verbose = FALSE)
 ElbowPlot(seurat_merged, ndims = 50)
 # DimHeatmap(seurat_merged, dims = 1:30, cells = 500)
 
-n_dim <- 20
+n_dim <- 10
 
 seurat_merged <- FindNeighbors(seurat_merged, dims = 1:n_dim, verbose = FALSE)
 seurat_merged <- FindClusters(seurat_merged, resolution = res, verbose = FALSE, cluster.name = "unintegrated_clusters")
@@ -71,7 +71,7 @@ Reductions(seurat_merged)
 # saveRDS(seurat_merged, "14_seurat_integration/out/seurat_obj_merged_list.rds")
 # seurat_merged <- readRDS("14_seurat_integration/out/seurat_obj_merged_list.rds")
 
-outdir_plot <- glue("14_seurat_integration/plot_{n_dim}PCs")
+outdir_plot <- glue("14_seurat_integration/plot/plot_{n_dim}PCs")
 dir.create(outdir_plot, showWarnings = F, recursive = T)
 dir.create(glue("{outdir_plot}/clusters/clustree"), showWarnings = F, recursive = T)
 
@@ -95,9 +95,9 @@ DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = "celltype_bro
 ggsave(glue("{outdir_plot}/UMAP_PRE_integration_{integration_var}_split.png"), width = 12, height = 7)
 
 ## More UMAPs...
-for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed")){
+for (var in c(integration_var, "sample", "celltype_broad", "tissue", "inflammed", "sample_clean")){
 
-  # var <- "patient"
+  # var <- ""
 
   DimPlot(seurat_merged, reduction = "umap.unintegrated", group.by = var) +
     labs(title = "UMAP - RNA - pre integration",
@@ -256,7 +256,40 @@ Reductions(seurat_integrated)
 saveRDS(seurat_integrated, glue("14_seurat_integration/out/seurat_integrated_{n_dim}PCs.rds"))
 # seurat_integrated <- readRDS("11_seurat_integration/out/seurat_integrated_v5_RNA.rds")
 
+# ------------------------------------------------------------------------------
+# Cell frequency per sample_clean
+# ------------------------------------------------------------------------------
+
+# Extract cell counts by celltype_broad for each sample
+celltype_counts <- seurat_integrated[[]] %>% 
+  summarise(n_cells = n(), .by = c(sample_clean, celltype_broad)) %>% 
+  mutate(n_cells_total = sum(n_cells), .by = sample_clean)
+
+# Create stacked barplot
+celltype_counts %>%
+  ggplot(aes(x = sample_clean, y = n_cells, fill = celltype_broad)) +
+  geom_col() +
+  geom_text(
+    aes(x = sample_clean, y = n_cells_total, label = n_cells_total),
+    inherit.aes = FALSE,
+    vjust = -0.5,
+    size = 3
+  ) +
+  scale_fill_manual(values = wes_palette("Darjeeling1")[c(2:5)]) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+  labs(
+    title = "Number of Cells per Sample by Cell Type",
+    subtitle = "Filtered seurat object", 
+    x = "",
+    y = "Number of cells",
+    fill = "Cell Type"
+  )
+
+ggsave("14_seurat_integration/plot/N_cells/N_cells_celltypes_post_integration.png", width = 12, height = 7)
+
 ############################ Investigate clusters  #############################
+
 
 # VlnPlot(
 #   seurat_integrated,

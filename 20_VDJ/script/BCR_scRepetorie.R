@@ -11,7 +11,7 @@ library(readxl)
 library(scRepertoire)
 library(gtools)
 
-combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
+combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
 
 # Quantifying Unique Clones
 # clonalQuant() returns the total or relative numbers of unique clones
