@@ -2,49 +2,7 @@ library(tidyverse)
 library(readxl)
 library(wesanderson)
 
-# ------------------------------------------------------------------------------
-# Cell frequency per sample
-# ------------------------------------------------------------------------------
-
-seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
-
-seurat_obj_list$`HH117-SILP-INF-PC`$celltype_broad
-
-# Extract cell counts by celltype_broad for each sample
-celltype_counts <- lapply(names(seurat_obj_list), function(sample_name) {
-  n_cells <- ncol(seurat_obj_list[[sample_name]])
-  seurat_obj_list[[sample_name]][[]] %>%
-    count(celltype_broad) %>%
-    mutate(sample_name = sample_name,
-           n_cells = n_cells)
-}) %>%
-  bind_rows() 
-
-# Create stacked barplot
-celltype_counts %>%
-  ggplot(aes(x = sample_name, y = n, fill = celltype_broad)) +
-  geom_col() +
-  geom_text(
-    data = celltype_counts %>% distinct(sample_name, n_cells),
-    aes(x = sample_name, y = n_cells, label = n_cells),
-    inherit.aes = FALSE,
-    vjust = -0.5,
-    size = 3
-  ) +
-  scale_fill_manual(values = wes_palette("Darjeeling1")) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
-  labs(
-    title = "Number of Cells per Sample by Cell Type",
-    subtitle = "Filtered seurat object", 
-    x = "",
-    y = "Number of cells",
-    fill = "Cell Type"
-  )
-
-ggsave("20_VDJ/plot/N_cell_stat/N_cells_celltypes.png", width = 12, height = 7)
-
-# ------------------------------------------------------------------------------
+ # ------------------------------------------------------------------------------
 # Cell frequency with BCR after filtering (No fol information)
 # ------------------------------------------------------------------------------
 # combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
