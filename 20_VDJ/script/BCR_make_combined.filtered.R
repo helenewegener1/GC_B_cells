@@ -12,8 +12,8 @@ library(scRepertoire)
 library(gtools)
 
 # Load data
-seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
-# seurat_obj_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list.rds")
+# seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
+seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
 
 # ------------------------------------------------------------------------------
 # LOAD BCR DATA
@@ -193,7 +193,7 @@ for (sample_name_fol in names(combined.BCR.filtered)) {
   # Filter for manual_ADT_ID
   if (str_detect(sample_name_fol, "_Fol-")){
     seurat_obj <- subset(seurat_obj, manual_ADT_ID == Fol_name)
-  }
+  } 
 
   # Get BCR data
   bcr_data <- combined.BCR.filtered[[sample_name_fol]]
@@ -230,7 +230,13 @@ for (sample_name_fol in names(combined.BCR.filtered)) {
   patient_number <- str_split_i(sample_name, "-", 1)
   patient <- ifelse(patient_number == "HH117", "HH117_Crohns", "HH117_Control")
   
-  combined.BCR.filtered.clean[[sample_name_fol]]$sample_high_level <- patient
+  combined.BCR.filtered.clean[[sample_name_fol]]$patient <- patient
+  
+  # -------------------------
+  # Add sample_clean: patient-tissue-inflammed
+  # -------------------------
+  
+  combined.BCR.filtered.clean[[sample_name_fol]]$sample_clean <- seurat_obj$sample_clean %>% unique()
   
 }
 
