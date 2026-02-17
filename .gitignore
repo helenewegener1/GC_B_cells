@@ -4,6 +4,7 @@
 
 */out
 !/out/README
+*/table
 
 05_run_cellranger/out_v9
 05_run_cellranger/out_v8
@@ -20,6 +21,7 @@
 14_seurat_integration/*
 !14_seurat_integration/script
 
+20_VDJ/plot
 
 
 .DS_Store
