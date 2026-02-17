@@ -21,19 +21,23 @@
 #   "Contamination_γδT_cell"   = "#BFBFBF"   # neutral grey
 # )
 
+library(wesanderson)
+main_celltypes <- wes_palette("FantasticFox1")
+names(main_celltypes) <- c("DCs_MNPs", "Naïve_memory_B_cells", "Tfh_like_cells", "GC_B_cells", "PCs_PBs")
+
 # All unique celltypes across all samples. 
 celltype_colors <- c(
-  # B-cell lineage (light/bright teals)
-  "Naïve_memory_B_cells"     = "#56B1C8",  # light bright teal
-  "GC_like_B_cells"          = "#2FA67F",  # bright turquoise-green
-  "GC_B_cells"               = "#9FD3DD",  # pale aqua
-  
-  # Tfh-like cells (soft lilac)
-  "Tfh_like_cells"           = "#C18ACB",  # light lilac
-  "DCs_MNPs"                 = "#8A5BAA",  # medium-bright violet
-  
-  # Plasma / PBs (brighter coral/pink)
-  "PCs_PBs"                  = "#F49CA9",  # coral pink
+  main_celltypes,
+
+  # "Naïve_memory_B_cells"     = "#E58601",  # light bright teal
+  # "GC_B_cells"               = "#46ACC8",  # pale aqua
+  # 
+  # # Tfh-like cells (soft lilac)
+  # "Tfh_like_cells"           = "green",  # light lilac
+  # "DCs_MNPs"                 = "#DD8D29",  # medium-bright violet
+  # 
+  # # Plasma / PBs (brighter coral/pink)
+  # "PCs_PBs"                  = "#F49CA9",  # coral pink
   
   # Contamination categories (pastel earth tones)
   "Contamination_ambiguous"  = "#D9B678",  # light honey
