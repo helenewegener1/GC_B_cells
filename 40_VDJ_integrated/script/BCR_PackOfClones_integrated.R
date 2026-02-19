@@ -158,6 +158,8 @@ top_clones <- lapply(
 
 names(top_clones) <- unique_patients
 
+saveRDS(top_clones, glue("40_VDJ_integrated/out/top_{n_clones}_clones_per_patient.rds"))
+
 # Combine into one list for showCloneHighlight 
 clones_to_highlight <- top_clones %>% unlist()
 names(clones_to_highlight) <- NULL 
