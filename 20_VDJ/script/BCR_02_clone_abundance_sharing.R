@@ -45,37 +45,6 @@ openxlsx::write.xlsx(
   overwrite = TRUE # Overwrite the file if it already exists
 )
 
-
-# ------------------------------------------------------------------------------
-# Heiu ...
-# ------------------------------------------------------------------------------
-
-# containing V J genes, full sequences, CDR3 sequences, abundance,
-
-combined.BCR.clone <- combined.BCR.filtered$`HH117-SILP-INF` %>% filter(CTstrict == "IGH:Cluster.370.IGHV1-8_IGLC:Cluster.1.IGKV1-5")
-
-# CDR3 heavy chain 
-combined.BCR.clone %>% 
-  mutate(
-    V_gene = IGH %>% str_split_i("\\.", 1),
-    J_gene = IGH %>% str_split_i("\\.", 3),
-    CDR3_light_chain = cdr3_nt1, 
-    CDR3_heavy_chain = cdr3_nt2
-  ) %>% 
-  group_by(CTstrict, V_gene, J_gene, CDR3_heavy_chain) %>% 
-  summarise(count = n())
-
-# CDR3 both chains
-combined.BCR.clone %>% 
-  mutate(
-    V_gene = IGH %>% str_split_i("\\.", 1),
-    J_gene = IGH %>% str_split_i("\\.", 3),
-    CDR3_light_chain = cdr3_nt1, 
-    CDR3_heavy_chain = cdr3_nt2
-  ) %>% 
-  group_by(CTstrict, V_gene, J_gene, CDR3_heavy_chain, CDR3_light_chain) %>% 
-  summarise(count = n())
-
 # ------------------------------------------------------------------------------
 # Number of unique clones per sample
 # ------------------------------------------------------------------------------
