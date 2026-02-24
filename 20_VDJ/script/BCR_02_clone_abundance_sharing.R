@@ -481,5 +481,50 @@ for (patient in c("HH117", "HH119")) {
   
 }
 
+# ------------------------------------------------------------------------------
+# Classes
+# ------------------------------------------------------------------------------
+
+combined.BCR.filtered_class <- lapply(combined.BCR.filtered, function(x) {
+  x %>% mutate(Ig_class = CTgene %>% str_split_i("_", 1) %>% str_split_i("\\.", 4))
+})
+
+sample_names <- names(combined.BCR.filtered_class)
+
+for (sample_name in sample_names){
+  
+  # sample_name <- "HH117-SILP-INF"
+  
+  n_cells <- nrow(combined.BCR.filtered_class[[sample_name]])
+  
+  combined.BCR.filtered_class[[sample_name]] %>% 
+    ggplot(aes(x = Ig_class)) + 
+    geom_bar() + 
+    theme_bw() + 
+    labs(
+      title = "Abundance of Ig classes",
+      subtitle = sample_name,
+      caption = glue("N cells: {n_cells}")
+    )
+  
+  ggsave(glue("20_VDJ/plot/BCR_IgClassesAbundance/count/BCR_IgClassesAbundance_{sample_name}_count.png"), width = 7.5, height = 5.5)
+  
+  combined.BCR.filtered_class[[sample_name]] %>% 
+    ggplot(aes(x = Ig_class, y = after_stat(count/sum(count)*100))) + 
+    geom_bar() + 
+    theme_bw() + 
+    labs(
+      title = "Abundance of Ig classes",
+      subtitle = sample_name,
+      y = "Percentage (%)",
+      caption = glue("N cells: {n_cells}")
+    )
+  
+  ggsave(glue("20_VDJ/plot/BCR_IgClassesAbundance/percentage/BCR_IgClassesAbundance_{sample_name}_percentage.png"), width = 7.5, height = 5.5)
+  
+}
+
+
+
 
 

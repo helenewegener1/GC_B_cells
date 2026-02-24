@@ -8,6 +8,7 @@ library(readxl)
 library(tidyr)
 library(tibble)
 library(purrr)
+library(readr)
 
 source("10_broad_annotation/script/color_palette.R")
 # celltype_colors
@@ -36,8 +37,9 @@ names(combined.BCR.filtered) <- names(combined.BCR.filtered) %>%
 # HH117-SILP-nonINF-PC
 # HH119-SILP-PC
 # HH119-COLP-PC
-# And then top 5 clones in each sample?
-
+# And then top 5 clones (CTstrict) in each sample?
+# https://www.youtube.com/watch?v=ExOCDX1HLA4
+# Gina: Did you oversequence? 10*
 
 sample_name <- "HH117-SILP-INF"
 
@@ -52,7 +54,7 @@ clone <- top_clones[1]
 combined.BCR.clone <- combined.BCR.filtered[[sample_name]] %>% filter(CTstrict == clone)
 
 # Extracting the columns 
-# barcode, heavy or light chain, V gene, J gene, CDR3 sequence, full sequences
+# barcode, V gene, J gene, CDR3 sequence, full sequences for heavy and light chain
 df_clone <- combined.BCR.clone %>% 
   mutate( 
     IGH_Vgene = IGH %>% str_split_i("\\.", 1),
@@ -62,42 +64,91 @@ df_clone <- combined.BCR.clone %>%
     IGLC_Vgene = IGLC %>% str_split_i("\\.", 1),
     IGLC_Jgene = IGLC %>% str_split_i("\\.", 2),
     IGLC_CDR3_nt = cdr3_nt1,
-    IGLC_CDR3_aa = cdr3_nt2
+    IGLC_CDR3_aa = cdr3_aa1
   )
 
-# TODO: MAP V and J genes to database (IMGT or 10x reference)
+# TODO: MAP V and J genes to database (IMGT or 10x reference)?
+
+# ---------------------------------------------------
+# Nucleotide seqeunce
+# ---------------------------------------------------
 
 # df_clone_nt: nucleotide seqeunce 
 df_clone_nt <- df_clone %>% 
   select(barcode, CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3_nt, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3_nt) %>% 
   rename(IGH_CDR3 = IGH_CDR3_nt, IGLC_CDR3 = IGLC_CDR3_nt) 
 
-# Both chains in same line, adding abundance
+# Both chains in same line --> abundance
 df_clone_nt_abundance <- df_clone_nt %>% 
   select(-barcode) %>% 
-  group_by(CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3) %>% 
-  summarise(count = n()) 
+  summarise(abundance = n(), .by = c(CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3))
 
-# Heavy chain, adding abundance
+write_delim(df_clone_nt_abundance, "20_VDJ/table/BCR_clone_nt_both_abundance.tsv")
+
+# Heavy chain --> abundance
 df_clone_nt_IGH_abundance <- df_clone_nt %>% 
   select(-barcode) %>% 
-  group_by(CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3) %>% 
-  summarise(count = n()) 
+  summarise(abundance = n(), .by = c(CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3)) 
 
-# Light chain, adding abundance
-# df_clone_nt_IGLC_abundance <- df_clone_nt %>% 
-#   select(-barcode) %>% 
-#   group_by(CTstrict, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3) %>% 
-#   summarise(count = n()) 
+write_delim(df_clone_nt_IGH_abundance, "20_VDJ/table/BCR_clone_nt_IGH_abundance.tsv")
 
-# Both chains different lines, keeping barcodes (no abundance )
-df_clone_nt_long <- df_clone_nt %>% pivot_longer(cols = matches("gene|CDR3")) %>% 
+# Light chain --> abundance
+df_clone_nt_IGLC_abundance <- df_clone_nt %>%
+  select(-barcode) %>%
+  summarise(abundance = n(), .by = c(CTstrict, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3))
+
+write_delim(df_clone_nt_IGLC_abundance, "20_VDJ/table/BCR_clone_nt_IGLC_abundance.tsv")
+
+# Both chains different lines, keeping barcodes (no abundance)
+df_clone_nt_long <- df_clone_nt %>% 
+  pivot_longer(cols = matches("gene|CDR3")) %>% 
   mutate(chain = str_split_i(name, "_", 1),
          name = str_split_i(name, "_", 2)) %>% 
   pivot_wider(names_from = name, values_from = value) %>% 
   select(-chain)
 
-# Save tables
+write_delim(df_clone_nt_long, "20_VDJ/table/BCR_df_clone_nt_long.tsv")
+
+# ---------------------------------------------------
+# Amino acid seqeunce
+# ---------------------------------------------------
+
+# df_clone_aa: amino acid seqeunce 
+df_clone_aa <- df_clone %>% 
+  select(barcode, CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3_aa, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3_aa) %>% 
+  rename(IGH_CDR3 = IGH_CDR3_aa, IGLC_CDR3 = IGLC_CDR3_aa) 
+
+# Both chains in same line --> abundance
+df_clone_aa_abundance <- df_clone_aa %>% 
+  select(-barcode) %>% 
+  summarise(abundance = n(), .by = c(CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3))
+
+write_delim(df_clone_nt_abundance, "20_VDJ/table/BCR_clone_aa_both_abundance.tsv")
+
+# Heavy chain --> abundance
+df_clone_aa_IGH_abundance <- df_clone_aa %>% 
+  select(-barcode) %>% 
+  summarise(abundance = n(), .by = c(CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3)) 
+
+write_delim(df_clone_aa_IGH_abundance, "20_VDJ/table/BCR_clone_aa_IGH_abundance.tsv")
+
+# Light chain --> abundance
+df_clone_aa_IGLC_abundance <- df_clone_aa %>%
+  select(-barcode) %>%
+  summarise(abundance = n(), .by = c(CTstrict, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3))
+
+write_delim(df_clone_aa_IGLC_abundance, "20_VDJ/table/BCR_clone_aa_IGLC_abundance.tsv")
+
+# Both chains different lines, keeping barcodes (no abundance)
+df_clone_aa_long <- df_clone_aa %>% 
+  pivot_longer(cols = matches("gene|CDR3")) %>% 
+  mutate(chain = str_split_i(name, "_", 1),
+         name = str_split_i(name, "_", 2)) %>% 
+  pivot_wider(names_from = name, values_from = value) %>% 
+  select(-chain)
+
+write_delim(df_clone_aa_long, "20_VDJ/table/BCR_df_clone_aa_long.tsv")
+
 
 # ------------------------------------------------------------------------------
 # One file per CTstrict and then do top 5 CTstrict for each patient?
@@ -113,7 +164,5 @@ df_clone_nt_long <- df_clone_nt %>% pivot_longer(cols = matches("gene|CDR3")) %>
 # top_clones$HH117
 # 
 # combined.BCR.filtered_all
-
-
 
 
