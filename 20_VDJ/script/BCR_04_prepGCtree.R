@@ -13,7 +13,8 @@ library(readr)
 source("10_broad_annotation/script/color_palette.R")
 # celltype_colors
 
-combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
+# combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
+combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.joined.rds")
 names(combined.BCR.filtered)
 
 names(combined.BCR.filtered) <- names(combined.BCR.filtered) %>%
@@ -49,7 +50,8 @@ top_clones <- combined.BCR.filtered[[sample_name]] %>%
   arrange(desc(count)) %>% head(5) %>% pull(CTstrict)
 
 # clone <- "IGH:Cluster.370.IGHV1-8_IGLC:Cluster.1.IGKV1-5"
-clone <- top_clones[1]
+clone_nr <- 1
+clone <- top_clones[clone_nr]
 
 combined.BCR.clone <- combined.BCR.filtered[[sample_name]] %>% filter(CTstrict == clone)
 
@@ -59,12 +61,12 @@ df_clone <- combined.BCR.clone %>%
   mutate( 
     IGH_Vgene = IGH %>% str_split_i("\\.", 1),
     IGH_Jgene = IGH %>% str_split_i("\\.", 3),
-    IGH_CDR3_nt = cdr3_nt2,
-    IGH_CDR3_aa = cdr3_aa2,
+    IGH_CDR3_nt = cdr3_nt1, # Heavy
+    IGH_CDR3_aa = cdr3_aa1,
     IGLC_Vgene = IGLC %>% str_split_i("\\.", 1),
     IGLC_Jgene = IGLC %>% str_split_i("\\.", 2),
-    IGLC_CDR3_nt = cdr3_nt1,
-    IGLC_CDR3_aa = cdr3_aa1
+    IGLC_CDR3_nt = cdr3_nt2, # Light 
+    IGLC_CDR3_aa = cdr3_aa2
   )
 
 # TODO: MAP V and J genes to database (IMGT or 10x reference)?
@@ -75,8 +77,17 @@ df_clone <- combined.BCR.clone %>%
 
 # df_clone_nt: nucleotide seqeunce 
 df_clone_nt <- df_clone %>% 
-  select(barcode, CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3_nt, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3_nt) %>% 
+  select(barcode, CTstrict, IGH_Vgene, IGH_Jgene, IGH_CDR3_nt, IGLC_Vgene, IGLC_Jgene, IGLC_CDR3_nt, IGH_full_sequence) %>% 
   rename(IGH_CDR3 = IGH_CDR3_nt, IGLC_CDR3 = IGLC_CDR3_nt) 
+
+# # CDR3 is now in full sequence 
+# cdr3 <- df_clone_nt$IGH_CDR3[[1]]
+# full <- df_clone_nt$IGH_full_sequence[[1]]
+# 
+# df_clone_nt$IGH_CDR3 %>% length()
+# df_clone_nt$IGH_CDR3 %>% unique() %>% length()
+# 
+# grep(cdr3, full)
 
 # Both chains in same line --> abundance
 df_clone_nt_abundance <- df_clone_nt %>% 
@@ -164,5 +175,55 @@ write_delim(df_clone_aa_long, "20_VDJ/table/BCR_df_clone_aa_long.tsv")
 # top_clones$HH117
 # 
 # combined.BCR.filtered_all
+
+# ------------------------------------------------------------------------------
+# FASTA file writing
+# ------------------------------------------------------------------------------
+
+library(Biostrings) # writing fasta files 
+library(msa) # mulitple sequence alignment 
+library(alakazam) # fetch IMGT 
+
+# assuming df has columns: barcode, CTstrict, sequence_vdj
+# clones <- split(df, df$CTstrict)
+# 
+# for (clone_id in names(clones)) {
+#   clone_df <- clones[[clone_id]]
+#   seqs <- DNAStringSet(clone_df$sequence_vdj)
+#   names(seqs) <- clone_df$barcode
+#   writeXStringSet(seqs, filepath = paste0(clone_id, ".fasta"))
+# }
+
+
+# Heavy chain: CTscrict, full seqeunce  abundance
+clone_df <- df_clone_nt %>% 
+  select(-barcode) %>% 
+  summarise(abundance = n(), .by = c(CTstrict, IGH_Vgene, IGH_Jgene, IGH_full_sequence, IGH_CDR3)) 
+
+# Adding germline reference
+fetchIMGTgermlines(species = "human", sequence_type = "V")
+
+
+# Align sequence
+
+
+seqs <- DNAStringSet(clone_df$IGH_full_sequence)
+names(seqs) <- glue("Sample:{sample_name}|Clone:{clone_df$CTstrict}|CDR3nt:{clone_df$IGH_CDR3}|Abundance:{clone_df$abundance}")
+
+sprintf(">Sample:%s|Clone:%s|CDR3nt:%s|Abundance:%s", 
+        sample_name, 
+        clone_df$CTstrict,
+        clone_df$IGH_CDR3,
+        clone_df$abundance)    
+
+writeXStringSet(seqs, filepath = glue("20_VDJ/fasta/{sample_name}_clone_{clone_nr}.fasta"))
+
+
+
+
+
+
+
+
 
 
