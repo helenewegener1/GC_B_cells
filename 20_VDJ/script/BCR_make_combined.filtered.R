@@ -14,6 +14,7 @@ library(gtools)
 # Load data
 # seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
 seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
+# seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
 
 # ------------------------------------------------------------------------------
 # LOAD BCR DATA
@@ -27,11 +28,13 @@ bcr_seurat_obj_list <- seurat_obj_list[bcr_mask]
 
 # Loading Data into scRepertoire
 b_contigs.list <- list() # stratified by follicles
+full_sequence_IGH.list <- list() 
 for (sample_name in names(bcr_seurat_obj_list)){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  # sample_name <- "HH119-SILP-PC"      
   
-  # Load contig annotation file for sample 
+  # Load contig annotation file for sample
   b_contigs <- read.csv(glue("05_run_cellranger/out_v9/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_b/filtered_contig_annotations.csv"))
   
   # Load Seurat object
@@ -50,17 +53,72 @@ for (sample_name in names(bcr_seurat_obj_list)){
     # Merge list with b_contigs.list
     b_contigs.list <- c(b_contigs.list, b_contigs)
     
+    # Get full sequence of IgH
+    full_sequence_IGH.list <- c(full_sequence_IGH.list, lapply(b_contigs, function(x){
+      x %>%
+        filter(
+          chain == "IGH",
+          productive == "true",
+          high_confidence == "true",
+          is_cell == "true"
+        ) %>% 
+        group_by(barcode) %>% 
+        slice_max(umis, n = 1, with_ties = FALSE) %>% 
+        ungroup() %>% 
+        mutate(
+          IGH_full_sequence = paste0(
+            fwr1_nt,
+            cdr1_nt,
+            fwr2_nt,
+            cdr2_nt,
+            fwr3_nt,
+            cdr3_nt,
+            fwr4_nt
+          ),
+          sample = sample %>% str_split_i("_", 2), 
+          barcode = paste(sample, barcode, sep = "_")
+        ) %>% 
+        select(barcode, IGH_full_sequence, umis)
+    }))
+    
   } else {
     
     # Append contiguous annotation of non-multiplexed sample to b_contigs.list
     b_contigs.list[[sample_name]] <- b_contigs
-    
+  
+    # Get full sequence of IgH
+    full_sequence_IGH.list[[sample_name]] <- b_contigs %>%
+      filter(
+        chain == "IGH",
+        productive == "true",
+        high_confidence == "true",
+        is_cell == "true"
+      ) %>% 
+      group_by(barcode) %>% 
+      slice_max(umis, n = 1, with_ties = FALSE) %>% 
+      ungroup() %>% 
+      mutate(
+        IGH_full_sequence = paste0(
+          fwr1_nt,
+          cdr1_nt,
+          fwr2_nt,
+          cdr2_nt,
+          fwr3_nt,
+          cdr3_nt,
+          fwr4_nt
+        ),
+        sample = sample %>% str_split_i("_", 2), 
+        barcode = paste(sample, barcode, sep = "_")
+      ) %>% 
+      select(barcode, IGH_full_sequence, umis)
+
   }
   
 }
 
 # Check names of contig list 
 names(b_contigs.list)
+names(full_sequence_IGH.list)
 
 # Here we have one row per contig
 b_contigs.list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13` %>% nrow() # 536 - N contigs
@@ -308,6 +366,28 @@ length(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
 
 saveRDS(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs, "20_VDJ/out/combined.BCR.filtered.clean.rds")
 # combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
+
+# ------------------------------------------------------------------------------
+# Add full sequence to combineBCR
+# ------------------------------------------------------------------------------
+
+combined.BCR.filtered$`HH117-SILP-INF-PC` %>% nrow()
+full_sequence_IGH.list$`HH117-SILP-INF-PC` %>% nrow()
+
+full_sequence_IGH.list$`HH117-SILP-INF-PC`$barcode %in% combined.BCR.filtered$`HH117-SILP-INF-PC`$barcode
+
+# Merge 
+all(names(combined.BCR.filtered) == names(full_sequence_IGH.list))
+
+combined.BCR.joined <- map2(
+  combined.BCR.filtered,
+  full_sequence_IGH.list,
+  ~ left_join(.x, .y, by = "barcode")
+)
+
+# combined.BCR.joined$`HH117-SILP-INF-PC`$IGH_full_sequence
+
+saveRDS(combined.BCR.joined, "20_VDJ/out/combined.BCR.joined.rds")
 
 # ------------------------------------------------------------------------------
 # N cell tracking 
