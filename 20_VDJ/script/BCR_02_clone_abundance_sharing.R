@@ -24,26 +24,26 @@ names(combined.BCR.filtered) <- names(combined.BCR.filtered) %>%
 # ------------------------------------------------------------------------------
 # Clonal abundance per sample
 # ------------------------------------------------------------------------------
-
-# Count of clone sizes
-clone_abundance <- lapply(combined.BCR.filtered, function(x) x %>% 
-  summarise(abundance = n(), .by = c(CTstrict)) %>% arrange(desc(abundance)))
-
-# Check numbers
-combined.BCR.filtered$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N cells
-combined.BCR.filtered$`HH117-SI-PP-nonINF_Fol-1`$CTstrict %>% unique() %>% length() # N unique clones
-clone_abundance$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N unique clones
-
-# Export as excel 
-out_file <- "20_VDJ/table/BCR_clonal_abundance.xlsx"
-
-# Use openxlsx::write.xlsx, which takes the named list and writes
-# each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
-openxlsx::write.xlsx(
-  x = clone_abundance,
-  file = out_file, 
-  overwrite = TRUE # Overwrite the file if it already exists
-)
+# 
+# # Count of clone sizes
+# clone_abundance <- lapply(combined.BCR.filtered, function(x) x %>% 
+#   summarise(abundance = n(), .by = c(CTstrict)) %>% arrange(desc(abundance)))
+# 
+# # Check numbers
+# combined.BCR.filtered$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N cells
+# combined.BCR.filtered$`HH117-SI-PP-nonINF_Fol-1`$CTstrict %>% unique() %>% length() # N unique clones
+# clone_abundance$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N unique clones
+# 
+# # Export as excel 
+# out_file <- "20_VDJ/table/BCR_clonal_abundance.xlsx"
+# 
+# # Use openxlsx::write.xlsx, which takes the named list and writes
+# # each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
+# openxlsx::write.xlsx(
+#   x = clone_abundance,
+#   file = out_file, 
+#   overwrite = TRUE # Overwrite the file if it already exists
+# )
 
 # ------------------------------------------------------------------------------
 # Number of unique clones per sample
@@ -316,6 +316,8 @@ links <- all_clones %>%
 
 for (patient in c("HH117", "HH119")) {
   
+  patient <- "HH117"
+  
   # Filter links for this patient
   links_patient <- links %>% 
     filter(str_detect(sample.x, patient) & str_detect(sample.y, patient))
@@ -442,6 +444,16 @@ for (patient in c("HH117", "HH119")) {
     all_samples
   )
   
+  # if (patient == "HH117"){
+  #   sample_colors[["HH117-SI-MILF-INF"]] <- "darkblue"
+  #   sample_colors[["HH117-SI-MILF-nonINF"]] <- "darkgreen"
+  #   sample_colors[["HH117-SILP-INF"]] <- "lightblue"
+  #   sample_colors[["HH117-SILP-nonINF"]] <- "lightgreen"
+  # } else if (patient == "HH119") {
+  #   
+  # }
+
+  
   # Plot
   png(glue("20_VDJ/plot/BCR_clonal_sharing/BCR_shared_clones_circos_{patient}_muted.png"), 
       width = 12, height = 12, units = "in", res = 500)
@@ -480,51 +492,4 @@ for (patient in c("HH117", "HH119")) {
   dev.off()
   
 }
-
-# ------------------------------------------------------------------------------
-# Classes
-# ------------------------------------------------------------------------------
-
-combined.BCR.filtered_class <- lapply(combined.BCR.filtered, function(x) {
-  x %>% mutate(Ig_class = CTgene %>% str_split_i("_", 1) %>% str_split_i("\\.", 4))
-})
-
-sample_names <- names(combined.BCR.filtered_class)
-
-for (sample_name in sample_names){
-  
-  # sample_name <- "HH117-SILP-INF"
-  
-  n_cells <- nrow(combined.BCR.filtered_class[[sample_name]])
-  
-  combined.BCR.filtered_class[[sample_name]] %>% 
-    ggplot(aes(x = Ig_class)) + 
-    geom_bar() + 
-    theme_bw() + 
-    labs(
-      title = "Abundance of Ig classes",
-      subtitle = sample_name,
-      caption = glue("N cells: {n_cells}")
-    )
-  
-  ggsave(glue("20_VDJ/plot/BCR_IgClassesAbundance/count/BCR_IgClassesAbundance_{sample_name}_count.png"), width = 7.5, height = 5.5)
-  
-  combined.BCR.filtered_class[[sample_name]] %>% 
-    ggplot(aes(x = Ig_class, y = after_stat(count/sum(count)*100))) + 
-    geom_bar() + 
-    theme_bw() + 
-    labs(
-      title = "Abundance of Ig classes",
-      subtitle = sample_name,
-      y = "Percentage (%)",
-      caption = glue("N cells: {n_cells}")
-    )
-  
-  ggsave(glue("20_VDJ/plot/BCR_IgClassesAbundance/percentage/BCR_IgClassesAbundance_{sample_name}_percentage.png"), width = 7.5, height = 5.5)
-  
-}
-
-
-
-
 
