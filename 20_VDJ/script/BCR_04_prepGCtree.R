@@ -42,7 +42,8 @@ names(combined.BCR.filtered) <- names(combined.BCR.filtered) %>%
 # https://www.youtube.com/watch?v=ExOCDX1HLA4
 # Gina: Did you oversequence? 10*
 
-sample_name <- "HH117-SILP-INF"
+# sample_name <- "HH117-SILP-INF"
+# sample_name <- "HH119-SILP-INF"
 
 # top clone 
 top_clones <- combined.BCR.filtered[[sample_name]] %>% 
@@ -192,7 +193,6 @@ library(msa) # mulitple sequence alignment
 #   names(seqs) <- clone_df$barcode
 #   writeXStringSet(seqs, filepath = paste0(clone_id, ".fasta"))
 # }
-
 
 # Heavy chain: CTscrict, full seqeunce  abundance
 clone_df <- df_clone_nt %>% 

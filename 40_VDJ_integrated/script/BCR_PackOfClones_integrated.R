@@ -55,6 +55,8 @@ table(colnames(seurat_obj) %in% combined.BCR.filtered_all$barcode) # TRUE = 7617
 seurat_obj[[]] %>% filter(!is.na(CTstrict)) %>% rownames() %>% length() # 76175
 combined.BCR.filtered_all$barcode %>% length() # 76175
 
+saveRDS(combined.BCR.filtered_all, "40_VDJ_integrated/out/combined.BCR.filtered_all.rds")
+
 # ------------------------------------------------------------------------------
 # Combine 
 # ------------------------------------------------------------------------------
@@ -66,6 +68,8 @@ seurat_obj_BCR <- combineExpression(
   cloneCall = "strict",
   proportion = TRUE
 )
+
+saveRDS(seurat_obj_BCR, "40_VDJ_integrated/out/seurat_obj_BCR.rds")
   
 # ------------------------------------------------------------------------------
 # Plot 
@@ -158,7 +162,14 @@ top_clones <- lapply(
 
 names(top_clones) <- unique_patients
 
-saveRDS(top_clones, glue("40_VDJ_integrated/out/top_{n_clones}_clones_per_patient.rds"))
+# Size of clone types (how many cells)
+seurat_obj_BCR[[]] %>% filter(CTstrict == "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40") %>% nrow()
+seurat_obj_BCR[[]] %>% filter(CTstrict == "IGH:Cluster.5768.IGHV5-51_IGLC:Cluster.73.IGKV1-39") %>% nrow()
+
+seurat_obj_BCR[[]] %>% filter(CTstrict == "IGH:Cluster.370.IGHV1-8_IGLC:Cluster.1.IGKV1-5") %>% nrow()
+
+
+# saveRDS(top_clones, glue("40_VDJ_integrated/out/top_{n_clones}_clones_per_patient.rds"))
 
 # Combine into one list for showCloneHighlight 
 clones_to_highlight <- top_clones %>% unlist()
@@ -191,3 +202,5 @@ p_clone <- p_clone + labs(title = "BCR PackOfClones", subtitle = glue("Top {n_cl
 
 # Save plot
 ggsave("40_VDJ_integrated/plot/BCR_PackOfClones/BCR_PackOfClones_CloneHighlight.png", p_clone, width = 14, height = 10)
+
+
