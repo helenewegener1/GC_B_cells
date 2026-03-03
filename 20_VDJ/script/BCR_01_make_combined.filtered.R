@@ -208,7 +208,7 @@ for (condition_name in names(filter_conditions)) {
 # Combine using the default similarity clustering
 combined.BCR.filtered <- combineBCR(b_contigs.list,
                                     samples = names(b_contigs.list), 
-                                    removeNA = FALSE,
+                                    removeNA = TRUE,
                                     threshold = 0.85, # Default is 0.85. Oliver used default.
                                     filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains.
                                     filterMulti = TRUE # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others. 
@@ -298,7 +298,7 @@ for (sample_name_fol in names(combined.BCR.filtered)) {
   # -------------------------
   
   patient_number <- str_split_i(sample_name, "-", 1)
-  patient <- ifelse(patient_number == "HH117", "HH117_Crohns", "HH117_Control")
+  patient <- ifelse(patient_number == "HH117", "HH117_Crohns", "HH119_Control")
   
   combined.BCR.filtered.clean[[sample_name_fol]]$patient <- patient
   
@@ -373,6 +373,7 @@ combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- combined.BCR.filtered.c
 length(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
 
 names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
+
 # ------------------------------------------------------------------------------
 # SAVE BCR DATA (combined.BCR.filtered.clean)
 # ------------------------------------------------------------------------------
@@ -611,3 +612,4 @@ openxlsx::write.xlsx(
   file = out_file,
   overwrite = TRUE # Overwrite the file if it already exists
 )
+
