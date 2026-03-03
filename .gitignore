@@ -25,6 +25,7 @@
 !14_seurat_integration/script
 
 20_VDJ/plot
+!20_VDJ/plot/BCR_06_GermlineSequence
 20_VDJ/fasta
 50_MiXCR
 

@@ -20,9 +20,16 @@ combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
 # names(combined.BCR.filtered)
 # names(combined.BCR.joined)
 
-
 names(combined.BCR.filtered) <- names(combined.BCR.filtered) %>% 
   str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+
+# Filter for germinal center B cells 
+combined.BCR.filtered_GCB <- lapply(names(combined.BCR.filtered), function(x){
+  combined.BCR.filtered[[x]] %>% filter(celltype_broad == "GC_B_cells")
+}) %>% setNames(names(combined.BCR.filtered))
+
+# Check number of GC B cells in each sample. 
+lapply(names(combined.BCR.filtered_GCB), function(x) combined.BCR.filtered_GCB[[x]] %>% nrow())
 
 # ------------------------------------------------------------------------------
 # Clonal abundance per sample
@@ -54,9 +61,9 @@ names(combined.BCR.filtered) <- names(combined.BCR.filtered) %>%
 
 # Count unique clones per sample
 n_unique_clones <- data.frame(
-  sample = names(combined.BCR.filtered),
-  n_clones = sapply(combined.BCR.filtered, function(x) length(unique(x$CTstrict))),
-  n_cells = sapply(combined.BCR.filtered, nrow)
+  sample = names(combined.BCR.filtered_GCB),
+  n_clones = sapply(combined.BCR.filtered_GCB, function(x) length(unique(x$CTstrict))),
+  n_cells = sapply(combined.BCR.filtered_GCB, nrow)
 ) %>%
   mutate(
     patient = str_extract(sample, "HH\\d+"),
@@ -82,6 +89,7 @@ ggplot(n_unique_clones, aes(x = sample, y = n_clones)) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
   labs(
     title = "Number of Unique Clones per Sample",
+    subtitle = "Only GC B cells",
     x = "",
     y = "Number of unique clones"
   ) +
@@ -91,10 +99,8 @@ ggplot(n_unique_clones, aes(x = sample, y = n_clones)) +
     legend.position = "right"
   )
 
-ggsave("20_VDJ/plot/BCR_clonal_sharing/BCR_final_N_unique_clones.png", 
+ggsave("20_VDJ/plot/BCR_clonal_sharing_GCB/BCR_final_N_unique_clones_GCB.png", 
        width = 14, height = 15, dpi = 300)
-
-#BCR_final_N_cells.png", width = 14, height = 15) 
 
 # ------------------------------------------------------------------------------
 # Number of cells colored by CTstrict 
@@ -106,7 +112,7 @@ for (sample_name in c("HH117-SI-PP", "HH119-SI-PP")){
   # sample_name <- "HH119-SI-PP"
   
   # Subset sample
-  combined.BCR.filtered_subset <- combined.BCR.filtered[str_detect(names(combined.BCR.filtered), sample_name)]
+  combined.BCR.filtered_subset <- combined.BCR.filtered_GCB[str_detect(names(combined.BCR.filtered_GCB), sample_name)]
   combined.BCR.filtered_subset <- bind_rows(combined.BCR.filtered_subset)
   
   combined.BCR.filtered_subset <- combined.BCR.filtered_subset %>% 
@@ -134,7 +140,7 @@ for (sample_name in c("HH117-SI-PP", "HH119-SI-PP")){
     theme_bw() + 
     theme(legend.position = "none")
   
-  ggsave(glue("20_VDJ/plot/BCR_clonal_abundance/BCR_N_cells_CTstrict_{sample_name}.png"), 
+  ggsave(glue("20_VDJ/plot/BCR_clonal_sharing_GCB/BCR_N_cells_CTstrict_{sample_name}_GCB.png"), 
          width = 14, height = 7, dpi = 300)
   
 }
@@ -144,15 +150,15 @@ for (sample_name in c("HH117-SI-PP", "HH119-SI-PP")){
 # ------------------------------------------------------------------------------
 
 # Count of clone sizes
-clone_abundance_celltype <- lapply(combined.BCR.filtered, function(x) x %>% 
+clone_abundance_celltype <- lapply(combined.BCR.filtered_GCB, function(x) x %>% 
                                      summarise(abundance = n(), .by = c(CTstrict, celltype_broad)) %>% 
                                      mutate(abundance_total = sum(abundance), .by = CTstrict) %>% 
                                      arrange(desc(abundance_total), desc(abundance))
                                    )
 
 # Check numbers
-combined.BCR.filtered$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N cells
-combined.BCR.filtered$`HH117-SI-PP-nonINF_Fol-1` %>% select(CTstrict, celltype_broad) %>% distinct() %>% nrow() # N unique clones
+combined.BCR.filtered_GCB$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N GCB cells
+combined.BCR.filtered_GCB$`HH117-SI-PP-nonINF_Fol-1` %>% select(CTstrict, celltype_broad) %>% distinct() %>% nrow() # N unique clones
 clone_abundance_celltype$`HH117-SI-PP-nonINF_Fol-1` %>% nrow() # N unique clones
 
 # Plot
@@ -193,7 +199,7 @@ for (sample_name in names(clone_abundance_celltype)){
       legend.position = "right"
     )
   
-  ggsave(glue("20_VDJ/plot/BCR_clonal_abundance/{sample_name}_celltypes.png"), width = 20, height = 10)
+  ggsave(glue("20_VDJ/plot/BCR_clonal_sharing_GCB/{sample_name}_celltypes_GCB.png"), width = 20, height = 10)
   
 }
 
@@ -225,12 +231,12 @@ clone_abundance_celltype$`HH119-SILP` %>% filter(CTstrict == clone)
 
 # Create a matrix of shared clones between samples
 # Get all unique clones per sample
-clone_by_sample <- lapply(names(combined.BCR.filtered), function(sample_name) {
-  combined.BCR.filtered[[sample_name]] %>% 
+clone_by_sample <- lapply(names(combined.BCR.filtered_GCB), function(sample_name) {
+  combined.BCR.filtered_GCB[[sample_name]] %>% 
     pull(CTstrict) %>% 
     unique()
 })
-names(clone_by_sample) <- names(combined.BCR.filtered)
+names(clone_by_sample) <- names(combined.BCR.filtered_GCB)
 
 # Create pairwise sharing matrix
 sample_names <- names(clone_by_sample)
@@ -255,7 +261,7 @@ sharing_df <- sharing_matrix %>%
 # Plot
 for (patient in c("HH117", "HH119")){
   
-  # patient <- "HH117"
+  # patient <- "HH119"
   
   sharing_df_filtered <- sharing_df %>% 
     filter(
@@ -283,7 +289,7 @@ for (patient in c("HH117", "HH119")){
          ) +
     coord_fixed() 
   
-  ggsave(glue("20_VDJ/plot/BCR_clonal_sharing/BCR_shared_clones_heatmap_{patient}.png"), width = 14, height = 13, dpi = 300)
+  ggsave(glue("20_VDJ/plot/BCR_clonal_sharing_GCB/BCR_shared_clones_heatmap_{patient}.png"), width = 14, height = 13, dpi = 300)
 
 }
 
@@ -416,7 +422,7 @@ for (patient in c("HH117", "HH119")){
     ) +
     coord_fixed() 
   
-  ggsave(glue("20_VDJ/plot/BCR_clonal_sharing/BCR_shared_clones_heatmap_{patient}_Fol.png"), width = 10, height = 8, dpi = 300)
+  ggsave(glue("20_VDJ/plot/BCR_clonal_sharing_GCB/BCR_shared_clones_heatmap_{patient}_Fol.png"), width = 10, height = 8, dpi = 300)
   
 }
 
