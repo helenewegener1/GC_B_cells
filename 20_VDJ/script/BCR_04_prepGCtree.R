@@ -182,7 +182,6 @@ write_delim(df_clone_aa_long, "20_VDJ/table/BCR_df_clone_aa_long.tsv")
 
 library(Biostrings) # writing fasta files 
 library(msa) # mulitple sequence alignment 
-library(alakazam) # fetch IMGT 
 
 # assuming df has columns: barcode, CTstrict, sequence_vdj
 # clones <- split(df, df$CTstrict)
@@ -200,23 +199,105 @@ clone_df <- df_clone_nt %>%
   select(-barcode) %>% 
   summarise(abundance = n(), .by = c(CTstrict, IGH_Vgene, IGH_Jgene, IGH_full_sequence, IGH_CDR3)) 
 
-# Adding germline reference
-fetchIMGTgermlines(species = "human", sequence_type = "V")
+# Get V and J gene of heavy chain 
+v_gene <- df_clone_nt$IGH_Vgene %>% unique()
+j_gene <- df_clone_nt$IGH_Jgene %>% unique()
 
+df_clone_nt$CTstrict %>% unique()
+
+# Get sequences
+seqs <- DNAStringSet(clone_df$IGH_full_sequence)
+# names(seqs) <- glue("Sample:{sample_name}|Clone:{clone_df$CTstrict}|CDR3nt:{clone_df$IGH_CDR3}|Abundance:{clone_df$abundance}")
+# names(seqs) <- sprintf("Sample:%s|Clone:%s|CDR3nt:%s|Abundance:%s", 
+#                        sample_name, 
+#                        clone_df$CTstrict,
+#                        clone_df$IGH_CDR3,
+#                        clone_df$abundance) 
+
+names(seqs) <- clone_df$abundance
+
+# writeXStringSet(seqs, filepath = glue("20_VDJ/fasta/{sample_name}_clone_{clone_nr}.fasta"))
+
+# Adding germline reference
+# reference <- readDNAStringSet("05_run_cellranger/out_v9/res_HH117-SILP-INF-PC/outs/vdj_reference/fasta/regions.fa")
+reference <- readDNAStringSet("00_data/Human_sequences.fasta")
+
+
+## V gene
+ref_v_gene <- grep(v_gene, names(reference), value = T)
+
+if (length(ref_v_gene) == 1){
+  v_gene_germline <- reference[ref_v_gene]
+} else{
+  v_gene_germline <- reference[ref_v_gene[1]]
+}
+
+## J gene
+ref_j_gene <- grep(j_gene, names(reference), value = T)
+
+if (length(ref_j_gene) == 1){
+  j_gene_germline <- reference[ref_j_gene]
+} else{
+  j_gene_germline <- reference[ref_j_gene[1]]
+}
+
+## Length of CDR3
+cdr3_length <- df_clone_nt$IGH_CDR3 %>% nchar() %>% unique()
+
+if (length(cdr3_length) != 1){
+  print("CDR3s are not the same length in this clone type")
+}
+
+## Create N mask of CDR3 length
+cdr3_mask <- paste(rep("N", cdr3_length), collapse = "")
+
+# Combine 
+
+# ## Convert to character
+# v_seq <- as.character(v_gene_germline)
+# j_seq <- as.character(j_gene_germline)
+# 
+# ### Remove leader sequence (L-REGION)
+# find_fr1_start <- function(imgt_seq, clone_seqs) {
+#   # Use first 20 nt of the clone sequence to find FR1 start
+#   first_20 <- substr(clone_seqs[1], 1, 20)
+#   pos <- regexpr(first_20, imgt_seq)
+#   return(as.integer(pos))
+# }
+# 
+# # Then trim
+# trim_v_gene <- function(imgt_seq, clone_seqs) {
+#   start_pos <- find_fr1_start(imgt_seq, clone_seqs)
+#   if (start_pos == -1) {
+#     warning("Could not find FR1 start in IMGT sequence")
+#     return(NULL)
+#   }
+#   return(substr(imgt_seq, start_pos, nchar(imgt_seq)))
+# }
+# Use it
+# v_seq_trimmed <- trim_v_gene(v_seq, clone_df$IGH_full_sequence)
+# germline_seq <- paste0(v_seq_trimmed, cdr3_mask, j_seq)
+
+
+## Combine V and J with the Ns
+germline_seq <- paste0(v_gene_germline, cdr3_mask, j_gene_germline)
+
+## Convert back to DNAStringSet
+germline_dna <- DNAStringSet(germline_seq)
+names(germline_dna) <- "GL"
+
+# Add germline to rest 
+seqs_final <- c(seqs, germline_dna)
 
 # Align sequence
+## Run alignment (ClustalW, ClustalOmega, or MUSCLE available)
+alignment <- msa(seqs_final, method = "ClustalOmega")
 
+## Convert to DNAStringSet for downstream use
+alignment_dna <- as(alignment, "DNAStringSet")
 
-seqs <- DNAStringSet(clone_df$IGH_full_sequence)
-names(seqs) <- glue("Sample:{sample_name}|Clone:{clone_df$CTstrict}|CDR3nt:{clone_df$IGH_CDR3}|Abundance:{clone_df$abundance}")
-
-sprintf(">Sample:%s|Clone:%s|CDR3nt:%s|Abundance:%s", 
-        sample_name, 
-        clone_df$CTstrict,
-        clone_df$IGH_CDR3,
-        clone_df$abundance)    
-
-writeXStringSet(seqs, filepath = glue("20_VDJ/fasta/{sample_name}_clone_{clone_nr}.fasta"))
+# Export as FASTA file
+writeXStringSet(alignment_dna, filepath = glue("20_VDJ/fasta/{sample_name}_clone_{clone_nr}_aligned_dna.fasta"))
 
 
 
