@@ -5,6 +5,9 @@
 */out
 !/out/README
 */table
+!20_VDJ/table
+
+00_data/Human_sequences.fasta
 
 05_run_cellranger/out_v9
 05_run_cellranger/out_v8

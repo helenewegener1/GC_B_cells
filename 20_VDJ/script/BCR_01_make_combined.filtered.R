@@ -13,8 +13,7 @@ library(gtools)
 
 # Load data
 # seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
-seurat_obj_list <- readRDS("13_prep_integration/out/seurat_obj_prepped_list.rds")
-# seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
+seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
 
 # ------------------------------------------------------------------------------
 # LOAD BCR DATA
@@ -127,50 +126,6 @@ b_contigs.list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3 %>
 b_contigs.list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_nt %>% unique() %>% length() # 500 - nucleotide sequence of CDR3 (More unique because silent mutations)
 
 # ------------------------------------------------------------------------------
-# Understanding combineBCR
-# ------------------------------------------------------------------------------
-# df <- b_contigs.list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`
-# 
-# # Count chains per barcode
-# chain_counts <- df %>%
-#   group_by(barcode, chain) %>%
-#   summarise(n_chains = n(), .groups = "drop") %>%
-#   pivot_wider(names_from = chain, 
-#               values_from = n_chains, 
-#               values_fill = 0)
-# 
-# # If you have IGH, IGK, IGL columns, create a summary
-# # Adjust column names based on what you actually have
-# chain_summary <- chain_counts %>%
-#   mutate(
-#     total_heavy = if("IGH" %in% names(.)) IGH else 0,
-#     total_light = rowSums(select(., matches("IGK|IGL")), na.rm = TRUE),
-#     chain_config = paste0("IGH:", total_heavy, " Light:", total_light)
-#   ) %>% 
-#   count(chain_config) %>%
-#   arrange(desc(n))
-# 
-# ggplot(chain_summary, aes(x = reorder(chain_config, n), y = n)) +
-#   geom_col(fill = "steelblue") +
-#   geom_text(aes(label = n), hjust = -0.2) +
-#   coord_flip() +
-#   labs(
-#     title = "Distribution of Chain Configurations",
-#     x = "Chain Configuration",
-#     y = "Number of Cells"
-#   ) +
-#   theme_minimal(base_size = 10) +
-#   theme(plot.title = element_text(face = "bold"))
-
-
-# What combineBCR does
-## Keeps all 295 cells (even those with only heavy or only light) - from plot --> 208 + 62 + 10= 280
-## For the 5 cells with 2+ heavy chains: selects one (highest UMI if filterMulti=TRUE)
-## For the 13 cells with 2+ light chains: selects one (highest UMI if filterMulti=TRUE)
-## Assigns heavy to cdr3_aa1/nt1 and light to cdr3_aa2/nt2
-## Cells missing a chain will have NA in the corresponding columns
-
-# ------------------------------------------------------------------------------
 # combineBCR - no filtering 
 # ------------------------------------------------------------------------------
 
@@ -190,13 +145,70 @@ combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1
 combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_nt2 %>% unique() %>% length() # 267 - ligth chain nucleotide sequence
 
 # ------------------------------------------------------------------------------
+# Filter cells that have heavy chain and compare to no filteringgit s
+# ------------------------------------------------------------------------------
+
+combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13` %>% filter(!is.na(IGH)) %>% nrow()
+
+n_cells_prefilt <- lapply(names(combined.BCR.NOTfiltered), function(x) combined.BCR.NOTfiltered[[x]] %>% nrow())
+n_cells_w_IGH <- lapply(names(combined.BCR.NOTfiltered), function(x) combined.BCR.NOTfiltered[[x]] %>% filter(!is.na(IGH)) %>% nrow())
+ 
+df <- cbind(n_cells_prefilt, n_cells_w_IGH, "sample" = names(combined.BCR.NOTfiltered)) %>% 
+  as_tibble() %>% unnest(c(n_cells_prefilt, n_cells_w_IGH, sample)) %>% 
+  mutate(
+    sample = sample %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC"),
+    percentage_loss = (n_cells_prefilt-n_cells_w_IGH)/n_cells_prefilt * 100 
+  ) %>% 
+  select(sample, n_cells_prefilt, n_cells_w_IGH, percentage_loss)
+
+xlsx::write.xlsx(df, "20_VDJ/table/BCR_both_vs_heavy_chain.xlsx")
+
+filter_conditions <- list(
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = function(df) filter(df, str_detect(sample, "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1")),
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = function(df) filter(df, str_detect(sample, "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2")),
+  "HH119-SI-PP-CD19-Pool1" = function(df) filter(df, str_detect(sample, "HH119-SI-PP-CD19-Pool1")),
+  "HH119-SI-PP-CD19-Pool2" = function(df) filter(df, str_detect(sample, "HH119-SI-PP-CD19-Pool2")),
+  "HH119-SI-PP" = function(df) filter(df, str_detect(sample, "HH119-SI-PP")),
+  "other"        = function(df) filter(df, !str_detect(sample, paste(c("HH117-SI-PP", "HH119-SI-PP"), collapse = "|")))
+)
+
+for (condition_name in names(filter_conditions)) {
+  
+  # condition_name <- "other"
+  
+  df_plot <- df %>%
+    filter_conditions[[condition_name]](.) %>%
+    filter(!str_detect(sample, "Negative|Doublet")) %>%
+    pivot_longer(cols = starts_with("n_cells"),
+                 names_to = "filter",
+                 values_to = "n_cells")
+  
+  n_cell_max <- max(df_plot$n_cells)
+  
+  df_plot %>% 
+    ggplot(aes(x = filter, y = n_cells, color = sample, group = sample)) + 
+    geom_point() + 
+    geom_line() + 
+    scale_y_continuous(breaks = seq(0, n_cell_max + 25, by = 100)) +
+    labs(
+      x = "",
+      y = "N cells"
+    ) + 
+    theme_bw()
+  
+  ggsave(glue("20_VDJ/plot/N_cell_stat/BCR_both_vs_heavy_chain/BCR_both_vs_heavy_chain_sample_{condition_name}.png"), height = 10, width = 8)
+  
+}
+
+
+# ------------------------------------------------------------------------------
 # combineBCR - Filtering 
 # ------------------------------------------------------------------------------
 
 # Combine using the default similarity clustering
 combined.BCR.filtered <- combineBCR(b_contigs.list,
                                     samples = names(b_contigs.list), 
-                                    removeNA = TRUE,
+                                    removeNA = FALSE,
                                     threshold = 0.85, # Default is 0.85. Oliver used default.
                                     filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains.
                                     filterMulti = TRUE # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others. 
@@ -360,34 +372,82 @@ combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- combined.BCR.filtered.c
 
 length(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
 
+names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
 # ------------------------------------------------------------------------------
 # SAVE BCR DATA (combined.BCR.filtered.clean)
 # ------------------------------------------------------------------------------
 
 saveRDS(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs, "20_VDJ/out/combined.BCR.filtered.clean.rds")
-# combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.rds")
+# combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
 
 # ------------------------------------------------------------------------------
 # Add full sequence to combineBCR
 # ------------------------------------------------------------------------------
 
-combined.BCR.filtered$`HH117-SILP-INF-PC` %>% nrow()
-full_sequence_IGH.list$`HH117-SILP-INF-PC` %>% nrow()
+# Clean full_sequence_IGH.list
+full_sequence_IGH.list_subset <- full_sequence_IGH.list[grep("Negative|Doublet", names(full_sequence_IGH.list), invert = TRUE)]
 
-full_sequence_IGH.list$`HH117-SILP-INF-PC`$barcode %in% combined.BCR.filtered$`HH117-SILP-INF-PC`$barcode
+## Clean names
+names(full_sequence_IGH.list_subset) <- names(full_sequence_IGH.list_subset) %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool2|-CD19-Pool1")
+names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool2|-CD19-Pool1")
+
+names_full_sequence_IGH.list_subset <- names(full_sequence_IGH.list_subset)
+names_combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
+
+# Combine 
+full_sequence_IGH.list_subset <- lapply(
+  split(full_sequence_IGH.list_subset, names(full_sequence_IGH.list_subset)),
+  bind_rows
+)
+
+names_full_sequence_IGH.list_subset <- names(full_sequence_IGH.list_subset) 
+names_combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
+
+
+## Clean barcodes
+full_sequence_IGH.list_subset <- lapply(names(full_sequence_IGH.list_subset), function(x){
+  
+  df <- full_sequence_IGH.list_subset[[x]]
+  df$barcode <- paste0(x, "_", df$barcode %>% str_split_i("_", 2))
+  df
+  
+})
+
+combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- lapply(names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs), function(x){
+  df <- combined.BCR.filtered.clean.pool_combine.rm_neg_doubs[[x]]
+  df$barcode <- df$barcode %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool2|-CD19-Pool1")
+  df
+})
+
+names(full_sequence_IGH.list_subset) <- names_full_sequence_IGH.list_subset
+names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) <- names_combined.BCR.filtered.clean.pool_combine.rm_neg_doubs
+
+# Get in same order
+full_sequence_IGH.list_subset <- full_sequence_IGH.list_subset[names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)]
+
+# Check 
+all(names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) == names(full_sequence_IGH.list_subset))
+
+combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SI-PP-nonINF_Fol-1`$barcode %>% head()
+full_sequence_IGH.list_subset$`HH117-SI-PP-nonINF_Fol-1`$barcode %>% head()
+
+combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SI-PP-nonINF_Fol-1`$barcode %in% full_sequence_IGH.list_subset$`HH117-SI-PP-nonINF_Fol-1`$barcode
 
 # Merge 
-all(names(combined.BCR.filtered) == names(full_sequence_IGH.list))
-
 combined.BCR.joined <- map2(
-  combined.BCR.filtered,
-  full_sequence_IGH.list,
+  combined.BCR.filtered.clean.pool_combine.rm_neg_doubs,
+  full_sequence_IGH.list_subset,
   ~ left_join(.x, .y, by = "barcode")
 )
 
+combined.BCR.joined$`HH117-SILP-INF` %>% head()
+
 # combined.BCR.joined$`HH117-SILP-INF-PC`$IGH_full_sequence
 
+names(combined.BCR.joined)
+
 saveRDS(combined.BCR.joined, "20_VDJ/out/combined.BCR.joined.rds")
+# combined.BCR.joined <- readRDS("20_VDJ/out/combined.BCR.joined.rds")
 
 # ------------------------------------------------------------------------------
 # N cell tracking 
