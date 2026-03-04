@@ -1,0 +1,6 @@
+Currently Loaded Modulefiles:
+ 1) tools   2) jdk/24.0.2   3) openjdk/23   4) java/17-openjdk   5) jre/17-openjdk   6) mixcr/4.7.0 
+ 
+ 
+module load tools jdk/24.0.2 openjdk/23 java/17-openjdk jre/17-openjdk mixcr/4.7.0
+ 
