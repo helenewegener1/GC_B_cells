@@ -215,9 +215,9 @@ TFH_w_BCR %>% data.frame()
 # Track clone manually  
 # ------------------------------------------------------------------------------
 
-clone <- "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40"
-
-clone_abundance_celltype$`HH119-SILP` %>% filter(CTstrict == clone)
+# clone <- "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40"
+# 
+# clone_abundance_celltype$`HH119-SILP` %>% filter(CTstrict == clone)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------

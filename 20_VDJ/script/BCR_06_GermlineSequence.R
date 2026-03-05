@@ -17,8 +17,8 @@ source("10_broad_annotation/script/color_palette.R")
 combined.BCR.joined <- readRDS("20_VDJ/out/combined.BCR.joined.rds")
 combined.BCR.joined_all <- combined.BCR.joined %>% bind_rows()
 
-outdir <- "20_VDJ/plot/BCR_06_GermlineSequence"
-dir.create(outdir)
+# outdir <- "20_VDJ/plot/BCR_06_GermlineSequence"
+# dir.create(outdir, showWarnings = FALSE)
 
 # ------------------------------------------------------------------------------
 # Get clones within GC B cells 
@@ -39,7 +39,7 @@ top_GC_clones <- lapply(patients, function(x){
   setNames(patients)
 
 # ------------------------------------------------------------------------------
-# Look at top clones across samples
+# Look at top clones across samples and cell types. 
 # ------------------------------------------------------------------------------
 
 for (patient in patients){
@@ -55,11 +55,15 @@ for (patient in patients){
     CT <- top_GC_clones[[patient]][clone_nr]
     
     # Barplot with CT across follicles  
-    combined.BCR.joined_all %>% 
+    df_plot <- combined.BCR.joined_all %>% 
       # filter(CTstrict == CT & str_detect(sample, "Fol")) %>%
       filter(CTstrict == CT) %>%
       mutate(sample = sample %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")) %>% 
-      summarize(n = n(), .by = c(sample, celltype_broad)) %>% 
+      summarize(n = n(), .by = c(sample, celltype_broad))
+    
+    n_cells_total <- df_plot$n %>% sum()
+      
+    df_plot %>% 
       ggplot(aes(x = sample, y = n, fill = celltype_broad)) + 
       geom_col() + 
       scale_fill_manual(values = celltype_colors) + 
@@ -69,21 +73,62 @@ for (patient in patients){
         x = "", 
         y = "N cells",
         title = patient,
-        subtitle = CT
+        subtitle = CT, 
+        caption = glue("Clone nr {clone_nr}\nN cells total: {n_cells_total}")
       )
     
-    ggsave(glue("{outdir}/{patient}_{CT}_barplot.png"), width = 14, height = 7)
+    
+    ggsave(glue("{outdir}/{patient}_clone{clone_nr}_barplot.png"), width = 14, height = 8)
     
   }
   
 }
 
+# ------------------------------------------------------------------------------
+# Find germline sequence in Naive 
+# ------------------------------------------------------------------------------
+
+CT <- "cluster.7833_IGLV1-40.TGCCAGTCTTATGACACCAGACTGAGGGCCACTGTGTTC"
+# CT <- "cluster.1"
+patient <- "HH119_Control"
+
+# Get the V and J genes from this CT
+CT_genes <- combined.BCR.joined_all %>% 
+  filter(CTstrict == CT, patient == patient) %>% 
+  mutate(
+    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+  ) %>% 
+  select(IGH_V_gene, IGH_J_gene, IGLC_V_gene, IGLC_J_gene) %>% 
+  distinct()
+  
+CT_genes
+
+IGH_v_gene <- CT_genes$IGH_V_gene
+IGH_j_gene <- CT_genes$IGH_J_gene
+
+IGL_v_gene <- CT_genes$IGLC_V_gene
+IGL_j_gene <- CT_genes$IGLC_J_gene
 
 
+# In 01
+# V gene sequence: cdr1+fwr2+cdr2+fwr3
+# J gene sequence: fwr4
+# What about light chain? Do we want to define clones from this?
 
-
-
-
+combined.BCR.joined_all %>% 
+  filter(patient == patient, celltype_broad == "Naïve_memory_B_cells") %>% 
+  mutate(
+    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+  ) %>% 
+  filter(IGH_V_gene == IGH_v_gene) %>% 
+  select(IGH_full_sequence) %>% 
+  distinct()
 
 
 

@@ -8,112 +8,131 @@ library(glue)
 library(ggplot2)
 library(patchwork)
 library(readxl)
-library(scRepertoire)
 library(gtools)
+library(purrr)
+# BiocManager::install("scRepertoire", force = TRUE) # 2.6.2
+# devtools::install_github("BorchLab/scRepertoire", force = TRUE) # 2.6.2
+# devtools::install_github("BorchLab/scRepertoire@v2.6.0", force = TRUE)
+# remotes::install_github(c("BorchLab/immApex", "BorchLab/scRepertoire"), force = TRUE)
+
+# devtools::install_github("BorchLab/scRepertoire@v2.6.0", force = TRUE)
+# devtools::install_github("BorchLab/immApex@v1.4.3", force = TRUE)
+
+# devtools::install_github("BorchLab/scRepertoire@v2.5.0", force = TRUE)
+
+library(scRepertoire)
+packageVersion("scRepertoire")
+library(immApex)
+packageVersion("immApex")
+
+
 
 # Load data
 # seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
 seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
 
 # ------------------------------------------------------------------------------
-# LOAD BCR DATA
+# LOAD BCR DATA - running on computerome.
 # ------------------------------------------------------------------------------
+# 
+# # Subset cells with BCR respectively. 
+# bcr_mask <- lapply(names(seurat_obj_list), function(x) {"bcr_v_gene_contig_1" %in% colnames(seurat_obj_list[[x]]@meta.data)}) %>% unlist()
+# 
+# # Extract seurat objects with BCR data 
+# bcr_seurat_obj_list <- seurat_obj_list[bcr_mask]
+# 
+# # Loading Data into scRepertoire
+# b_contigs.list <- list() # stratified by follicles
+# full_sequence_IGH.list <- list() 
+# for (sample_name in names(bcr_seurat_obj_list)){
+#   
+#   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+#   # sample_name <- "HH119-SILP-PC"      
+#   
+#   # Load contig annotation file for sample
+#   b_contigs <- read.csv(glue("05_run_cellranger/out_v9/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_b/filtered_contig_annotations.csv"))
+#   
+#   # Load Seurat object
+#   seurat_obj <- seurat_obj_list[[sample_name]]
+#   
+#   # If sample is muliplexed, split contigs into list of contig files and added to b_contigs.list
+#   if ("manual_ADT_ID" %in% colnames(seurat_obj@meta.data)){
+#     
+#     b_contigs <- createHTOContigList(b_contigs, 
+#                                      seurat_obj, 
+#                                      group.by = "manual_ADT_ID")
+#     
+#     # Have name include sample_name
+#     names(b_contigs) <- paste(sample_name, names(b_contigs), sep = "_")
+#     
+#     # Merge list with b_contigs.list
+#     b_contigs.list <- c(b_contigs.list, b_contigs)
+#     
+#     # Get full sequence of IgH
+#     full_sequence_IGH.list <- c(full_sequence_IGH.list, lapply(b_contigs, function(x){
+#       x %>%
+#         filter(
+#           chain == "IGH",
+#           productive == "true",
+#           high_confidence == "true",
+#           is_cell == "true"
+#         ) %>% 
+#         group_by(barcode) %>% 
+#         slice_max(umis, n = 1, with_ties = FALSE) %>% 
+#         ungroup() %>% 
+#         mutate(
+#           IGH_full_sequence = paste0(
+#             fwr1_nt,
+#             cdr1_nt,
+#             fwr2_nt,
+#             cdr2_nt,
+#             fwr3_nt,
+#             cdr3_nt,
+#             fwr4_nt
+#           ),
+#           sample = sample %>% str_split_i("_", 2), 
+#           barcode = paste(sample, barcode, sep = "_")
+#         ) %>% 
+#         select(barcode, IGH_full_sequence, umis)
+#     }))
+#     
+#   } else {
+#     
+#     # Append contiguous annotation of non-multiplexed sample to b_contigs.list
+#     b_contigs.list[[sample_name]] <- b_contigs
+#   
+#     # Get full sequence of IgH
+#     full_sequence_IGH.list[[sample_name]] <- b_contigs %>%
+#       filter(
+#         chain == "IGH",
+#         productive == "true",
+#         high_confidence == "true",
+#         is_cell == "true"
+#       ) %>% 
+#       group_by(barcode) %>% 
+#       slice_max(umis, n = 1, with_ties = FALSE) %>% 
+#       ungroup() %>% 
+#       mutate(
+#         IGH_full_sequence = paste0(
+#           fwr1_nt,
+#           cdr1_nt,
+#           fwr2_nt,
+#           cdr2_nt,
+#           fwr3_nt,
+#           cdr3_nt,
+#           fwr4_nt
+#         ),
+#         sample = sample %>% str_split_i("_", 2), 
+#         barcode = paste(sample, barcode, sep = "_")
+#       ) %>% 
+#       select(barcode, IGH_full_sequence, umis)
+# 
+#   }
+#   
+# }
 
-# Subset cells with BCR respectively. 
-bcr_mask <- lapply(names(seurat_obj_list), function(x) {"bcr_v_gene_contig_1" %in% colnames(seurat_obj_list[[x]]@meta.data)}) %>% unlist()
-
-# Extract seurat objects with BCR data 
-bcr_seurat_obj_list <- seurat_obj_list[bcr_mask]
-
-# Loading Data into scRepertoire
-b_contigs.list <- list() # stratified by follicles
-full_sequence_IGH.list <- list() 
-for (sample_name in names(bcr_seurat_obj_list)){
-  
-  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  # sample_name <- "HH119-SILP-PC"      
-  
-  # Load contig annotation file for sample
-  b_contigs <- read.csv(glue("05_run_cellranger/out_v9/res_{sample_name}/outs/per_sample_outs/res_{sample_name}/vdj_b/filtered_contig_annotations.csv"))
-  
-  # Load Seurat object
-  seurat_obj <- seurat_obj_list[[sample_name]]
-  
-  # If sample is muliplexed, split contigs into list of contig files and added to b_contigs.list
-  if ("manual_ADT_ID" %in% colnames(seurat_obj@meta.data)){
-    
-    b_contigs <- createHTOContigList(b_contigs, 
-                                     seurat_obj, 
-                                     group.by = "manual_ADT_ID")
-    
-    # Have name include sample_name
-    names(b_contigs) <- paste(sample_name, names(b_contigs), sep = "_")
-    
-    # Merge list with b_contigs.list
-    b_contigs.list <- c(b_contigs.list, b_contigs)
-    
-    # Get full sequence of IgH
-    full_sequence_IGH.list <- c(full_sequence_IGH.list, lapply(b_contigs, function(x){
-      x %>%
-        filter(
-          chain == "IGH",
-          productive == "true",
-          high_confidence == "true",
-          is_cell == "true"
-        ) %>% 
-        group_by(barcode) %>% 
-        slice_max(umis, n = 1, with_ties = FALSE) %>% 
-        ungroup() %>% 
-        mutate(
-          IGH_full_sequence = paste0(
-            fwr1_nt,
-            cdr1_nt,
-            fwr2_nt,
-            cdr2_nt,
-            fwr3_nt,
-            cdr3_nt,
-            fwr4_nt
-          ),
-          sample = sample %>% str_split_i("_", 2), 
-          barcode = paste(sample, barcode, sep = "_")
-        ) %>% 
-        select(barcode, IGH_full_sequence, umis)
-    }))
-    
-  } else {
-    
-    # Append contiguous annotation of non-multiplexed sample to b_contigs.list
-    b_contigs.list[[sample_name]] <- b_contigs
-  
-    # Get full sequence of IgH
-    full_sequence_IGH.list[[sample_name]] <- b_contigs %>%
-      filter(
-        chain == "IGH",
-        productive == "true",
-        high_confidence == "true",
-        is_cell == "true"
-      ) %>% 
-      group_by(barcode) %>% 
-      slice_max(umis, n = 1, with_ties = FALSE) %>% 
-      ungroup() %>% 
-      mutate(
-        IGH_full_sequence = paste0(
-          fwr1_nt,
-          cdr1_nt,
-          fwr2_nt,
-          cdr2_nt,
-          fwr3_nt,
-          cdr3_nt,
-          fwr4_nt
-        ),
-        sample = sample %>% str_split_i("_", 2), 
-        barcode = paste(sample, barcode, sep = "_")
-      ) %>% 
-      select(barcode, IGH_full_sequence, umis)
-
-  }
-  
-}
+b_contigs.list <- readRDS("20_VDJ/out/b_contigs.list.rds")
+full_sequence_IGH.list <- readRDS("20_VDJ/out/full_sequence_IGH.list.rds")
 
 # Check names of contig list 
 names(b_contigs.list)
@@ -212,14 +231,227 @@ combined.BCR.filtered <- combineBCR(b_contigs.list,
                                     threshold = 0.85, # Default is 0.85. Oliver used default.
                                     filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains.
                                     filterMulti = TRUE # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others. 
+                                    
 ) 
 
+# Define clone types on heavy chain 
+clonalCluster_IGH <- clonalCluster(
+  combined.BCR.filtered,
+  chain = "IGH",
+  sequence = "nt",
+  threshold = 0.85,
+  # group.by = "IGH",
+  dist_type = "levenshtein",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
+  gap_open = -10,
+  gap_extend = -1,
+  cluster.method = "components",
+  cluster.prefix = "cluster.",
+  use.V = TRUE,
+  use.J = TRUE,
+  exportAdjMatrix = FALSE,
+  exportGraph = FALSE
+)
+
+# Define clone types on light chain 
+clonalCluster_Light <- clonalCluster(
+  combined.BCR.filtered,
+  chain = "Light",
+  sequence = "nt",
+  threshold = 0.85,
+  # group.by = "IGH",
+  dist_type = "levenshtein",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
+  gap_open = -10,
+  gap_extend = -1,
+  cluster.method = "components",
+  cluster.prefix = "cluster.",
+  use.V = TRUE,
+  use.J = TRUE,
+  exportAdjMatrix = FALSE,
+  exportGraph = FALSE
+)
+
+# Combine clonal types for heavy and light chain 
+combined.BCR.filtered_clonalCluster <- map2(clonalCluster_IGH, clonalCluster_Light, function(igh, light) {
+  inner_join(igh, light, by = "barcode")
+})
+
+combined.BCR.filtered_clonalCluster[[]] %>% 
+  mutate(
+    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+  ) %>% 
+  select(IGH_V_gene, IGH_J_gene, IGLC_V_gene, IGLC_J_gene, CTstrict, IGH.Cluster, Light.Cluster) %>% 
+  summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "IGH.Cluster", "Light.Cluster")) %>%
+  # summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "CTstrict")) %>% 
+  arrange(desc(n)) %>% head(n = 15)
+
+
+combined.BCR.filtered_clonalCluster[[]] %>% 
+  mutate(
+    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+    gene_cluster = paste0(IGH_V_gene, "_", IGH_J_gene, "_", IGLC_V_gene, "_", IGLC_J_gene),
+    manual_cluster = paste0(IGH.Cluster, "_", Light.Cluster)
+  ) %>% 
+  summarize(n = n(), .by = c("gene_cluster", "manual_cluster")) %>%
+  # summarize(n = n(), .by = c("IGLC_V_gene", "IGLC_J_gene", "Light.Cluster")) %>%
+  arrange(desc(n)) %>% head(n = 15)
+
+
+
+
+
+#########
+
+combined.BCR.filtered_Fol13 <- combineBCR(b_contigs.list[c(88,89)],
+           samples = b_contigs.list[c(88,89)] %>% names(),
+           removeNA = TRUE,
+           threshold = 0.85, # Default is 0.85. Oliver used default.
+           filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains.
+           filterMulti = TRUE, # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others.
+           call.related.clones = TRUE,
+           use.V = TRUE,
+           use.J = TRUE,
+           # group.by = "IGH",
+           chain = "both"
+)
+
+
+# CHECK THAT HEAVY CHAIN V AND J GENES ARE THE SAME 
+combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22`$CTstrict %>%
+  table() %>% as.data.frame() %>% arrange(desc(Freq)) %>% head(n = 10)
+
+combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22` %>%
+  # filter(CTstrict == "cluster.7833_IGLV1-40.TGCCAGTCTTATGACACCAGACTGAGGGCCACTGTGTTC") %>%
+  # filter(CTstrict == "cluster.3") %>%
+  filter(CTstrict == "cluster.3_cluster.3") %>%
+  summarize(n = n(), .by = c("IGH", "IGLC")) %>%
+  arrange(desc(n))
+
+# combined.BCR.filtered_Fol13$`HH119-SILP-PC`$CTstrict %>%
+#   table() %>% as.data.frame() %>% arrange(desc(Freq)) %>% head(n = 10)
+# 
+# combined.BCR.filtered$`HH119-SILP-PC` %>%
+#   filter(CTstrict == "cluster.4451_IGKV1-33.TGTCAACACTATAATGTTGTCCCTCCGTGCACTTTT") %>%
+#   # filter(CTstrict == "cluster.3") %>%
+#   summarize(n = n(), .by = c("IGH")) %>%
+#   arrange(desc(n))
+
+
+test_IGH <- clonalCluster(
+  combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22`,
+  chain = "IGH",
+  sequence = "nt",
+  threshold = 0.85,
+  # group.by = "IGH",
+  dist_type = "levenshtein",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
+  gap_open = -10,
+  gap_extend = -1,
+  cluster.method = "components",
+  cluster.prefix = "cluster.",
+  use.V = TRUE,
+  use.J = TRUE,
+  exportAdjMatrix = FALSE,
+  exportGraph = FALSE
+)
+
+test_Light <- clonalCluster(
+  combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22`,
+  chain = "Light",
+  sequence = "nt",
+  threshold = 0.85,
+  # group.by = "IGH",
+  dist_type = "levenshtein",
+  dist_mat = "BLOSUM80",
+  normalize = "length",
+  gap_open = -10,
+  gap_extend = -1,
+  cluster.method = "components",
+  cluster.prefix = "cluster.",
+  use.V = TRUE,
+  use.J = TRUE,
+  exportAdjMatrix = FALSE,
+  exportGraph = FALSE
+)
+
+test_Light 
+
+# # Both chains
+# test[[1]]$Multi.Cluster %>% table()
+#
+# test[[1]] %>%
+#   filter(Multi.Cluster == "cluster.2") %>%
+#   summarize(n = n(), .by = c("IGH")) %>%
+#   arrange(desc(n))
+
+# Only heavy chain
+test_IGH[[1]]$IGH.Cluster %>% table()
+
+test_IGH[[1]] %>%
+  filter(IGH.Cluster == "cluster.10") %>%
+  summarize(n = n(), .by = c("IGH")) %>%
+  arrange(desc(n))
+
+# Only light chain
+test_Light[[1]]$Light.Cluster %>% table()
+
+test_Light[[1]] %>%
+  filter(Light.Cluster == "cluster.5") %>%
+  summarize(n = n(), .by = c("IGLC")) %>%
+  arrange(desc(n))
+
+# Combine
+
+test <- inner_join(test_IGH[[1]], test_Light[[1]])
+
+test %>% 
+  mutate(
+    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+  ) %>% 
+  select(IGH_V_gene, IGH_J_gene, IGLC_V_gene, IGLC_J_gene, CTstrict, IGH.Cluster, Light.Cluster) %>% 
+  summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "IGH.Cluster", "Light.Cluster")) %>%
+  # summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "CTstrict")) %>% 
+  arrange(desc(n)) %>% head(n = 15)
+
+
+test %>% 
+  mutate(
+    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+    gene_cluster = paste0(IGH_V_gene, "_", IGH_J_gene, "_", IGLC_V_gene, "_", IGLC_J_gene),
+    manual_cluster = paste0(IGH.Cluster, "_", Light.Cluster)
+  ) %>% 
+  summarize(n = n(), .by = c("gene_cluster", "manual_cluster")) %>%
+  # summarize(n = n(), .by = c("IGLC_V_gene", "IGLC_J_gene", "Light.Cluster")) %>%
+  arrange(desc(n)) %>% head(n = 15)
+
+  
+
+################################################################################
 # One row per cell
 combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13` %>% nrow() # 223 - N cells 
 combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_aa1 %>% unique() %>% length() # 209 - heavy chain amino acid sequence
 combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_nt1 %>% unique() %>% length() # 210 - heavy chain nucleotide sequence
 combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_aa2 %>% unique() %>% length() # 200 - ligth chain amino acid sequence
 combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_nt2 %>% unique() %>% length() # 208 - ligth chain nucleotide sequence
+
+combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$CTstrict %>% table()
+
 
 # How many receptors with NA in any chains 
 is.na(combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGH) %>% table() # 62
