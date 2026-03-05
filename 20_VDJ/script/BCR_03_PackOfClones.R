@@ -14,24 +14,24 @@ library(APackOfTheClones)
 # seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
 # combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
 # 
-# # Merge combined.BCR.filtered and update barcode column 
+# # Merge combined.BCR.filtered and update barcode column
 # combined.BCR.filtered_all <- bind_rows(combined.BCR.filtered)
 # combined.BCR.filtered_all$barcode_new <- paste0(
-#   combined.BCR.filtered_all$sample_clean, "_", 
+#   combined.BCR.filtered_all$sample_clean, "_",
 #   combined.BCR.filtered_all$barcode %>% str_split_i("_", -1)
 # )
 # 
 # # Rename barcode_new to barcode for combineExpression - THIS is what should match with colnames(seurat_obj)
 # combined.BCR.filtered_all <- combined.BCR.filtered_all %>%
 #   select(!barcode) %>%
-#   rename(barcode = barcode_new) 
+#   rename(barcode = barcode_new)
 # 
 # combined.BCR.filtered_all$barcode %>% head()
 # 
-# saveRDS(combined.BCR.filtered_all, "20_VDJ/out/combined.BCR.filtered.clean_all.rds")
+# # saveRDS(combined.BCR.filtered_all, "20_VDJ/out/combined.BCR.filtered.clean_all.rds")
 # 
 # # ------------------------------------------------------------------------------
-# # Prep data - Per sample  
+# # Prep data - Per sample
 # # ------------------------------------------------------------------------------
 # 
 # seurat_obj_BCR_list <- list()
@@ -39,17 +39,17 @@ library(APackOfTheClones)
 # sample_names <- names(seurat_obj_list)
 # 
 # for (sample_name in sample_names){
-#   
+# 
 #   # Get your sample
 #   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
 #   # sample_name <- "HH119-SI-PP-CD19-Pool1"
-#   
+# 
 #   seurat_obj <- seurat_obj_list[[sample_name]]
 #   sample_name_clean <- unique(seurat_obj$sample_clean)
-#   
+# 
 #   # Add barcode_new to Seurat
 #   seurat_obj$barcode_new <- paste0(seurat_obj$sample_clean, "_", colnames(seurat_obj))
-#   
+# 
 #   if (seurat_obj$barcode_new %>% length() != seurat_obj$barcode_new %>% unique() %>% length()){
 #     print("barcode_new not unique not in seurat_obj")
 #   } else {
@@ -57,19 +57,19 @@ library(APackOfTheClones)
 #   }
 # 
 #   # Filter BCR data
-#   combined.BCR.filtered_sample <- combined.BCR.filtered_all %>% 
+#   combined.BCR.filtered_sample <- combined.BCR.filtered_all %>%
 #     filter(sample_high_level == sample_name)
-#   
+# 
 #   if (combined.BCR.filtered_sample %>% select(barcode) %>% nrow() != combined.BCR.filtered_sample %>% select(barcode) %>% unique() %>% nrow()){
 #     print("barcode not unique not in combined.BCR.filtered_sample")
 #   }
-#   
+# 
 #   # Check barcodes match
 #   combined.BCR.filtered_sample$barcode %>% head()
 #   colnames(seurat_obj) %>% head()
-#   
+# 
 #   table(combined.BCR.filtered_sample$barcode %in% colnames(seurat_obj))
-#   
+# 
 #   # Combine combined.BCR.filtered_sample and seurat_obj
 #   seurat_obj_BCR <- combineExpression(
 #     combined.BCR.filtered_sample,
@@ -77,7 +77,7 @@ library(APackOfTheClones)
 #     cloneCall = "strict",
 #     proportion = TRUE
 #   )
-#   
+# 
 #   seurat_obj_BCR_list[[sample_name]] <- seurat_obj_BCR
 # 
 # }
@@ -86,7 +86,7 @@ library(APackOfTheClones)
 # 
 # 
 # # ------------------------------------------------------------------------------
-# # Check 
+# # Check
 # # ------------------------------------------------------------------------------
 # 
 # # HH117-SILP-INF-PC
@@ -99,13 +99,13 @@ library(APackOfTheClones)
 # seurat_obj_BCR_list$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1`[[]] %>% filter(!is.na(CTstrict)) %>% nrow()
 # seurat_obj_BCR_list$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2`[[]] %>% filter(!is.na(CTstrict)) %>% nrow()
 # 
-# 7322 + 9617 + 2807 + 4784 # 24530
+# 7324 + 9618 + 2807 + 4784 # 24533
 # 
-# combined.BCR.filtered_all %>% filter(sample_clean == "HH119-SI-PP" & !is.na(CTstrict)) %>% nrow() # 24530
+# combined.BCR.filtered_all %>% filter(sample_clean == "HH119-SI-PP" & !is.na(CTstrict)) %>% nrow() # 24533
 # 
 # # HH117-SI-PP-nonINF
-# seurat_obj_BCR_list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH`[[]] %>% filter(!is.na(CTstrict)) %>% nrow() # 3155
-# combined.BCR.filtered_all %>% filter(sample_clean == "HH117-SI-PP-nonINF" & !is.na(CTstrict)) %>% nrow() # 3155
+# seurat_obj_BCR_list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH`[[]] %>% filter(!is.na(CTstrict)) %>% nrow() # 3158
+# combined.BCR.filtered_all %>% filter(sample_clean == "HH117-SI-PP-nonINF" & !is.na(CTstrict)) %>% nrow() # 3158
 
 # ------------------------------------------------------------------------------
 # Plot - Per sample  
@@ -178,34 +178,34 @@ for (sample_name in sample_names){
 # ------------------------------------------------------------------------------
 # Plot - Highlight clone
 # ------------------------------------------------------------------------------
-
-# Define sample
-sample_name <- "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"
-
-# Define clone
-clone <- "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40" # can also be a list
-
-# Define colors 
-library(wesanderson)
-# clone_color <- wes_palette("GrandBudapest1")[2]
-clone_color <- wes_palette("Cavalcanti1")[1] # if clone is a list, this should be a list. 
-
-# Get seurat_obj_BCR for given sample
-seurat_obj_BCR <- seurat_obj_BCR_list[[sample_name]]
-sample_name_clean <- unique(seurat_obj_BCR$sample_clean)
-
-Idents(seurat_obj_BCR) <- "celltype_broad"
-
-# Initiate plot
-p_clone <- vizAPOTC(seurat_obj_BCR, clonecall = "strict", verbose = FALSE,
-                    legend_text_size = 2, legend_spacing = 0.7, show_labels = TRUE, label_size = 3) %>%
-  showCloneHighlight(clone) 
-
-# Update clone color 
-p_clone$data$color <- str_replace_all(p_clone$data$color, "#F8766D", clone_color)
-
-# Finish plot
-p_clone <- p_clone + labs(title = "BCR PackOfClones", subtitle = glue("{sample_name}\n{clone}"))
-
-# Save plot
-ggsave(glue("20_VDJ/plot/BCR_PackOfClones/{sample_name}_BCR_PackOfClones_CloneHighlight.png"), p_clone, width = 14, height = 10)
+# 
+# # Define sample
+# sample_name <- "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"
+# 
+# # Define clone
+# clone <- "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40" # can also be a list
+# 
+# # Define colors 
+# library(wesanderson)
+# # clone_color <- wes_palette("GrandBudapest1")[2]
+# clone_color <- wes_palette("Cavalcanti1")[1] # if clone is a list, this should be a list. 
+# 
+# # Get seurat_obj_BCR for given sample
+# seurat_obj_BCR <- seurat_obj_BCR_list[[sample_name]]
+# sample_name_clean <- unique(seurat_obj_BCR$sample_clean)
+# 
+# Idents(seurat_obj_BCR) <- "celltype_broad"
+# 
+# # Initiate plot
+# p_clone <- vizAPOTC(seurat_obj_BCR, clonecall = "strict", verbose = FALSE,
+#                     legend_text_size = 2, legend_spacing = 0.7, show_labels = TRUE, label_size = 3) %>%
+#   showCloneHighlight(clone) 
+# 
+# # Update clone color 
+# p_clone$data$color <- str_replace_all(p_clone$data$color, "#F8766D", clone_color)
+# 
+# # Finish plot
+# p_clone <- p_clone + labs(title = "BCR PackOfClones", subtitle = glue("{sample_name}\n{clone}"))
+# 
+# # Save plot
+# ggsave(glue("20_VDJ/plot/BCR_PackOfClones/{sample_name}_BCR_PackOfClones_CloneHighlight.png"), p_clone, width = 14, height = 10)
