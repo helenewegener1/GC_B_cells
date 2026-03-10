@@ -10,6 +10,7 @@ library(patchwork)
 library(readxl)
 library(gtools)
 library(purrr)
+library(tibble)
 # BiocManager::install("scRepertoire", force = TRUE) # 2.6.2
 # devtools::install_github("BorchLab/scRepertoire", force = TRUE) # 2.6.2
 # devtools::install_github("BorchLab/scRepertoire@v2.6.0", force = TRUE)
@@ -25,11 +26,10 @@ packageVersion("scRepertoire")
 library(immApex)
 packageVersion("immApex")
 
-
-
 # Load data
 # seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
-seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
+# seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
+seurat_obj_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
 
 # ------------------------------------------------------------------------------
 # LOAD BCR DATA - running on computerome.
@@ -224,241 +224,140 @@ for (condition_name in names(filter_conditions)) {
 # combineBCR - Filtering 
 # ------------------------------------------------------------------------------
 
-# Combine using the default similarity clustering
-combined.BCR.filtered <- combineBCR(b_contigs.list,
-                                    samples = names(b_contigs.list), 
-                                    removeNA = TRUE,
-                                    threshold = 0.85, # Default is 0.85. Oliver used default.
-                                    filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains.
-                                    filterMulti = TRUE # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others. 
-                                    
-) 
+combined.BCR.filtered_HH117 <- combineBCR(
+  b_contigs.list[startsWith(names(b_contigs.list), "HH117")],
+  samples = names(b_contigs.list[startsWith(names(b_contigs.list), "HH117")]),
+  removeNA = TRUE,
+  threshold = 0.85,
+  filterNonproductive = TRUE,
+  filterMulti = TRUE
+)
+
+combined.BCR.filtered_HH119_noFol <- combineBCR(
+  b_contigs.list[startsWith(names(b_contigs.list), "HH119") & !grepl("Pool", names(b_contigs.list))],
+  samples = names(b_contigs.list[startsWith(names(b_contigs.list), "HH119") & !grepl("Pool", names(b_contigs.list))]),
+  removeNA = TRUE,
+  threshold = 0.85,
+  filterNonproductive = TRUE,
+  filterMulti = TRUE
+)
+
+combined.BCR.filtered_HH119_pool1 <- combineBCR(
+  b_contigs.list[startsWith(names(b_contigs.list), "HH119") & grepl("Pool1", names(b_contigs.list))],
+  samples = names(b_contigs.list[startsWith(names(b_contigs.list), "HH119") & grepl("Pool1", names(b_contigs.list))]),
+  removeNA = TRUE,
+  threshold = 0.85,
+  filterNonproductive = TRUE,
+  filterMulti = TRUE
+)
+
+combined.BCR.filtered_HH119_pool2 <- combineBCR(
+  b_contigs.list[startsWith(names(b_contigs.list), "HH119") & grepl("Pool2", names(b_contigs.list))],
+  samples = names(b_contigs.list[startsWith(names(b_contigs.list), "HH119") & grepl("Pool2", names(b_contigs.list))]),
+  removeNA = TRUE,
+  threshold = 0.85,
+  filterNonproductive = TRUE,
+  filterMulti = TRUE
+)
+
+# Combine cells across patients 
+combined.BCR.filtered_list <- list(
+  HH117 = combined.BCR.filtered_HH117 %>% bind_rows(),
+  HH119 = list(
+    combined.BCR.filtered_HH119_noFol,
+    combined.BCR.filtered_HH119_pool1,
+    combined.BCR.filtered_HH119_pool2
+  ) %>% flatten() %>% bind_rows()
+)
+
+rm(combined.BCR.filtered_HH117, combined.BCR.filtered_HH119_noFol, combined.BCR.filtered_HH119_pool1, combined.BCR.filtered_HH119_pool2)
 
 # Define clone types on heavy chain 
-clonalCluster_IGH <- clonalCluster(
-  combined.BCR.filtered,
-  chain = "IGH",
-  sequence = "nt",
-  threshold = 0.85,
-  # group.by = "IGH",
-  dist_type = "levenshtein",
-  dist_mat = "BLOSUM80",
-  normalize = "length",
-  gap_open = -10,
-  gap_extend = -1,
-  cluster.method = "components",
-  cluster.prefix = "cluster.",
-  use.V = TRUE,
-  use.J = TRUE,
-  exportAdjMatrix = FALSE,
-  exportGraph = FALSE
-)
-
-# Define clone types on light chain 
-clonalCluster_Light <- clonalCluster(
-  combined.BCR.filtered,
-  chain = "Light",
-  sequence = "nt",
-  threshold = 0.85,
-  # group.by = "IGH",
-  dist_type = "levenshtein",
-  dist_mat = "BLOSUM80",
-  normalize = "length",
-  gap_open = -10,
-  gap_extend = -1,
-  cluster.method = "components",
-  cluster.prefix = "cluster.",
-  use.V = TRUE,
-  use.J = TRUE,
-  exportAdjMatrix = FALSE,
-  exportGraph = FALSE
-)
-
-# Combine clonal types for heavy and light chain 
-combined.BCR.filtered_clonalCluster <- map2(clonalCluster_IGH, clonalCluster_Light, function(igh, light) {
-  inner_join(igh, light, by = "barcode")
+clonalCluster_IGH_list <- lapply(combined.BCR.filtered_list, function(x) {
+  clonalCluster(
+    list(x),            
+    chain = "IGH",
+    sequence = "nt",
+    threshold = 0.85,
+    dist_type = "levenshtein",
+    normalize = "length",
+    cluster.method = "components",
+    cluster.prefix = "cluster.",
+    use.V = TRUE,
+    use.J = TRUE,
+    exportAdjMatrix = FALSE,
+    exportGraph = FALSE
+  )[[1]]                 
 })
 
-combined.BCR.filtered_clonalCluster[[]] %>% 
-  mutate(
-    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
-    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
-    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
-    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
-  ) %>% 
-  select(IGH_V_gene, IGH_J_gene, IGLC_V_gene, IGLC_J_gene, CTstrict, IGH.Cluster, Light.Cluster) %>% 
-  summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "IGH.Cluster", "Light.Cluster")) %>%
-  # summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "CTstrict")) %>% 
-  arrange(desc(n)) %>% head(n = 15)
+# Define clone types on light chain 
+clonalCluster_Light_list <- lapply(combined.BCR.filtered_list, function(x) {
+  clonalCluster(
+    list(x),             
+    chain = "Light",
+    sequence = "nt",
+    threshold = 0.85,
+    dist_type = "levenshtein",
+    normalize = "length",
+    cluster.method = "components",
+    cluster.prefix = "cluster.",
+    use.V = TRUE,
+    use.J = TRUE,
+    exportAdjMatrix = FALSE,
+    exportGraph = FALSE
+  )[[1]]                
+})
 
+rm(combined.BCR.filtered_list)
 
-combined.BCR.filtered_clonalCluster[[]] %>% 
-  mutate(
-    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
-    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
-    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
-    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
-    gene_cluster = paste0(IGH_V_gene, "_", IGH_J_gene, "_", IGLC_V_gene, "_", IGLC_J_gene),
-    manual_cluster = paste0(IGH.Cluster, "_", Light.Cluster)
-  ) %>% 
+# Combine clonal types for heavy and light chain 
+combined.BCR.filtered_clonalCluster <- map2(
+  clonalCluster_IGH_list,
+  clonalCluster_Light_list,
+  function(igh, light) {
+    inner_join(igh, light) %>%
+      mutate(
+        IGH_V_gene     = str_split_i(IGH,  "\\.", 1),
+        IGH_J_gene     = str_split_i(IGH,  "\\.", 3),
+        IGLC_V_gene    = str_split_i(IGLC, "\\.", 1),
+        IGLC_J_gene    = str_split_i(IGLC, "\\.", 2),
+        gene_cluster   = paste0(IGH_V_gene, "_", IGH_J_gene, "_", IGLC_V_gene, "_", IGLC_J_gene),
+        manual_cluster = paste0(IGH.Cluster, "_", Light.Cluster)
+      )
+  }
+)
+
+# Clean up 
+rm(clonalCluster_Light_list, clonalCluster_IGH_list)
+
+# Check
+combined.BCR.filtered_clonalCluster$HH119 %>% 
   summarize(n = n(), .by = c("gene_cluster", "manual_cluster")) %>%
-  # summarize(n = n(), .by = c("IGLC_V_gene", "IGLC_J_gene", "Light.Cluster")) %>%
-  arrange(desc(n)) %>% head(n = 15)
+  filter(gene_cluster == "IGHV4-34_IGHJ4_IGLV1-40_IGLJ7") 
+  arrange(desc(n)) %>% head(n = 20)
 
+# combined.BCR.filtered_clonalCluster[["HH117-SILP-INF-PC"]] %>% filter(is.na(IGH.Cluster)) %>% head()
 
+saveRDS(combined.BCR.filtered_clonalCluster, "20_VDJ/out/combined.BCR.filtered_clonalCluster.rds")
+# combined.BCR.filtered_clonalCluster <- readRDS("20_VDJ/out/combined.BCR.filtered_clonalCluster.rds")
 
-
-
-#########
-
-combined.BCR.filtered_Fol13 <- combineBCR(b_contigs.list[c(88,89)],
-           samples = b_contigs.list[c(88,89)] %>% names(),
-           removeNA = TRUE,
-           threshold = 0.85, # Default is 0.85. Oliver used default.
-           filterNonproductive = TRUE, # Default. Removes non-productive contigs , keeping only functional receptor chains.
-           filterMulti = TRUE, # Default. For cells with more than one heavy or light chain detected, this automatically selects the chain with the highest UMI count and discards the others.
-           call.related.clones = TRUE,
-           use.V = TRUE,
-           use.J = TRUE,
-           # group.by = "IGH",
-           chain = "both"
-)
-
-
-# CHECK THAT HEAVY CHAIN V AND J GENES ARE THE SAME 
-combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22`$CTstrict %>%
-  table() %>% as.data.frame() %>% arrange(desc(Freq)) %>% head(n = 10)
-
-combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22` %>%
-  # filter(CTstrict == "cluster.7833_IGLV1-40.TGCCAGTCTTATGACACCAGACTGAGGGCCACTGTGTTC") %>%
-  # filter(CTstrict == "cluster.3") %>%
-  filter(CTstrict == "cluster.3_cluster.3") %>%
-  summarize(n = n(), .by = c("IGH", "IGLC")) %>%
-  arrange(desc(n))
-
-# combined.BCR.filtered_Fol13$`HH119-SILP-PC`$CTstrict %>%
-#   table() %>% as.data.frame() %>% arrange(desc(Freq)) %>% head(n = 10)
-# 
-# combined.BCR.filtered$`HH119-SILP-PC` %>%
-#   filter(CTstrict == "cluster.4451_IGKV1-33.TGTCAACACTATAATGTTGTCCCTCCGTGCACTTTT") %>%
-#   # filter(CTstrict == "cluster.3") %>%
-#   summarize(n = n(), .by = c("IGH")) %>%
-#   arrange(desc(n))
-
-
-test_IGH <- clonalCluster(
-  combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22`,
-  chain = "IGH",
-  sequence = "nt",
-  threshold = 0.85,
-  # group.by = "IGH",
-  dist_type = "levenshtein",
-  dist_mat = "BLOSUM80",
-  normalize = "length",
-  gap_open = -10,
-  gap_extend = -1,
-  cluster.method = "components",
-  cluster.prefix = "cluster.",
-  use.V = TRUE,
-  use.J = TRUE,
-  exportAdjMatrix = FALSE,
-  exportGraph = FALSE
-)
-
-test_Light <- clonalCluster(
-  combined.BCR.filtered_Fol13$`HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_Fol-22`,
-  chain = "Light",
-  sequence = "nt",
-  threshold = 0.85,
-  # group.by = "IGH",
-  dist_type = "levenshtein",
-  dist_mat = "BLOSUM80",
-  normalize = "length",
-  gap_open = -10,
-  gap_extend = -1,
-  cluster.method = "components",
-  cluster.prefix = "cluster.",
-  use.V = TRUE,
-  use.J = TRUE,
-  exportAdjMatrix = FALSE,
-  exportGraph = FALSE
-)
-
-test_Light 
-
-# # Both chains
-# test[[1]]$Multi.Cluster %>% table()
-#
-# test[[1]] %>%
-#   filter(Multi.Cluster == "cluster.2") %>%
-#   summarize(n = n(), .by = c("IGH")) %>%
-#   arrange(desc(n))
-
-# Only heavy chain
-test_IGH[[1]]$IGH.Cluster %>% table()
-
-test_IGH[[1]] %>%
-  filter(IGH.Cluster == "cluster.10") %>%
-  summarize(n = n(), .by = c("IGH")) %>%
-  arrange(desc(n))
-
-# Only light chain
-test_Light[[1]]$Light.Cluster %>% table()
-
-test_Light[[1]] %>%
-  filter(Light.Cluster == "cluster.5") %>%
-  summarize(n = n(), .by = c("IGLC")) %>%
-  arrange(desc(n))
-
-# Combine
-
-test <- inner_join(test_IGH[[1]], test_Light[[1]])
-
-test %>% 
-  mutate(
-    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
-    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
-    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
-    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
-  ) %>% 
-  select(IGH_V_gene, IGH_J_gene, IGLC_V_gene, IGLC_J_gene, CTstrict, IGH.Cluster, Light.Cluster) %>% 
-  summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "IGH.Cluster", "Light.Cluster")) %>%
-  # summarize(n = n(), .by = c("IGH_V_gene", "IGH_J_gene", "IGLC_V_gene", "IGLC_J_gene", "CTstrict")) %>% 
-  arrange(desc(n)) %>% head(n = 15)
-
-
-test %>% 
-  mutate(
-    IGH_V_gene = IGH %>% str_split_i("\\.", 1),
-    IGH_J_gene = IGH %>% str_split_i("\\.", 3),
-    IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
-    IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
-    gene_cluster = paste0(IGH_V_gene, "_", IGH_J_gene, "_", IGLC_V_gene, "_", IGLC_J_gene),
-    manual_cluster = paste0(IGH.Cluster, "_", Light.Cluster)
-  ) %>% 
-  summarize(n = n(), .by = c("gene_cluster", "manual_cluster")) %>%
-  # summarize(n = n(), .by = c("IGLC_V_gene", "IGLC_J_gene", "Light.Cluster")) %>%
-  arrange(desc(n)) %>% head(n = 15)
-
-  
+combined.BCR.filtered <- combined.BCR.filtered_clonalCluster
 
 ################################################################################
 # One row per cell
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13` %>% nrow() # 223 - N cells 
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_aa1 %>% unique() %>% length() # 209 - heavy chain amino acid sequence
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_nt1 %>% unique() %>% length() # 210 - heavy chain nucleotide sequence
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_aa2 %>% unique() %>% length() # 200 - ligth chain amino acid sequence
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$cdr3_nt2 %>% unique() %>% length() # 208 - ligth chain nucleotide sequence
-
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$CTstrict %>% table()
-
+combined.BCR.filtered$HH117 %>% filter(sample == "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13") %>% nrow() # 223 - N cells 
+combined.BCR.filtered$HH117 %>% filter(sample == "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13") %>% select(cdr3_aa1) %>% unique() %>% nrow() # 209 - heavy chain amino acid sequence
+combined.BCR.filtered$HH117 %>% filter(sample == "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13") %>% select(cdr3_nt1) %>% unique() %>% nrow() # 210 - heavy chain nucleotide sequence
+combined.BCR.filtered$HH117 %>% filter(sample == "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13") %>% select(cdr3_aa2) %>% unique() %>% nrow() # 200 - ligth chain amino acid sequence
+combined.BCR.filtered$HH117 %>% filter(sample == "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13") %>% select(cdr3_nt2) %>% unique() %>% nrow() # 208 - ligth chain nucleotide sequence
 
 # How many receptors with NA in any chains 
-is.na(combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGH) %>% table() # 62
-is.na(combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGLC) %>% table() # 10 
-
-is.na(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGH) %>% table() # 0 
-is.na(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGLC) %>% table() # 0 
+# is.na(combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGH) %>% table() # 62
+# is.na(combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGLC) %>% table() # 10 
+# 
+# combined.BCR.filtered$HH117 %>% filter(sample == "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13", !is.na(IGH))
+# is.na(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGH) %>% table() # 0 
+# is.na(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`$IGLC) %>% table() # 0 
 
 # head(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13`, n = 5)
 
@@ -477,286 +376,257 @@ is.na(combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fo
 # Filter combined.BCR.filtered based on seurat object 
 # ------------------------------------------------------------------------------
 
+# Bind rows
+full_sequence_IGH <- list(
+  HH117 = dplyr::bind_rows(Filter(function(df) any(grepl("HH117", df$barcode)), full_sequence_IGH.list)),
+  HH119 = dplyr::bind_rows(Filter(function(df) any(grepl("HH119", df$barcode)), full_sequence_IGH.list))
+)
+
 combined.BCR.filtered.clean <- list()
 
-for (sample_name_fol in names(combined.BCR.filtered)) {
+for (HH in names(combined.BCR.filtered)) {
   
-  # sample_name_fol <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-13"
-  # sample_name_fol <- "HH117-SI-MILF-INF-HLADR-AND-CD19"
-  # sample_name_fol <- "HH117-SILP-INF-PC"
+  # HH <- "HH119"
   
-  sample_name <- sample_name_fol %>% str_split_i("_", 1)
-  Fol_name <- sample_name_fol %>% str_split_i("_", 2)
+  combined.BCR.filtered_HH <- combined.BCR.filtered[[HH]]
   
+  # Clean sample names
+  seurat_obj <- subset(seurat_obj_integrated, patient == HH)
+  seurat_obj$sample_high_level <- seurat_obj$sample %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+  seurat_obj[[]] <- seurat_obj[[]] %>% mutate(sample = ifelse(!is.na(manual_ADT_ID), glue("{sample_high_level}_{manual_ADT_ID}"), sample_high_level))
+  
+  # Clean sample names 
+  combined.BCR.filtered_HH$sample_original <- combined.BCR.filtered_HH$sample
+  combined.BCR.filtered_HH$sample <- combined.BCR.filtered_HH$sample %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+  combined.BCR.filtered_HH$barcode_original <- combined.BCR.filtered_HH$barcode
+  combined.BCR.filtered_HH$barcode_original_noFol <- gsub("_Fol-\\d+", "", combined.BCR.filtered_HH$barcode_original)
+  combined.BCR.filtered_HH$barcode <- combined.BCR.filtered_HH$barcode %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+  combined.BCR.filtered_HH$sample_high_level <- str_split_i(combined.BCR.filtered_HH$sample, "_", 1)
+   
   # Get barcodes from Seurat (cells that passed QC)
-  seurat_obj <- seurat_obj_list[[sample_name]]
-  seurat_obj$barcode <- paste(sample_name_fol, rownames(seurat_obj[[]]), sep = "_")
+  # Update barcodes
+  barcode_seurat <- rownames(seurat_obj[[]]) %>% str_extract("(?<=_)[^_]+_[^_]+")
+  seurat_obj$barcode <- paste(seurat_obj$sample, barcode_seurat, sep = "_")
   
-  # Filter for manual_ADT_ID
-  if (str_detect(sample_name_fol, "_Fol-")){
-    seurat_obj <- subset(seurat_obj, manual_ADT_ID == Fol_name)
-  } 
-
-  # Get BCR data
-  bcr_data <- combined.BCR.filtered[[sample_name_fol]]
+  # Get barcode suffix
+  sample_suffix_map <- seurat_obj[[]] %>%
+    select(sample_high_level) %>%
+    rownames_to_column("barcode") %>%
+    mutate(barcode_suffix = str_split_i(barcode, "_", 3)) %>%
+    select(sample_high_level, barcode_suffix) %>%
+    distinct()
+  
+  # Then fix BCR barcodes to match integrated object
+  combined.BCR.filtered_HH <- combined.BCR.filtered_HH %>%
+    left_join(sample_suffix_map, by = "sample_high_level", relationship = "many-to-many") %>% 
+    mutate(
+      barcode_integrated = paste0(
+        barcode,
+        "_", barcode_suffix # Add integration suffix
+      )
+    ) %>% 
+    rename(barcode_original_2 = barcode, 
+           barcode = barcode_integrated)
+  
+  # Look at barcodes
+  combined.BCR.filtered_HH$barcode %>% tail()
+  seurat_obj$barcode %>% tail()
+  table(combined.BCR.filtered_HH$barcode %in% seurat_obj$barcode)
   
   # Filter barcodes in combined.BCR.filtered based on seurat obejct since these cells have been QC-filtered
-  bcr_filtered <- bcr_data %>%
+  combined.BCR.filtered_HH_QC <- combined.BCR.filtered_HH %>%
     filter(barcode %in% seurat_obj$barcode)
   
   # Check numbers 
-  # table(bcr_data$barcode %in% seurat_obj$barcode)
-  nrow(bcr_data)
-  nrow(bcr_filtered)
+  table(combined.BCR.filtered_HH$barcode %in% seurat_obj$barcode)
+  nrow(combined.BCR.filtered_HH)
+  nrow(combined.BCR.filtered_HH_QC)
   
   # -------------------------
   # Add cell type annotation 
   # -------------------------
   
   seurat_meta <- seurat_obj[[]] %>% select(barcode, celltype_broad)
+  seurat_meta$barcode %>% tail()
+  combined.BCR.filtered_HH_QC$barcode %>% tail()
   
-  bcr_filtered_annotated <- left_join(bcr_filtered, seurat_meta, by = "barcode")
-  
-  combined.BCR.filtered.clean[[sample_name_fol]] <- bcr_filtered_annotated
-  
-  # -------------------------
-  # Add sample_high_level 
-  # -------------------------
-  
-  combined.BCR.filtered.clean[[sample_name_fol]]$sample_high_level <- sample_name
+  combined.BCR.filtered_HH_QC <- left_join(combined.BCR.filtered_HH_QC, seurat_meta, by = "barcode")
   
   # -------------------------
   # Add patient 
   # -------------------------
   
-  patient_number <- str_split_i(sample_name, "-", 1)
-  patient <- ifelse(patient_number == "HH117", "HH117_Crohns", "HH119_Control")
-  
-  combined.BCR.filtered.clean[[sample_name_fol]]$patient <- patient
+  patient <- ifelse(HH == "HH117", "HH117_Crohns", "HH119_Control")
+
+  combined.BCR.filtered_HH_QC$patient <- patient
   
   # -------------------------
-  # Add sample_clean: patient-tissue-inflammed
+  # Remove Pool information in sample and barcode
+  # -------------------------
+  combined.BCR.filtered_HH_QC$barcode <- combined.BCR.filtered_HH_QC$barcode %>% str_remove_all("-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool1|-CD19-Pool2")
+  combined.BCR.filtered_HH_QC$sample <- combined.BCR.filtered_HH_QC$sample %>% str_remove_all("-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool1|-CD19-Pool2")
+  combined.BCR.filtered_HH_QC$sample_high_level <- combined.BCR.filtered_HH_QC$sample %>% str_remove_all("-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool1|-CD19-Pool2")
+  
+  # unique(combined.BCR.filtered_HH$sample)
+  # unique(combined.BCR.filtered_HH$sample_high_level)
+  
+  # -------------------------
+  # Remove negatives and doublets
   # -------------------------
   
-  combined.BCR.filtered.clean[[sample_name_fol]]$sample_clean <- seurat_obj$sample_clean %>% unique()
+  combined.BCR.filtered_HH_QC <- combined.BCR.filtered_HH_QC %>% filter(!str_detect(sample, "Negative|Doublet"))
+  
+  # -------------------------
+  # Add full sequence 
+  # -------------------------
+  
+  full_sequence_IGH_HH <- full_sequence_IGH[[HH]]
+  
+  full_sequence_IGH_HH$barcode_original_noFol <- full_sequence_IGH_HH$barcode
+  
+  # Check
+  table(full_sequence_IGH_HH$barcode_original_noFol %in% combined.BCR.filtered_HH_QC$barcode_original_noFol)
+  combined.BCR.filtered_HH_QC$barcode_original_noFol %>% length()
+  combined.BCR.filtered_HH_QC$barcode_original_noFol %>% unique() %>% length() # same as ^^
+  
+  combined.BCR.filtered_HH_QC <- combined.BCR.filtered_HH_QC %>% left_join(full_sequence_IGH_HH, by = "barcode_original_noFol")
+  
+  # -------------------------
+  # Add genes and Ig class
+  # -------------------------
+  
+  combined.BCR.filtered_HH_QC <- combined.BCR.filtered_HH_QC %>% 
+    mutate(
+      IGH_V_gene = IGH %>% str_split_i("\\.", 1),
+      IGH_J_gene = IGH %>% str_split_i("\\.", 3),
+      IGLC_V_gene = IGLC %>% str_split_i("\\.", 1),
+      IGLC_J_gene = IGLC %>% str_split_i("\\.", 2),
+      gene_cluster   = paste0(IGH_V_gene, "_", IGH_J_gene, "_", IGLC_V_gene, "_", IGLC_J_gene),
+      Ig_class = CTgene %>% str_split_i("_", 1) %>% str_split_i("\\.", 4),
+      Ig_class = na_if(Ig_class, "")
+  )
+
+  # -------------------------
+  # Add sample_clean
+  # -------------------------
+  
+  combined.BCR.filtered_HH_QC <- combined.BCR.filtered_HH_QC %>% 
+    mutate(sample_clean = sample %>% str_split_i("_", 1))
+  
+  # -------------------------
+  # Export dataframe
+  # -------------------------
+
+  combined.BCR.filtered.clean[[HH]] <- combined.BCR.filtered_HH_QC
   
 }
 
-# ------------------------------------------------------------------------------
-# Combine Pools 
-# ------------------------------------------------------------------------------
-
-combined.BCR.filtered.clean.pool_combine <- combined.BCR.filtered.clean
-
-pools_fols <- list(
-  "Pool1" = grep("Pool1", names(combined.BCR.filtered.clean.pool_combine), value = TRUE) %>% str_split_i("_", 2) %>% unique(), 
-  "Pool2" = grep("Pool2", names(combined.BCR.filtered.clean.pool_combine), value = TRUE) %>% str_split_i("_", 2) %>% unique()
-)
-
-for (pool in names(pools_fols)){
-  
-  # pool <- "Pool1"
-  fols <- pools_fols[[pool]]
-  
-  # Define samples
-  for (fol in fols){
-    
-    # fol <- "Fol-7"
-    
-    sample_name_new <- glue("HH119-SI-PP_{fol}")
-    
-    s1 <- glue("HH119-SI-PP-CD19-{pool}_{fol}")
-    s2 <- glue("HH119-SI-PP-GC-AND-PB-AND-TFH-{pool}_{fol}")
-    
-    # Combine samples 
-    combined.BCR.filtered.clean.pool_combine[[sample_name_new]] <- rbind(combined.BCR.filtered.clean.pool_combine[[s1]], combined.BCR.filtered.clean.pool_combine[[s2]])
-    
-    combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$barcode_old <- combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$barcode
-    combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$barcode <- paste(
-      sample_name_new, 
-      combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$barcode_old %>% str_split_i("_", 3), sep = "_"
-      )
-    
-    combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$sample_old <- combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$sample
-    combined.BCR.filtered.clean.pool_combine[[sample_name_new]]$sample <- sample_name_new
-    
-    # Remove old samples 
-    combined.BCR.filtered.clean.pool_combine <- combined.BCR.filtered.clean.pool_combine[
-      !names(combined.BCR.filtered.clean.pool_combine) %in% c(s1, s2)
-    ]
-  }
-  
-}
-
-length(combined.BCR.filtered.clean.pool_combine)
-
-# ------------------------------------------------------------------------------
-# Remove negatives and doublets 
-# ------------------------------------------------------------------------------
-
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- combined.BCR.filtered.clean.pool_combine
-
-not_keep <- grep("Negative|Doublet", names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs), value = TRUE)
-
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- combined.BCR.filtered.clean.pool_combine.rm_neg_doubs[
-  !names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) %in% not_keep
-]
-
-length(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
-
-names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
-
-# ------------------------------------------------------------------------------
-# SAVE BCR DATA (combined.BCR.filtered.clean)
-# ------------------------------------------------------------------------------
-
-saveRDS(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs, "20_VDJ/out/combined.BCR.filtered.clean.rds")
-# combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
-
-# ------------------------------------------------------------------------------
-# Add full sequence to combineBCR
-# ------------------------------------------------------------------------------
-
-# Clean full_sequence_IGH.list
-full_sequence_IGH.list_subset <- full_sequence_IGH.list[grep("Negative|Doublet", names(full_sequence_IGH.list), invert = TRUE)]
-
-## Clean names
-names(full_sequence_IGH.list_subset) <- names(full_sequence_IGH.list_subset) %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool2|-CD19-Pool1")
-names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool2|-CD19-Pool1")
-
-names_full_sequence_IGH.list_subset <- names(full_sequence_IGH.list_subset)
-names_combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
-
-# Combine 
-full_sequence_IGH.list_subset <- lapply(
-  split(full_sequence_IGH.list_subset, names(full_sequence_IGH.list_subset)),
-  bind_rows
-)
-
-names_full_sequence_IGH.list_subset <- names(full_sequence_IGH.list_subset) 
-names_combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
-
-
-## Clean barcodes
-full_sequence_IGH.list_subset <- lapply(names(full_sequence_IGH.list_subset), function(x){
-  
-  df <- full_sequence_IGH.list_subset[[x]]
-  df$barcode <- paste0(x, "_", df$barcode %>% str_split_i("_", 2))
-  df
-  
-})
-
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs <- lapply(names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs), function(x){
-  df <- combined.BCR.filtered.clean.pool_combine.rm_neg_doubs[[x]]
-  df$barcode <- df$barcode %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool2|-CD19-Pool1")
-  df
-})
-
-names(full_sequence_IGH.list_subset) <- names_full_sequence_IGH.list_subset
-names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) <- names_combined.BCR.filtered.clean.pool_combine.rm_neg_doubs
-
-# Get in same order
-full_sequence_IGH.list_subset <- full_sequence_IGH.list_subset[names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)]
-
-# Check 
-all(names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs) == names(full_sequence_IGH.list_subset))
-
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SI-PP-nonINF_Fol-1`$barcode %>% head()
-full_sequence_IGH.list_subset$`HH117-SI-PP-nonINF_Fol-1`$barcode %>% head()
-
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SI-PP-nonINF_Fol-1`$barcode %in% full_sequence_IGH.list_subset$`HH117-SI-PP-nonINF_Fol-1`$barcode
-
-# Merge 
-combined.BCR.joined <- map2(
-  combined.BCR.filtered.clean.pool_combine.rm_neg_doubs,
-  full_sequence_IGH.list_subset,
-  ~ left_join(.x, .y, by = "barcode")
-)
-
-combined.BCR.joined$`HH117-SILP-INF` %>% head()
-
-# combined.BCR.joined$`HH117-SILP-INF-PC`$IGH_full_sequence
-
-names(combined.BCR.joined)
-
-saveRDS(combined.BCR.joined, "20_VDJ/out/combined.BCR.joined.rds")
+saveRDS(combined.BCR.filtered.clean, "20_VDJ/out/combined.BCR.filtered.clean.rds")
 # combined.BCR.joined <- readRDS("20_VDJ/out/combined.BCR.joined.rds")
+
+# ------------------------------------------------------------------------------
+# Inspect top clones 
+# ------------------------------------------------------------------------------
+
+combined.BCR.filtered$HH119 %>%
+  summarise(n = n(), .by = c("manual_cluster", "gene_cluster")) %>% 
+  filter(!str_detect(manual_cluster, "NA")) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
+
+# Are there clones with the same genes?
+combined.BCR.filtered$HH119  %>%
+  # filter(IGH_V_gene == "IGHV4-34" & IGH_J_gene == "IGHJ4") %>% 
+  filter(gene_cluster == "IGHV4-34_IGHJ4_IGLV1-40_IGLJ7") %>% 
+  summarise(n = n(), .by = c("manual_cluster", "gene_cluster")) %>% 
+  arrange(desc(n)) %>% 
+  head(15)
+
+combined.BCR.filtered$HH117 %>%
+  summarise(n = n(), .by = c("manual_cluster", "gene_cluster")) %>% 
+  filter(!str_detect(manual_cluster, "NA")) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
 
 # ------------------------------------------------------------------------------
 # N cell tracking 
 # ------------------------------------------------------------------------------
 
 # Base data for all original samples
-df_N_cells <- data.frame(
-  sample_fol = names(combined.BCR.NOTfiltered),
-  sample_name = names(combined.BCR.NOTfiltered) %>% str_split_i("_", 1),
-  combineBCR_NOTfiltered = sapply(combined.BCR.NOTfiltered, nrow),
-  combineBCR_filtered = sapply(combined.BCR.filtered, nrow),
-  seurat_intersection_filtered = sapply(combined.BCR.filtered.clean, nrow),
-  row.names = NULL
-)
+# df_N_cells <- data.frame(
+#   sample_fol = names(combined.BCR.NOTfiltered),
+#   sample_name = names(combined.BCR.NOTfiltered) %>% str_split_i("_", 1),
+#   combineBCR_NOTfiltered = sapply(combined.BCR.NOTfiltered, nrow),
+#   combineBCR_filtered = sapply(combined.BCR.filtered, nrow),
+#   seurat_intersection_filtered = sapply(combined.BCR.filtered.clean, nrow),
+#   row.names = NULL
+# )
 
 # Add pool_combined stage
-pool_combined_counts <- data.frame(
-  sample_fol = names(combined.BCR.filtered.clean.pool_combine),
-  pool_combine = sapply(combined.BCR.filtered.clean.pool_combine, nrow),
-  row.names = NULL
-)
+# pool_combined_counts <- data.frame(
+#   sample_fol = names(combined.BCR.filtered.clean),
+#   pool_combine = sapply(combined.BCR.filtered.clean.pool_combine, nrow),
+#   row.names = NULL
+# )
 
 # Removing negatives/doublets
-final_counts <- data.frame(
-  sample_fol = names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs),
-  final_clean = sapply(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs, nrow),
-  row.names = NULL
-)
+# final_counts <- data.frame(
+#   sample_fol = names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs),
+#   final_clean = sapply(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs, nrow),
+#   row.names = NULL
+# )
 
-# Check that merging of pools went well
-pool_summary <- df_N_cells %>% 
-  filter(str_detect(sample_name, "Pool")) %>% 
-  mutate(Fol = str_split_i(sample_fol, "_", 2)) %>% 
-  filter(!(Fol %in% c("Negative", "Doublet"))) %>% 
-  group_by(Fol) %>% 
-  summarise(n_cells_total = sum(seurat_intersection_filtered)) %>% 
-  arrange(Fol)
+final_counts <- combined.BCR.filtered.clean %>%
+  bind_rows() %>% 
+  summarize(n = n(), .by = "sample")
 
-pool_summary_final <- final_counts %>% filter(str_detect(sample_fol, "HH119-SI-PP")) %>% arrange(sample_fol)
-
-cbind(pool_summary, pool_summary_final) %>% mutate(adds_up = ifelse(n_cells_total == final_clean, TRUE, FALSE))
-
-# Plot
-for (SAMPLE_NAME in unique(df_N_cells$sample_name)){
-
-  # SAMPLE_NAME <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-
-  df_N_cells %>%
-    filter(sample_name == SAMPLE_NAME & str_detect(sample_fol, "Negative|Doublet", negate = TRUE)) %>%
-    pivot_longer(
-      cols = -c(sample_fol, sample_name),
-      names_to = "stage",
-      values_to = "n_cells"
-    ) %>%
-    mutate(stage = factor(stage, levels = c("combineBCR_NOTfiltered", "combineBCR_filtered", "seurat_intersection_filtered"))) %>%
-    ggplot(aes(x = stage, y = n_cells, group = sample_fol, color = sample_fol)) +
-    geom_line() +
-    geom_point(size = 2) +
-    theme_bw() +
-    theme(legend.position = "right") +
-    labs(
-      title = "Cell Filtering Through BCR Processing Pipeline",
-      subtitle = SAMPLE_NAME, 
-      x = "Processing Stage",
-      y = "Number of Cells",
-      color = "Sample"
-    )
-
-  ggsave(glue("20_VDJ/plot/N_cell_stat/BCR_cell_filtering/BCR_cell_filtering_{SAMPLE_NAME}.png"), width = 12, height = 8)
-
-}
+# # Check that merging of pools went well
+# pool_summary <- df_N_cells %>% 
+#   filter(str_detect(sample_name, "Pool")) %>% 
+#   mutate(Fol = str_split_i(sample_fol, "_", 2)) %>% 
+#   filter(!(Fol %in% c("Negative", "Doublet"))) %>% 
+#   group_by(Fol) %>% 
+#   summarise(n_cells_total = sum(seurat_intersection_filtered)) %>% 
+#   arrange(Fol)
+# 
+# pool_summary_final <- final_counts %>% filter(str_detect(sample_fol, "HH119-SI-PP")) %>% arrange(sample_fol)
+# 
+# cbind(pool_summary, pool_summary_final) %>% mutate(adds_up = ifelse(n_cells_total == final_clean, TRUE, FALSE))
+# 
+# # Plot
+# for (SAMPLE_NAME in unique(df_N_cells$sample_name)){
+# 
+#   # SAMPLE_NAME <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+# 
+#   df_N_cells %>%
+#     filter(sample_name == SAMPLE_NAME & str_detect(sample_fol, "Negative|Doublet", negate = TRUE)) %>%
+#     pivot_longer(
+#       cols = -c(sample_fol, sample_name),
+#       names_to = "stage",
+#       values_to = "n_cells"
+#     ) %>%
+#     mutate(stage = factor(stage, levels = c("combineBCR_NOTfiltered", "combineBCR_filtered", "seurat_intersection_filtered"))) %>%
+#     ggplot(aes(x = stage, y = n_cells, group = sample_fol, color = sample_fol)) +
+#     geom_line() +
+#     geom_point(size = 2) +
+#     theme_bw() +
+#     theme(legend.position = "right") +
+#     labs(
+#       title = "Cell Filtering Through BCR Processing Pipeline",
+#       subtitle = SAMPLE_NAME, 
+#       x = "Processing Stage",
+#       y = "Number of Cells",
+#       color = "Sample"
+#     )
+# 
+#   ggsave(glue("20_VDJ/plot/N_cell_stat/BCR_cell_filtering/BCR_cell_filtering_{SAMPLE_NAME}.png"), width = 12, height = 8)
+# 
+# }
 
 # Final N cells barplot
-final_counts %>% ggplot(aes(y = sample_fol, x = final_clean)) + 
+final_counts %>% ggplot(aes(y = sample, x = n)) + 
   geom_col() + 
-  geom_text(aes(label = final_clean), hjust = -0.1, size = 3) +
+  geom_text(aes(label = n), hjust = -0.1, size = 3) +
   theme_bw() + 
   labs(
     title = "Final N cells after all filtering",
@@ -770,78 +640,78 @@ ggsave("20_VDJ/plot/N_cell_stat/BCR_final_N_cells.png", width = 14, height = 15)
 # HH117 - Fol-1 stats
 # ------------------------------------------------------------------------------
 
-table(seurat_obj_list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH`$manual_ADT_ID == "Fol-1")
-b_contigs.list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
-combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
-combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
-combined.BCR.filtered.clean$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
-combined.BCR.filtered.clean.pool_combine$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
-
-# HH117-SILP-INF-PC
-ncol(seurat_obj_list$`HH117-SILP-INF-PC`)
-b_contigs.list$`HH117-SILP-INF-PC` %>% nrow()
-combined.BCR.NOTfiltered$`HH117-SILP-INF-PC` %>% nrow()
-combined.BCR.filtered$`HH117-SILP-INF-PC` %>% nrow()
-combined.BCR.filtered.clean$`HH117-SILP-INF-PC` %>% nrow()
-combined.BCR.filtered.clean.pool_combine$`HH117-SILP-INF-PC` %>% nrow()
-combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SILP-INF-PC` %>% nrow()
-
-
-# ------------------------------------------------------------------------------
-# Follicle frequence after filtering 
-# ------------------------------------------------------------------------------
-
-combined.BCR.names <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
-
-fol_freq_list <- list()
-
-for (combined.BCR.name in combined.BCR.names){
-  
-  # combined.BCR.name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1"
-  # combined.BCR.name <- "HH117-SILP-INF-PC"
-  combined.BCR.filtered.clean.sample <- combined.BCR.filtered.clean.pool_combine.rm_neg_doubs[[combined.BCR.name]]
-  
-  if (str_detect(combined.BCR.name, "_", negate = TRUE)){
-    next
-  }
-  
-  sample_name <- combined.BCR.name %>% str_split_i("_", 1)
-  sample_name_sheet_name <- sample_name %>% str_split_i("-", 1)
-  fol_name <- combined.BCR.name %>% str_split_i("_", 2)
-  
-  fol_freq_line <- c(fol_name, nrow(combined.BCR.filtered.clean.sample))
-  
-  fol_freq_list[[sample_name_sheet_name]] <- rbind(fol_freq_list[[sample_name_sheet_name]], fol_freq_line)
-  
-}
-
-# Get in order 
-
-fol_freq_df_list <- lapply(fol_freq_list, function(x) {
-  as.data.frame(x) %>% 
-    mutate(
-      fol_num = as.numeric(str_extract(V1, "(?<=Fol-)\\d+")),
-      order_val = case_when(
-        V1 == "Doublet" ~ Inf,      # Doublet goes second to last
-        V1 == "Negative" ~ Inf + 1, # Negative goes last
-        TRUE ~ fol_num                # Fol-X ordered by number
-      )
-    ) %>%
-    arrange(order_val) %>%
-    select(-fol_num, -order_val) %>% 
-    rename(Fol = V1, Count = V2) %>% 
-    remove_rownames()
-})
-
-# Export xlsx file 
-out_file <- "20_VDJ/table/BCR_filtered_fol_freq.xlsx"
-
-# Use openxlsx::write.xlsx, which takes the named list and writes
-# each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
-openxlsx::write.xlsx(
-  x = fol_freq_df_list,
-  file = out_file,
-  overwrite = TRUE # Overwrite the file if it already exists
-)
+# table(seurat_obj_list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH`$manual_ADT_ID == "Fol-1")
+# b_contigs.list$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
+# combined.BCR.NOTfiltered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
+# combined.BCR.filtered$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
+# combined.BCR.filtered.clean$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
+# combined.BCR.filtered.clean.pool_combine$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
+# combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1` %>% nrow()
+# 
+# # HH117-SILP-INF-PC
+# ncol(seurat_obj_list$`HH117-SILP-INF-PC`)
+# b_contigs.list$`HH117-SILP-INF-PC` %>% nrow()
+# combined.BCR.NOTfiltered$`HH117-SILP-INF-PC` %>% nrow()
+# combined.BCR.filtered$`HH117-SILP-INF-PC` %>% nrow()
+# combined.BCR.filtered.clean$`HH117-SILP-INF-PC` %>% nrow()
+# combined.BCR.filtered.clean.pool_combine$`HH117-SILP-INF-PC` %>% nrow()
+# combined.BCR.filtered.clean.pool_combine.rm_neg_doubs$`HH117-SILP-INF-PC` %>% nrow()
+# 
+# 
+# # ------------------------------------------------------------------------------
+# # Follicle frequence after filtering 
+# # ------------------------------------------------------------------------------
+# 
+# combined.BCR.names <- names(combined.BCR.filtered.clean.pool_combine.rm_neg_doubs)
+# 
+# fol_freq_list <- list()
+# 
+# for (combined.BCR.name in combined.BCR.names){
+#   
+#   # combined.BCR.name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH_Fol-1"
+#   # combined.BCR.name <- "HH117-SILP-INF-PC"
+#   combined.BCR.filtered.clean.sample <- combined.BCR.filtered.clean.pool_combine.rm_neg_doubs[[combined.BCR.name]]
+#   
+#   if (str_detect(combined.BCR.name, "_", negate = TRUE)){
+#     next
+#   }
+#   
+#   sample_name <- combined.BCR.name %>% str_split_i("_", 1)
+#   sample_name_sheet_name <- sample_name %>% str_split_i("-", 1)
+#   fol_name <- combined.BCR.name %>% str_split_i("_", 2)
+#   
+#   fol_freq_line <- c(fol_name, nrow(combined.BCR.filtered.clean.sample))
+#   
+#   fol_freq_list[[sample_name_sheet_name]] <- rbind(fol_freq_list[[sample_name_sheet_name]], fol_freq_line)
+#   
+# }
+# 
+# # Get in order 
+# 
+# fol_freq_df_list <- lapply(fol_freq_list, function(x) {
+#   as.data.frame(x) %>% 
+#     mutate(
+#       fol_num = as.numeric(str_extract(V1, "(?<=Fol-)\\d+")),
+#       order_val = case_when(
+#         V1 == "Doublet" ~ Inf,      # Doublet goes second to last
+#         V1 == "Negative" ~ Inf + 1, # Negative goes last
+#         TRUE ~ fol_num                # Fol-X ordered by number
+#       )
+#     ) %>%
+#     arrange(order_val) %>%
+#     select(-fol_num, -order_val) %>% 
+#     rename(Fol = V1, Count = V2) %>% 
+#     remove_rownames()
+# })
+# 
+# # Export xlsx file 
+# out_file <- "20_VDJ/table/BCR_filtered_fol_freq.xlsx"
+# 
+# # Use openxlsx::write.xlsx, which takes the named list and writes
+# # each element as a separate sheet (sheet name = list name, i.e., Cluster ID)
+# openxlsx::write.xlsx(
+#   x = fol_freq_df_list,
+#   file = out_file,
+#   overwrite = TRUE # Overwrite the file if it already exists
+# )
 

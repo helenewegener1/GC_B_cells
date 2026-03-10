@@ -12,50 +12,29 @@ library(scRepertoire)
 library(APackOfTheClones)
 
 seurat_obj <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
-combined.BCR.filtered_all <- readRDS("20_VDJ/out/combined.BCR.filtered.clean_all.rds")
+combined.BCR.filtered <- readRDS("20_VDJ/out/combined.BCR.filtered.clean.rds")
 
 # ------------------------------------------------------------------------------
 # Check barcodes 
 # ------------------------------------------------------------------------------
 
-colnames(seurat_obj) %>% head() # "HH117-SILP-INF_AAACCAAAGCCGACAT-1_1" "HH117-SILP-INF_AAACCAAAGGGTAGGC-1_1"
-combined.BCR.filtered_all$barcode %>% head() # "HH117-SILP-INF_ACGACAGAGAGTGCGA-1" "HH117-SILP-INF_AGCGAGTCAGTGTTCG-1"
+(seurat_obj) %>% head() # "HH117-SILP-INF_AAACCAAAGCCGACAT-1_1" "HH117-SILP-INF_AAACCAAAGGGTAGGC-1_1"
+combined.BCR.filtered$HH117$barcode %>% head() # "HH117-SILP-INF_ACGACAGAGAGTGCGA-1" "HH117-SILP-INF_AGCGAGTCAGTGTTCG-1"
 
-# ------------------------------------------------------------------------------
-# Fix barcodes 
-# ------------------------------------------------------------------------------
+# Clean seurat barcodes
+seurat_obj$sample_high_level <- seurat_obj$sample %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+seurat_obj[[]] <- seurat_obj[[]] %>% mutate(sample = ifelse(!is.na(manual_ADT_ID), glue("{sample_high_level}_{manual_ADT_ID}"), sample_high_level))
+barcode_seurat <- rownames(seurat_obj[[]]) %>% str_extract("(?<=_)[^_]+_[^_]+")
+seurat_obj$barcode <- paste(seurat_obj$sample, barcode_seurat, sep = "_")
+seurat_obj$barcode <- seurat_obj$barcode %>% str_remove_all("-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool1|-CD19-Pool2")
 
-# Check what number corresponds to what sample
-# Create a lookup: sample name -> suffix number
-sample_suffix_map <- seurat_obj[[]] %>%
-  select(sample) %>%
-  rownames_to_column("barcode") %>%
-  mutate(suffix = str_split_i(barcode, "_", 3)) %>%
-  select(sample, suffix) %>%
-  distinct() %>% 
-  rename(sample_high_level = sample)
+# Check - all should be true
+table(combined.BCR.filtered$HH117$barcode %in% seurat_obj$barcode)
+table(combined.BCR.filtered$HH119$barcode %in% seurat_obj$barcode)
 
-sample_suffix_map
-
-# Then fix BCR barcodes to match integrated object
-combined.BCR.filtered_all <- combined.BCR.filtered_all %>%
-  left_join(sample_suffix_map, by = "sample_high_level") %>%
-  mutate(
-    barcode_integrated = paste0(
-      barcode,
-      "_", suffix                            # Add integration suffix
-    )
-  ) %>% 
-  rename(barcode_rm = barcode, 
-         barcode = barcode_integrated)
-
-# Check matches
-table(colnames(seurat_obj) %in% combined.BCR.filtered_all$barcode) # TRUE = 76175
-
-seurat_obj[[]] %>% filter(!is.na(CTstrict)) %>% rownames() %>% length() # 76175
-combined.BCR.filtered_all$barcode %>% length() # 76175
-
-saveRDS(combined.BCR.filtered_all, "40_VDJ_integrated/out/combined.BCR.filtered_all.rds")
+# Assign new barcodes as colnames
+seurat_obj$barcode %>% unique() %>% length() == seurat_obj$barcode %>% length()
+colnames(seurat_obj) <- seurat_obj$barcode
 
 # ------------------------------------------------------------------------------
 # Combine 
@@ -63,9 +42,9 @@ saveRDS(combined.BCR.filtered_all, "40_VDJ_integrated/out/combined.BCR.filtered_
 
 # Combine combined.BCR.filtered_sample and seurat_obj
 seurat_obj_BCR <- combineExpression(
-  combined.BCR.filtered_all,
+  combined.BCR.filtered %>% bind_rows(),
   seurat_obj,
-  cloneCall = "strict",
+  cloneCall = "manual_cluster",
   proportion = TRUE
 )
 
@@ -97,10 +76,13 @@ ggsave("40_VDJ_integrated/plot/BCR_PackOfClones/UMAP.png", width = 12, height = 
 # -----------------------------------
 # vizAPOTC
 # -----------------------------------
+
+Idents(seurat_obj_BCR) <- "celltype_broad"
+
 # Define initial plot
 p <- vizAPOTC(
   seurat_obj_BCR, 
-  clonecall = "strict", 
+  clonecall = "manual_cluster",
   verbose = FALSE, 
   reduction_base = "RNA_umap.harmony", # integrated
   legend_text_size = 3, 
@@ -112,7 +94,7 @@ p <- vizAPOTC(
 )
 
 # Extract celltype_broads without NA in CTstrict
-df_colors <- seurat_obj_BCR[[]] %>% filter(!is.na(CTstrict)) %>% group_by(celltype_broad) %>% distinct(CTstrict) %>% summarise(count = n())
+df_colors <- seurat_obj_BCR[[]] %>% filter(!is.na(manual_cluster)) %>% group_by(celltype_broad) %>% distinct(manual_cluster) %>% summarise(count = n())
 
 # Join with colors I want 
 df_colors <- df_colors %>% left_join(df_celltype_colors, b = "celltype_broad")
@@ -151,25 +133,20 @@ top_clones <- lapply(
   unique_patients, 
   function(x) {
     seurat_obj_BCR[[]] %>% 
-      filter(patient == x & !is.na(CTstrict)) %>% 
-      group_by(CTstrict) %>% 
-      summarize(CTstrict_abundance = n()) %>% 
-      arrange(desc(CTstrict_abundance)) %>%
-      head(n_clones) %>% 
-      pull(CTstrict)
+      filter(patient == x & !is.na(manual_cluster) & !str_detect(manual_cluster, "NA") & celltype_broad == "GC_B_cells") %>% 
+      summarize(CT_abundance = n(), .by = "manual_cluster") %>% 
+      arrange(desc(CT_abundance)) %>%
+      head(n_clones, n = n_clones) %>% 
+      pull(manual_cluster)
   }
 )
 
 names(top_clones) <- unique_patients
 
 # Size of clone types (how many cells)
-seurat_obj_BCR[[]] %>% filter(CTstrict == "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40") %>% nrow()
-seurat_obj_BCR[[]] %>% filter(CTstrict == "IGH:Cluster.5768.IGHV5-51_IGLC:Cluster.73.IGKV1-39") %>% nrow()
-
-seurat_obj_BCR[[]] %>% filter(CTstrict == "IGH:Cluster.370.IGHV1-8_IGLC:Cluster.1.IGKV1-5") %>% nrow()
-
-
-# saveRDS(top_clones, glue("40_VDJ_integrated/out/top_{n_clones}_clones_per_patient.rds"))
+seurat_obj_BCR[[]] %>% filter(manual_cluster == "cluster.4792_cluster.461") %>% nrow()
+seurat_obj_BCR[[]] %>% filter(manual_cluster == "cluster.4834_cluster.461") %>% nrow()
+seurat_obj_BCR[[]] %>% filter(manual_cluster == "cluster.99_cluster.392") %>% nrow()
 
 # Combine into one list for showCloneHighlight 
 clones_to_highlight <- top_clones %>% unlist()
@@ -184,7 +161,7 @@ clone_shades <- c(blue_shades, green_shades)
 # Initiate plot
 p_clone <- vizAPOTC(
   seurat_obj_BCR, 
-  clonecall = "strict", 
+  clonecall = "manual_cluster", 
   verbose = FALSE, 
   reduction_base = "RNA_umap.harmony", # integrated
   legend_text_size = 3, 
@@ -198,9 +175,23 @@ p_clone <- vizAPOTC(
                      fill_legend = TRUE) 
 
 # Finish plot
-p_clone <- p_clone + labs(title = "BCR PackOfClones", subtitle = glue("Top {n_clones} clones per patient")) 
+p_clone <- p_clone + labs(title = "BCR PackOfClones", subtitle = glue("Top {n_clones} GCB clones per patient")) 
 
 # Save plot
 ggsave("40_VDJ_integrated/plot/BCR_PackOfClones/BCR_PackOfClones_CloneHighlight.png", p_clone, width = 14, height = 10)
 
+# Inspect genes of clones
+seurat_obj_BCR[[]] %>% filter(manual_cluster == "cluster.4792_cluster.461") %>%
+  select(CTgene) %>%
+  distinct() %>% 
+  head()
 
+seurat_obj_BCR[[]] %>% filter(manual_cluster == "cluster.4834_cluster.461") %>%
+  select(CTgene) %>%
+  distinct() %>% 
+  head()
+
+seurat_obj_BCR[[]] %>% filter(manual_cluster == "cluster.381_cluster.97") %>%
+  select(CTgene) %>%
+  distinct() %>% 
+  head()
