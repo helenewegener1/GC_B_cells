@@ -10,11 +10,27 @@
 
 module load tools jdk/24.0.2 openjdk/23 java/17-openjdk jre/17-openjdk mixcr/4.7.0
 
-proj_dir="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
+# mixcr activate-license 
+# E-ZBKUJLUYAGTUQQLPMXPDVOHYKMVBWUFNATIMAYZBPLPQSLIU
 
-mixcr analyze 10x-vdj-bcr \
-    $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L001_R1_001.fastq.gz,$proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L002_R1_001.fastq.gz,$proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L003_R1_001.fastq.gz,$proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L004_R1_001.fastq.gz \
-    $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L001_R2_001.fastq.gz,$proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L002_R2_001.fastq.gz,$proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L003_R2_001.fastq.gz,$proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L004_R2_001.fastq.gz \
+proj_dir="cd"
+
+# cat $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L001_R1_001.fastq.gz \
+#     $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L002_R1_001.fastq.gz \
+#     $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L003_R1_001.fastq.gz \
+#     $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L004_R1_001.fastq.gz \
+#     > BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_R1.fastq.gz
+#     
+# cat $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L001_R2_001.fastq.gz \
+#     $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L002_R2_001.fastq.gz \
+#     $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L003_R2_001.fastq.gz \
+#     $proj_dir/BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_S28_L004_R2_001.fastq.gz \
+#     > BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_R2.fastq.gz
+
+mixcr analyze 10x-sc-xcr-vdj \
+    --species hsa \
+    BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_R1.fastq.gz \
+    BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2_R2.fastq.gz \
     BCR-HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2
     
     
