@@ -20,7 +20,7 @@ combined.BCR.joined <- readRDS("20_VDJ/out/combined.BCR.joined.rds") # with full
 clones <- readRDS("40_VDJ_integrated/out/top_5_clones_per_patient.rds")
 
 # Define clone of interest 
-CT <- "IGH:Cluster.4529.IGHV4-34_IGLC:Cluster.172.IGLV1-40"
+CT <- "cluster.7833_IGLV1-40.TGCCAGTCTTATGACACCAGACTGAGGGCCACTGTGTTC"
 
 
 combined.BCR.joined <- bind_rows(combined.BCR.joined)
