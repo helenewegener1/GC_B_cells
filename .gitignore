@@ -11,6 +11,7 @@
 
 05_run_cellranger/out_v9
 05_run_cellranger/out_v8
+05_run_cellranger/airr_files/
 
 */script/*.err
 */script/*.log
