@@ -4,7 +4,10 @@ Currently Loaded Modulefiles:
  
 module load tools jdk/24.0.2 openjdk/23 java/17-openjdk jre/17-openjdk mixcr/4.7.0
 
+mixcr activate-license
 MiXCR License:
 E-ZBKUJLUYAGTUQQLPMXPDVOHYKMVBWUFNATIMAYZBPLPQSLIU
 
+# Check presets 
+mixcr listPresets | grep -i 10x
  
