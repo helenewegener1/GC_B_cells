@@ -279,9 +279,11 @@ clonalCluster_IGH_list <- lapply(combined.BCR.filtered_list, function(x) {
     chain = "IGH",
     sequence = "nt",
     threshold = 0.85,
-    dist_type = "levenshtein",
+    # dist_type = "levenshtein",
+    dist_type = "hamming",
     normalize = "length",
     cluster.method = "components",
+    # cluster.method = "leiden",
     cluster.prefix = "cluster.",
     use.V = TRUE,
     use.J = TRUE,
@@ -297,9 +299,11 @@ clonalCluster_Light_list <- lapply(combined.BCR.filtered_list, function(x) {
     chain = "Light",
     sequence = "nt",
     threshold = 0.85,
-    dist_type = "levenshtein",
+    # dist_type = "levenshtein",
+    dist_type = "hamming",
     normalize = "length",
     cluster.method = "components",
+    # cluster.method = "leiden",
     cluster.prefix = "cluster.",
     use.V = TRUE,
     use.J = TRUE,
@@ -308,7 +312,7 @@ clonalCluster_Light_list <- lapply(combined.BCR.filtered_list, function(x) {
   )[[1]]                
 })
 
-rm(combined.BCR.filtered_list)
+# rm(combined.BCR.filtered_list)
 
 # Combine clonal types for heavy and light chain 
 combined.BCR.filtered_clonalCluster <- map2(
@@ -328,12 +332,16 @@ combined.BCR.filtered_clonalCluster <- map2(
 )
 
 # Clean up 
-rm(clonalCluster_Light_list, clonalCluster_IGH_list)
+# rm(clonalCluster_Light_list, clonalCluster_IGH_list)
 
 # Check
 combined.BCR.filtered_clonalCluster$HH119 %>% 
   summarize(n = n(), .by = c("gene_cluster", "manual_cluster")) %>%
-  filter(gene_cluster == "IGHV4-34_IGHJ4_IGLV1-40_IGLJ7") 
+  # filter(gene_cluster == "IGHV4-34_IGHJ4_IGLV1-40_IGLJ7") %>% 
+  arrange(desc(n)) %>% head(n = 20)
+
+combined.BCR.filtered_clonalCluster$HH119 %>% 
+  summarize(n = n(), .by = c("IGH.Cluster")) %>%
   arrange(desc(n)) %>% head(n = 20)
 
 # combined.BCR.filtered_clonalCluster[["HH117-SILP-INF-PC"]] %>% filter(is.na(IGH.Cluster)) %>% head()
