@@ -8,4 +8,6 @@ mixcr activate-license
 MiXCR License:
 E-ZBKUJLUYAGTUQQLPMXPDVOHYKMVBWUFNATIMAYZBPLPQSLIU
 
+# Check presets 
+mixcr listPresets | grep -i 10x
  
