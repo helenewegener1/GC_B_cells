@@ -28,8 +28,8 @@
 !20_VDJ/plot/BCR_06_GermlineSequence
 20_VDJ/fasta
 
+50_MiXCR/mixcr_output/
 tmp
-
 
 .DS_Store
 .Rproj.user
