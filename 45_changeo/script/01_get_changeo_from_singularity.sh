@@ -8,8 +8,7 @@ export SINGULARITY_TMPDIR=/scratch/helweg/singularity/.singularity_tmp
 
 mkdir -p $SINGULARITY_CACHEDIR $SINGULARITY_TMPDIR
 
-
-export SINGULARITY_BIND="/home/projects/dtu_00062:/home/projects/dtu_00062,/scratch/helweg:/scratch/helweg"
-
 IMAGE="/scratch/helweg/singularity/immcantation_suite-4.7.0.sif"
 singularity pull $IMAGE docker://immcantation/suite:4.7.0
+
+
