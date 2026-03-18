@@ -8,7 +8,7 @@ FILTERED_CONTIGS_PATH="${CELLRANGER_OUT_PATH}/filtered_contig.fasta"
 FILTERED_CONTIGS_ANNOTATIONS_PATH="${CELLRANGER_OUT_PATH}/filtered_contig_annotations.csv"
 
 # Output directory
-OUTDIR="/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/45_changeo/${SAMPLE_NAME}"
+OUTDIR="/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/45_changeo/${SAMPLE_NAME}/out"
 mkdir -p $OUTDIR
 
 # Step 1: V(D)J assignment with IgBLAST
