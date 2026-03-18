@@ -1,7 +1,7 @@
 
 # singularity is an alternative to docker that is HPC friendly
 
-module load tools singularity/4.3.0
+# module load tools singularity/4.3.0
 
 export SINGULARITY_CACHEDIR=/scratch/helweg/singularity/.singularity_cache
 export SINGULARITY_TMPDIR=/scratch/helweg/singularity/.singularity_tmp
