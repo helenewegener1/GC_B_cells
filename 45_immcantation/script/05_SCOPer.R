@@ -1,5 +1,10 @@
+library(alakazam)
 library(scoper)
 library(dplyr)
+
+# Newest versions
+packageVersion("scoper")
+packageVersion("alakazam")
 
 # Following this SCOPer tutorial: 
 # https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
@@ -9,66 +14,76 @@ library(dplyr)
 # ------------------------------------------------------------------------------
 
 bcr_data <- readRDS("45_immcantation/out/rds/bcr_data_qc_annot.rds")
+
 patients <- names(bcr_data)
+
+bcr_data <- lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  bcr_data_HH <- bcr_data[[HH]]
+  
+  bcr_data_HH <- bcr_data_HH %>%
+    mutate(
+      sample_clean_fol = ifelse(!is.na(manual_ADT_ID), paste(sample_clean, manual_ADT_ID, sep = "_"), sample_clean)
+    )
+  
+  return(bcr_data_HH)
+  
+}) %>% setNames(patients)
+
 
 # ------------------------------------------------------------------------------
 # Identifying clones by sequence identity
 # ------------------------------------------------------------------------------
-
-# Clonal assignment using identical nucleotide sequences
-seq_clones <- lapply(patients, function(HH){
-  
-  identicalClones(
-    bcr_data[[HH]], 
-    method="nt", 
-    cell_id = "cell_id"
-  )
-  
-}) %>% setNames(patients)
-
-saveRDS(seq_clones, "45_immcantation/out/rds/seq_clones.rds")
-
-# -------------------
-# HH119
-# -------------------
-
-HH <- "HH119"
-
-seq_clones[[HH]] %>% 
-  count(clone_id, sort = TRUE)
-  # count(clone_id, v_call, j_call, sort = TRUE)
-  
-# -------------------
-# HH117
-# -------------------
-
-HH <- "HH117"
-
-seq_clones[[HH]] %>% 
-count(clone_id, sort = TRUE)
-# count(clone_id, v_call, j_call, sort = TRUE)
-
-# ------------------------------------------------------------------------------
-# Identifying clones by hierical clustering (already done in 03_changeO_flow)
-# ------------------------------------------------------------------------------
-
+# 
+# # Clonal assignment using identical nucleotide sequences
+# seq_clones <- lapply(patients, function(HH){
+#   
+#   identicalClones(
+#     bcr_data[[HH]], 
+#     method="nt", 
+#     cell_id = "cell_id", 
+#     junction = "junction", 
+#     first = TRUE
+#   )
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(seq_clones, "45_immcantation/out/rds/seq_clones.rds")
+# 
+# # -------------------
+# # HH119
+# # -------------------
+# 
+# HH <- "HH119"
+# 
+# seq_clones[[HH]] %>% 
+#   count(clone_id, sort = TRUE)
+#   # count(clone_id, v_call, j_call, sort = TRUE)
+#   
+# # -------------------
+# # HH117
+# # -------------------
+# 
+# HH <- "HH117"
+# 
+# seq_clones[[HH]] %>% 
+# count(clone_id, sort = TRUE)
+# # count(clone_id, v_call, j_call, sort = TRUE)
 
 # ------------------------------------------------------------------------------
 # Identifying clones by spectral clustering
-# ------------------------------------------------------------------------------
-
-# -------------------
 # novj method: Groups clones only based on junction sequences
-# -------------------
+# ------------------------------------------------------------------------------
 
 spec_clones_novj <- lapply(patients, function(HH){
   
   spectralClones(
     bcr_data[[HH]], 
     method="novj", 
-    junction="junction",
-    # junction="cdr3", # In the paper they said that using cdr3 instead of junction improved performance. 
-    cell_id = "cell_id"
+    junction="junction",# In the paper they said that using cdr3 instead of junction improved performance. 
+    cell_id = "cell_id",
+    first = TRUE # Taking only the first gene call per cell
   )
   
 }) %>% setNames(patients)
@@ -80,17 +95,17 @@ saveRDS(spec_clones_novj, "45_immcantation/out/rds/spec_clones_novj.rds")
 # -------------------
 
 HH <- "HH119"
-spec_clones_novj[[HH]]@db %>% 
+spec_clones_novj[[HH]] %>% 
   count(clone_id, sort = TRUE)
 # count(clone_id, v_call, j_call, sort = TRUE)
 
 # Plot a histogram of inter and intra clonal distances
 plot(spec_clones_novj[[HH]], binwidth=0.02)
 
-top_clone <- spec_clones_novj[[HH]]@db %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
+top_clone <- spec_clones_novj[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
   head(1) %>% pull(clone_id)
 
-spec_clones_novj[[HH]]@db %>% 
+spec_clones_novj[[HH]] %>% 
   filter(clone_id == top_clone) %>% 
   count(sample_clean, v_call, j_call, sort = TRUE)
 
@@ -99,7 +114,7 @@ spec_clones_novj[[HH]]@db %>%
 # IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
 
 # How large is the problem? - not that big :)
-spec_clones_novj[[HH]]@db %>%
+spec_clones_novj[[HH]] %>%
   filter(clone_id == top_clone) %>%
   mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
   count(j_gene) %>%
@@ -112,17 +127,17 @@ spec_clones_novj[[HH]]@db %>%
 # HH117 has larger clones than with hierical clustering.
 
 HH <- "HH117"
-spec_clones_novj[[HH]]@db %>% 
+spec_clones_novj[[HH]] %>% 
   count(clone_id, sort = TRUE)
 # count(clone_id, v_call, j_call, sort = TRUE)
 
 # Plot a histogram of inter and intra clonal distances
 plot(spec_clones_novj[[HH]], binwidth=0.02)
 
-top_clone <- spec_clones_novj[[HH]]@db %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
+top_clone <- spec_clones_novj[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
   head(1) %>% pull(clone_id)
 
-spec_clones_novj[[HH]]@db %>% 
+spec_clones_novj[[HH]] %>% 
   filter(clone_id == top_clone) %>% 
   count(sample_clean, v_call, j_call, sort = TRUE)
 
@@ -131,24 +146,85 @@ spec_clones_novj[[HH]]@db %>%
 # IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
 
 # How large is the problem? - not that big :)
-spec_clones_novj[[HH]]@db %>%
+spec_clones_novj[[HH]] %>%
   filter(clone_id == top_clone) %>%
   mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
   count(j_gene) %>%
   mutate(pct = n/sum(n)*100)
 
+# -------------------
+# Define top clones novj
+# -------------------
+
+top_GC_clones_novj <- lapply(patients, function(HH) {
+  
+  spec_clones_novj[[HH]] %>%
+    filter(celltype_broad == "GC_B_cells") %>%
+    count(clone_id, sort = TRUE) %>%
+    slice_head(n = 10) %>%
+    pull(clone_id)
+  
+  
+}) %>% setNames(patients)
 
 # -------------------
-# vj method: Groups clones based on junction sequences and SHM in V and J sequences
+# Visualize top clones novj
 # -------------------
+
+source("10_broad_annotation/script/color_palette.R")
+
+for (HH in patients){
+  
+  # HH <- "HH119"
+  HH_top_clones <- top_GC_clones_novj[[HH]]
+  
+  for (clone_nr in 1:length(HH_top_clones)){
+    
+    # clone_nr <- 1
+    clone <- HH_top_clones[clone_nr]
+    
+    plot_df <- spec_clones_novj[[HH]] %>% 
+      filter(clone_id == clone) %>% 
+      mutate(sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev()) %>%
+      add_count(sample_clean_fol, name = "Count")
+    
+    # Meta data
+    n_cells <- plot_df %>% nrow()
+    v_gene <- plot_df$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+    j_gene <- plot_df$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+    
+    plot_df %>%   
+      ggplot(aes(y = sample_clean_fol, fill = celltype_broad)) +
+      geom_bar() + 
+      scale_fill_manual(values = celltype_colors) + 
+      geom_text(aes(x = Count, label = Count), 
+                hjust = -0.2, color = "black",
+                stat = "unique") +
+      labs(
+        title = glue("{HH}: Top {clone_nr} GCB clone spec_novj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
+        y = ""
+      ) +
+      theme_bw()
+    
+    ggsave(glue("45_immcantation/plot/GC_clones_spec_novj/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
+    
+  }
+}
+
+# ------------------------------------------------------------------------------
+# vj method: Groups clones based on junction sequences and SHM in V and J sequences
+# ------------------------------------------------------------------------------
 
 spec_clones_vj <- lapply(patients, function(HH){
   
   spectralClones(
     bcr_data[[HH]], 
     method="vj", 
-    summarize_clones = TRUE, 
-    cell_id = "cell_id"
+    cell_id = "cell_id", 
+    junction = "junction",
+    first = TRUE
   )
   
 }) %>% setNames(patients)
@@ -160,17 +236,17 @@ saveRDS(spec_clones_vj, "45_immcantation/out/rds/spec_clones_vj.rds")
 # -------------------
 
 HH <- "HH119"
-spec_clones_vj[[HH]]@db %>% 
+spec_clones_vj[[HH]] %>% 
   count(clone_id, sort = TRUE)
 # count(clone_id, v_call, j_call, sort = TRUE)
 
 # Plot a histogram of inter and intra clonal distances
-plot(spec_clones_vj[[HH]], binwidth=0.02)
+# plot(spec_clones_vj[[HH]], binwidth=0.02)
 
-top_clone <- spec_clones_vj[[HH]]@db %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
+top_clone <- spec_clones_vj[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
   head(1) %>% pull(clone_id)
 
-spec_clones_vj[[HH]]@db %>% 
+spec_clones_vj[[HH]] %>% 
   filter(clone_id == top_clone) %>% 
   count(sample_clean, v_call, j_call, sort = TRUE)
 
@@ -179,7 +255,7 @@ spec_clones_vj[[HH]]@db %>%
 # IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
 
 # How large is the problem? - not that big :)
-spec_clones_vj[[HH]]@db %>%
+spec_clones_vj[[HH]] %>%
   filter(clone_id == top_clone) %>%
   mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
   count(j_gene) %>%
@@ -192,17 +268,17 @@ spec_clones_vj[[HH]]@db %>%
 # HH117 has larger clones than with hierical clustering.
 
 HH <- "HH117"
-spec_clones_vj[[HH]]@db %>% 
+spec_clones_vj[[HH]] %>% 
   count(clone_id, sort = TRUE)
 # count(clone_id, v_call, j_call, sort = TRUE)
 
 # Plot a histogram of inter and intra clonal distances
-plot(spec_clones_vj[[HH]], binwidth=0.02)
+# plot(spec_clones_vj[[HH]], binwidth=0.02)
 
-top_clone <- spec_clones_vj[[HH]]@db %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
+top_clone <- spec_clones_vj[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
   head(1) %>% pull(clone_id)
 
-spec_clones_vj[[HH]]@db %>% 
+spec_clones_vj[[HH]] %>% 
   filter(clone_id == top_clone) %>% 
   count(sample_clean, v_call, j_call, sort = TRUE)
 
@@ -211,11 +287,73 @@ spec_clones_vj[[HH]]@db %>%
 # IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
 
 # How large is the problem? - not that big :)
-spec_clones_vj[[HH]]@db %>%
+spec_clones_vj[[HH]] %>%
   filter(clone_id == top_clone) %>%
   mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
   count(j_gene) %>%
   mutate(pct = n/sum(n)*100)
+
+# -------------------
+# Define top clones vj
+# -------------------
+
+top_GC_clones_vj <- lapply(patients, function(HH) {
+  
+  spec_clones_vj[[HH]] %>%
+    filter(celltype_broad == "GC_B_cells") %>%
+    count(clone_id, sort = TRUE) %>%
+    slice_head(n = 10) %>%
+    pull(clone_id)
+  
+  
+}) %>% setNames(patients)
+
+# -------------------
+# Visualize top clones vj
+# -------------------
+
+source("10_broad_annotation/script/color_palette.R")
+
+for (HH in patients){
+  
+  # HH <- "HH119"
+  HH_top_clones <- top_GC_clones_vj[[HH]]
+  
+  for (clone_nr in 1:length(HH_top_clones)){
+    
+    # clone_nr <- 1
+    clone <- HH_top_clones[clone_nr]
+    
+    plot_df <- spec_clones_vj[[HH]] %>% 
+      filter(clone_id == clone) %>% 
+      mutate(sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev()) %>%
+      add_count(sample_clean_fol, name = "Count")
+    
+    # Meta data
+    n_cells <- plot_df %>% nrow()
+    v_gene <- plot_df$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+    j_gene <- plot_df$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+    
+    plot_df %>%   
+      ggplot(aes(y = sample_clean_fol, fill = celltype_broad)) +
+      geom_bar() + 
+      scale_fill_manual(values = celltype_colors) + 
+      geom_text(aes(x = Count, label = Count), 
+                hjust = -0.2, color = "black",
+                stat = "unique") +
+      labs(
+        title = glue("{HH}: Top {clone_nr} GCB clone spec_vj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
+        y = ""
+      ) +
+      theme_bw()
+    
+    ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
+    
+  }
+}
+
 
 # ------------------------------------------------------------------------------
 # Compare methods: novj VS vj 
@@ -227,8 +365,8 @@ spec_clones_vj[[HH]]@db %>%
 
 HH <- "HH119"
 
-HH_spec_clones_vj <- spec_clones_vj[[HH]]@db
-HH_spec_clones_novj <- spec_clones_novj[[HH]]@db
+HH_spec_clones_vj <- spec_clones_vj[[HH]]
+HH_spec_clones_novj <- spec_clones_novj[[HH]]
 
 # Not in the same order...
 table(HH_spec_clones_vj$cell_id %in% HH_spec_clones_novj$cell_id) 

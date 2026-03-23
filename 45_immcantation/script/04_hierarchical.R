@@ -90,7 +90,7 @@ list_thresholds <- lapply(patients, function(HH){
     scale_x_continuous(breaks = seq(0, 1, 0.1)) +
     theme_bw()
   
-  ggsave(glue("45_immcantation/plot/{HH}_nearest_neighbor_Hamming_distance_histogram.png"), width = 11, height = 6.5)
+  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram.png"), width = 11, height = 6.5)
   
   # -------------------
   # Automatic - GMM 
@@ -117,7 +117,7 @@ list_thresholds <- lapply(patients, function(HH){
   #     subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold}")
   #   )
   # 
-  # ggsave(glue("45_immcantation/plot/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_gmm_threshold.png"), width = 12, height = 6.5)
+  # ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_gmm_threshold.png"), width = 12, height = 6.5)
   
   # -------------------
   # Automatic - Density
@@ -141,7 +141,7 @@ list_thresholds <- lapply(patients, function(HH){
       subtitle = glue("Automatic density threshold: {threshold}")
     )
   
-  ggsave(glue("45_immcantation/plot/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold.png"), width = 12, height = 6.5)
+  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold.png"), width = 12, height = 6.5)
   
   # -------------------
   # GMM - cross patient 
@@ -171,7 +171,7 @@ list_thresholds <- lapply(patients, function(HH){
   #     subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold}")
   #   )
   # 
-  # ggsave(glue("45_immcantation/plot/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_gmm_threshold_cross_patient.png"), width = 12, height = 6.5)
+  # ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_gmm_threshold_cross_patient.png"), width = 12, height = 6.5)
   # 
   # -------------------
   # Density - cross patient 
@@ -197,7 +197,7 @@ list_thresholds <- lapply(patients, function(HH){
       subtitle = glue("Automatic density threshold: {threshold}")
     )
   
-  ggsave(glue("45_immcantation/plot/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold_cross_patient.png"), width = 12, height = 6.5)
+  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold_cross_patient.png"), width = 12, height = 6.5)
   
   return(HH_thresholds)
   
@@ -367,7 +367,7 @@ for (HH in patients){
       ) +
       theme_bw()
     
-    ggsave(glue("45_immcantation/plot/GC_clones/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
+    ggsave(glue("45_immcantation/plot/GC_clones_hier/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
     
   }
 }

@@ -1,5 +1,4 @@
-library(scoper)
-library(dplyr)
+library(dplyr) 
 
 # Following this SCOPer tutorial: 
 # https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
@@ -8,9 +7,9 @@ library(dplyr)
 # Load data
 # ------------------------------------------------------------------------------
 
+hier <- readRDS("45_immcantation/out/rds/hier_clones.rds")
 spec_clones_novj <- readRDS("45_immcantation/out/rds/spec_clones_novj.rds")
 spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
-hier <- readRDS("45_immcantation/out/rds/hier_clones.rds")
 
 patients <- names(hier)
 
@@ -18,11 +17,11 @@ patients <- names(hier)
 # Compare spetral to hierical clustering
 # ------------------------------------------------------------------------------
 
-HH <- "HH119"
+HH <- "HH117"
 
-HH_spec_clones_vj <- spec_clones_vj[[HH]]@db
-HH_spec_clones_novj <- spec_clones_novj[[HH]]@db
-HH_hier <- hier %>% filter(patient_id == HH)
+HH_spec_clones_vj <- spec_clones_vj[[HH]]
+HH_spec_clones_novj <- spec_clones_novj[[HH]]
+HH_hier <- hier[[HH]]
 
 # Not in the same order...
 table(HH_spec_clones_vj$cell_id %in% HH_spec_clones_novj$cell_id) 
@@ -115,4 +114,46 @@ comparison %>%
 # hierical clustering done with mean threshold for patients - should this had been done seperatly? Test
 # Continue with Immcantation Tutorials
 
+# ------------------------------------------------------------------------------
+# Different V and J genes within a clone
+# ------------------------------------------------------------------------------
 
+HH_spec_clones_vj <- spectralClones(
+  bcr_data[["HH119"]], 
+  method="novj", 
+  junction="junction",# In the paper they said that using cdr3 instead of junction improved performance. 
+  cell_id = "cell_id",
+  first = FALSE # Taking only the first gene call per cell
+)
+
+HH_spec_clones_vj %>% count(clone_id,sort = TRUE)
+HH_spec_clones_vj %>% filter(clone_id == 4244) %>% count(v_call, sort = TRUE)
+HH_spec_clones_vj %>% filter(clone_id == 4244) %>% count(j_call, sort = TRUE)
+
+HH_spec_clones_vj_first <- spectralClones(
+  bcr_data[["HH119"]], 
+  method="novj", 
+  junction="junction",# In the paper they said that using cdr3 instead of junction improved performance. 
+  cell_id = "cell_id",
+  first = TRUE # Taking only the first gene call per cell
+)
+
+HH_spec_clones_vj_first %>% count(clone_id,sort = TRUE)
+HH_spec_clones_vj_first %>% filter(clone_id == 1027) %>% count(v_call, sort = TRUE)
+HH_spec_clones_vj_first %>% filter(clone_id == 1027) %>% count(j_call, sort = TRUE)
+
+################################################################################
+
+HH_spec_clones_vj %>% filter(clone_id == 2645) %>% count(v_call, sort = TRUE)
+HH_spec_clones_vj %>% filter(clone_id == 2645) %>% count(j_call, sort = TRUE)
+
+
+HH_hier %>% count(clone_id,sort = TRUE)
+HH_hier %>% filter(clone_id == 20388) %>% count(v_call, sort = TRUE)
+HH_hier %>% filter(clone_id == 20388) %>% count(j_call, sort = TRUE)
+
+HH_spec_clones_novj %>% count(clone_id,sort = TRUE)
+
+HH_spec_clones_novj %>% filter(clone_id == 1027) %>% count(v_call, sort = TRUE)
+HH_spec_clones_novj %>% filter(clone_id == 1027) %>% count(j_call, sort = TRUE)
+HH_spec_clones_novj %>% filter(clone_id == 1027) %>% count(v_call, j_call, sort = TRUE) %>% view()
