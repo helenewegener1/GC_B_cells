@@ -1,4 +1,4 @@
-library(dplyr) 
+library(tidyverse) 
 
 # Following this SCOPer tutorial: 
 # https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
@@ -17,7 +17,7 @@ patients <- names(hier)
 # Compare spetral to hierical clustering
 # ------------------------------------------------------------------------------
 
-HH <- "HH117"
+HH <- "HH119"
 
 HH_spec_clones_vj <- spec_clones_vj[[HH]]
 HH_spec_clones_novj <- spec_clones_novj[[HH]]
@@ -114,46 +114,29 @@ comparison %>%
 # hierical clustering done with mean threshold for patients - should this had been done seperatly? Test
 # Continue with Immcantation Tutorials
 
-# ------------------------------------------------------------------------------
-# Different V and J genes within a clone
-# ------------------------------------------------------------------------------
+# Multiple J gene calls (vj and novj is the same here) - is there a pattern?
+HH_spec_clones_novj %>%
+  mutate(j_gene = str_replace_all(j_call, "\\*\\d+", ""),
+         n_unique_v = map_int(str_split(j_gene, ","), n_distinct)) %>%
+  filter(n_unique_v > 1) %>%
+  count(j_gene, sort = TRUE) %>% 
+  view()
 
-HH_spec_clones_vj <- spectralClones(
-  bcr_data[["HH119"]], 
-  method="novj", 
-  junction="junction",# In the paper they said that using cdr3 instead of junction improved performance. 
-  cell_id = "cell_id",
-  first = FALSE # Taking only the first gene call per cell
-)
-
-HH_spec_clones_vj %>% count(clone_id,sort = TRUE)
-HH_spec_clones_vj %>% filter(clone_id == 4244) %>% count(v_call, sort = TRUE)
-HH_spec_clones_vj %>% filter(clone_id == 4244) %>% count(j_call, sort = TRUE)
-
-HH_spec_clones_vj_first <- spectralClones(
-  bcr_data[["HH119"]], 
-  method="novj", 
-  junction="junction",# In the paper they said that using cdr3 instead of junction improved performance. 
-  cell_id = "cell_id",
-  first = TRUE # Taking only the first gene call per cell
-)
-
-HH_spec_clones_vj_first %>% count(clone_id,sort = TRUE)
-HH_spec_clones_vj_first %>% filter(clone_id == 1027) %>% count(v_call, sort = TRUE)
-HH_spec_clones_vj_first %>% filter(clone_id == 1027) %>% count(j_call, sort = TRUE)
-
-################################################################################
-
-HH_spec_clones_vj %>% filter(clone_id == 2645) %>% count(v_call, sort = TRUE)
-HH_spec_clones_vj %>% filter(clone_id == 2645) %>% count(j_call, sort = TRUE)
+# Multiple V gene calls (vj and novj is the same here) - is there a pattern?
+HH_spec_clones_novj %>%
+  mutate(v_gene = str_replace_all(v_call, "\\*\\d+", ""),
+         n_unique_v = map_int(str_split(v_gene, ","), n_distinct)) %>%
+  filter(n_unique_v > 1) %>%
+  count(v_gene, sort = TRUE) %>% 
+  view()
 
 
-HH_hier %>% count(clone_id,sort = TRUE)
-HH_hier %>% filter(clone_id == 20388) %>% count(v_call, sort = TRUE)
-HH_hier %>% filter(clone_id == 20388) %>% count(j_call, sort = TRUE)
 
-HH_spec_clones_novj %>% count(clone_id,sort = TRUE)
 
-HH_spec_clones_novj %>% filter(clone_id == 1027) %>% count(v_call, sort = TRUE)
-HH_spec_clones_novj %>% filter(clone_id == 1027) %>% count(j_call, sort = TRUE)
-HH_spec_clones_novj %>% filter(clone_id == 1027) %>% count(v_call, j_call, sort = TRUE) %>% view()
+
+
+
+
+
+
+

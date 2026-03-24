@@ -1,10 +1,14 @@
 library(alakazam)
 library(scoper)
 library(dplyr)
+library(shazam)
 
 # Newest versions
 packageVersion("scoper")
 packageVersion("alakazam")
+
+# load the built-in human SHM targeting model
+data(HH_S5F)  # or S5F, RS5NF depending on your preference
 
 # Following this SCOPer tutorial: 
 # https://scoper.readthedocs.io/en/stable/vignettes/Scoper-Vignette/
@@ -158,12 +162,39 @@ spec_clones_novj[[HH]] %>%
 
 top_GC_clones_novj <- lapply(patients, function(HH) {
   
-  spec_clones_novj[[HH]] %>%
+  # find clones that contain at least 1 GC cell
+  GC_clones <- spec_clones_novj[[HH]] %>%
     filter(celltype_broad == "GC_B_cells") %>%
+    pull(clone_id) %>%
+    unique()
+  
+  # rank those clones by total size (all cell types) and take top 10
+  spec_clones_novj[[HH]] %>%
+    filter(clone_id %in% GC_clones) %>%
     count(clone_id, sort = TRUE) %>%
     slice_head(n = 10) %>%
     pull(clone_id)
   
+}) %>% setNames(patients)
+
+# -------------------
+# Look at top clones novj
+# -------------------
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  # HH <- "HH117"
+  
+  spec_clones_novj[[HH]] %>% 
+    filter(clone_id %in% top_GC_clones_novj[[HH]]) %>% 
+    mutate(
+      v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
+    ) %>% 
+    mutate(
+      j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
+    ) %>% 
+    count(clone_id, v_gene, j_gene, sort = TRUE) 
   
 }) %>% setNames(patients)
 
@@ -175,7 +206,7 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_top_clones <- top_GC_clones_novj[[HH]]
   
   for (clone_nr in 1:length(HH_top_clones)){
@@ -299,14 +330,42 @@ spec_clones_vj[[HH]] %>%
 
 top_GC_clones_vj <- lapply(patients, function(HH) {
   
-  spec_clones_vj[[HH]] %>%
+  # find clones that contain at least 1 GC cell
+  GC_clones <- spec_clones_vj[[HH]] %>%
     filter(celltype_broad == "GC_B_cells") %>%
+    pull(clone_id) %>%
+    unique()
+  
+  # rank those clones by total size (all cell types) and take top 10
+  spec_clones_vj[[HH]] %>%
+    filter(clone_id %in% GC_clones) %>%
     count(clone_id, sort = TRUE) %>%
     slice_head(n = 10) %>%
     pull(clone_id)
   
+}) %>% setNames(patients)
+
+# -------------------
+# Look at top clones vj
+# -------------------
+
+lapply(patients, function(HH){
+
+  # HH <- "HH119"
+  # HH <- "HH117"
+  
+  spec_clones_vj[[HH]] %>% 
+    filter(clone_id %in% top_GC_clones_vj[[HH]]) %>% 
+    mutate(
+      v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
+    ) %>% 
+    mutate(
+      j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
+    ) %>% 
+    count(clone_id, v_gene, j_gene, sort = TRUE) 
   
 }) %>% setNames(patients)
+
 
 # -------------------
 # Visualize top clones vj
@@ -316,7 +375,7 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_top_clones <- top_GC_clones_vj[[HH]]
   
   for (clone_nr in 1:length(HH_top_clones)){

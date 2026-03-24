@@ -315,14 +315,41 @@ hier[[HH]] %>%
 # Define top clones
 # ------------------------------------------------------------------------------
 
-top_GC_clones <- lapply(patients, function(HH) {
+top_GC_clones_hier <- lapply(patients, function(HH) {
   
-  hier[[HH]] %>%
+  # find clones that contain at least 1 GC cell
+  GC_clones <- hier[[HH]] %>%
     filter(celltype_broad == "GC_B_cells") %>%
+    pull(clone_id) %>%
+    unique()
+  
+  # rank those clones by total size (all cell types) and take top 10
+  hier[[HH]] %>%
+    filter(clone_id %in% GC_clones) %>%
     count(clone_id, sort = TRUE) %>%
-    slice_head(n = 5) %>%
+    slice_head(n = 10) %>%
     pull(clone_id)
   
+}) %>% setNames(patients)
+
+# -------------------
+# Look at top clones novj
+# -------------------
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  # HH <- "HH117"
+  
+  hier[[HH]] %>%
+    filter(clone_id %in% top_GC_clones_hier[[HH]]) %>% 
+    mutate(
+      v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
+    ) %>% 
+    mutate(
+      j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
+    ) %>% 
+    count(clone_id, v_gene, j_gene, sort = TRUE) 
   
 }) %>% setNames(patients)
 
@@ -335,7 +362,7 @@ source("10_broad_annotation/script/color_palette.R")
 for (HH in patients){
   
   # HH <- "HH119"
-  HH_top_clones <- top_GC_clones[[HH]]
+  HH_top_clones <- top_GC_clones_hier[[HH]]
   
   for (clone_nr in 1:length(HH_top_clones)){
     
