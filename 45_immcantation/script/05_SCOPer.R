@@ -366,7 +366,6 @@ lapply(patients, function(HH){
   
 }) %>% setNames(patients)
 
-
 # -------------------
 # Visualize top clones vj
 # -------------------
