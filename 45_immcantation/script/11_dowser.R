@@ -55,7 +55,7 @@ HH_spec_clones_vj$germline_alignment_d_mask[1]
 # ------------------------------------------------------------------------------
 
 # Top clone
-clone_nr <- 5
+clone_nr <- 1
 clone <- HH_spec_clones_vj %>% count(clone_id, sort = TRUE) %>% head(1) %>% pull(clone_id)
 
 # Subset data for this example
@@ -68,7 +68,7 @@ HH_spec_clones_vj <- HH_spec_clones_vj %>%
   ungroup()
 
 # Process example data using default settings
-clones <- formatClones(HH_spec_clones_vj, text_fields = c("c_call", "celltype_broad"), num_fields=c("n_identical"))
+clones <- formatClones(HH_spec_clones_vj, text_fields = c("c_call", "celltype_broad", "sample_clean_fol"), num_fields=c("n_identical"))
 
 print(clones)
 
@@ -98,7 +98,7 @@ plotTrees(
     title = glue("{HH}: Clone number {clone_nr}")
   )
 
-ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = 15, height = 25)
+ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = 15, height = 25, dpi = 1000)
 
 plotTrees(
   clones, 
@@ -110,7 +110,19 @@ plotTrees(
     title = glue("{HH}: Clone number {clone_nr}")
   )
 
-ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = 15, height = 25)
+ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = 15, height = 25, dpi = 1000)
+
+plotTrees(
+  clones, 
+  tips="sample_clean_fol", 
+  tipsize="n_identical",
+  title = FALSE
+)[[1]] + 
+  plot_annotation(
+    title = glue("{HH}: Clone number {clone_nr}")
+  )
+
+ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = 15, height = 25, dpi = 1000)
 
 # ------------------------------------------------------------------------------
 # 
