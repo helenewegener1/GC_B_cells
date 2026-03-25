@@ -45,9 +45,7 @@ HH_spec_clones_vj <- createGermlines(db, references, nproc=1)
 HH_spec_clones_vj$germline_alignment_d_mask[1]
 
 # ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# Build Lineage Trees
-# ------------------------------------------------------------------------------
+# Build Lineage Trees...
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -55,20 +53,29 @@ HH_spec_clones_vj$germline_alignment_d_mask[1]
 # ------------------------------------------------------------------------------
 
 # Top clone
-clone_nr <- 1
-clone <- HH_spec_clones_vj %>% count(clone_id, sort = TRUE) %>% head(1) %>% pull(clone_id)
+clone_nr <- 3
+clone <- HH_spec_clones_vj %>% count(clone_id, sort = TRUE) %>% slice(clone_nr) %>% pull(clone_id)
 
 # Subset data for this example
-HH_spec_clones_vj <- HH_spec_clones_vj[HH_spec_clones_vj$clone_id == clone,]
+HH_spec_clones_vj_clone <- HH_spec_clones_vj[HH_spec_clones_vj$clone_id == clone,]
+
+# Meta data
+n_cells <- HH_spec_clones_vj_clone %>% nrow()
+v_gene <- HH_spec_clones_vj_clone$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+j_gene <- HH_spec_clones_vj_clone$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
 
 # Add count for identical clones - used for tipsize of tree
-HH_spec_clones_vj <- HH_spec_clones_vj %>%
+HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
   group_by(clone_id, sequence_alignment) %>%
   mutate(n_identical = n()) %>%
   ungroup()
 
 # Process example data using default settings
-clones <- formatClones(HH_spec_clones_vj, text_fields = c("c_call", "celltype_broad", "sample_clean_fol"), num_fields=c("n_identical"))
+clones <- formatClones(
+  HH_spec_clones_vj_clone, 
+  text_fields = c("c_call", "celltype_broad", "sample_clean_fol"), 
+  num_fields=c("n_identical")
+)
 
 print(clones)
 
@@ -95,7 +102,8 @@ plotTrees(
   title = FALSE
 )[[1]] + 
   plot_annotation(
-    title = glue("{HH}: Clone number {clone_nr}")
+    title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+    subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
   )
 
 ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = 15, height = 25, dpi = 1000)
@@ -107,7 +115,8 @@ plotTrees(
   title = FALSE
 )[[1]] + 
   plot_annotation(
-    title = glue("{HH}: Clone number {clone_nr}")
+    title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+    subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
   )
 
 ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = 15, height = 25, dpi = 1000)
@@ -119,10 +128,11 @@ plotTrees(
   title = FALSE
 )[[1]] + 
   plot_annotation(
-    title = glue("{HH}: Clone number {clone_nr}")
+    title = glue("{HH}: Clone number {clone_nr} ({clone})"), 
+    subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
   )
 
-ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = 15, height = 25, dpi = 1000)
+ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = 25, height = 25, dpi = 1000)
 
 # ------------------------------------------------------------------------------
 # 
