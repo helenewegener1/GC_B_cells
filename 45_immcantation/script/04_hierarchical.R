@@ -204,6 +204,7 @@ list_thresholds <- lapply(patients, function(HH){
 }) %>% setNames(patients)
 
 list_thresholds
+saveRDS(list_thresholds, "45_immcantation/out/rds/list_thresholds.rds")
 
 # ------------------------------------------------------------------------------
 # Define clonal groups
