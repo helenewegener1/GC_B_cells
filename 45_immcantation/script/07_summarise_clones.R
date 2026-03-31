@@ -117,6 +117,8 @@ clone_10x[[HH]] %>%
 # Define top clones
 # ------------------------------------------------------------------------------
 
+patients <- names(clone_10x)
+
 top_GC_clones_vj <- lapply(patients, function(HH) {
   
   # # find clones that contain at least 1 GC cell
