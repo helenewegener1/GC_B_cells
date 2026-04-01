@@ -96,34 +96,34 @@ light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% uni
 # Run resolveLightChains
 patients <- names(both_combined)
 
-resolve_LC_list <- lapply(patients, function(HH){
-  
-  # HH <- "HH117"
-  
-  resolve_LC_HH <- resolveLightChains(both_combined[[HH]])
-  
-  table(resolve_LC_HH$celltype_broad, useNA = "always")
-  
-  # Get meta data from heavy chains
-  meta <- resolve_LC_HH %>% 
-    filter(!is.na(celltype_broad)) %>% 
-    select(cell_id, celltype_broad) %>% 
-    distinct()
-  
-  # Clear celltype 
-  resolve_LC_HH$celltype_broad <- NULL 
-  
-  # Add metadata
-  resolve_LC_HH <- resolve_LC_HH %>% left_join(meta, by = "cell_id")
-  
-  # table(resolve_LC_HH$celltype_broad, useNA = "always")
-  
-  return(resolve_LC_HH)
-  
-}) %>% setNames(patients)
-
-saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
-# resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+# resolve_LC_list <- lapply(patients, function(HH){
+#   
+#   # HH <- "HH117"
+#   
+#   resolve_LC_HH <- resolveLightChains(both_combined[[HH]])
+#   
+#   table(resolve_LC_HH$celltype_broad, useNA = "always")
+#   
+#   # Get meta data from heavy chains
+#   meta <- resolve_LC_HH %>% 
+#     filter(!is.na(celltype_broad)) %>% 
+#     select(cell_id, celltype_broad) %>% 
+#     distinct()
+#   
+#   # Clear celltype 
+#   resolve_LC_HH$celltype_broad <- NULL 
+#   
+#   # Add metadata
+#   resolve_LC_HH <- resolve_LC_HH %>% left_join(meta, by = "cell_id")
+#   
+#   # table(resolve_LC_HH$celltype_broad, useNA = "always")
+#   
+#   return(resolve_LC_HH)
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
+resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
 
 # Check output
 resolve_LC_list$HH119$clone_id %>% head()
@@ -227,12 +227,12 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_top_clones <- top_GC_clones_vj[[HH]]
   
   for (clone_nr in 1:length(HH_top_clones)){
     
-    # clone_nr <- 1
+    # clone_nr <- 3
     clone <- HH_top_clones[clone_nr]
     
     plot_df <- resolve_LC_list[[HH]] %>% 
@@ -302,13 +302,15 @@ HH_spec_clones_vj$germline_alignment_d_mask[1]
 # Format clones
 # ------------------------------------------------------------------------------
 source("10_broad_annotation/script/color_palette.R")
+library(scatterpie)
 
 clone_nrs <- 1:5
+# clone_nrs <- 2:5
 
 for (clone_nr in clone_nrs){
   
   # Top clone
-  # clone_nr <- 3
+  # clone_nr <- 1
   clone <- top_GC_clones_vj[[HH]][[clone_nr]]
   
   # Subset data for this example
@@ -336,7 +338,7 @@ for (clone_nr in clone_nrs){
     light_traits = TRUE
   )
   
-  print(clones)
+  # print(clones)
   
   # ------------------------------------------------------------------------------
   # Build trees
@@ -352,6 +354,14 @@ for (clone_nr in clone_nrs){
   # Plot tree
   # ------------------------------------------------------------------------------
   
+  if (HH == "HH119" & clone_nr == 1){
+    width <- 15
+    height <-  25
+  } else {
+    width <- 10
+    height <- 10
+  }
+  
   # plotTrees(clones)
   
   plotTrees(
@@ -365,7 +375,7 @@ for (clone_nr in clone_nrs){
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
   
-  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = 15, height = 25, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
   
   plotTrees(
     clones, 
@@ -394,7 +404,7 @@ for (clone_nr in clone_nrs){
   # p + node_data +
   #   geom_inset(pies, width = 0.1, height = 0.1)
   
-  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = 15, height = 25, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
   
   plotTrees(
     clones, 
@@ -403,16 +413,51 @@ for (clone_nr in clone_nrs){
     title = FALSE
   )[[1]] + 
     plot_annotation(
-      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"), 
+      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
   
-  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = 25, height = 25, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
+  
+
+  # join with your metadata
+  tree <- clones$trees[[1]]
+  tree_data <- fortify(tree)
+  
+  table(tree_data$label[str_detect(tree_data$label, "Heavy")] %>% na.omit() %in% HH_spec_clones_vj_clone$sequence_id[str_detect(HH_spec_clones_vj_clone$sequence_id, "Heavy")])
+  
+  tree_data <- tree_data %>%
+    left_join(
+      HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
+                         celltype_broad, n_identical, sequence_alignment),
+      by = c("label" = "sequence_id")
+    )
+  
+  # build plot manually
+  tree_data %>% 
+    ggplot(aes(x = x, y = y)) +
+    geom_tree() +
+    geom_tippoint(aes(color = sample_clean_fol,
+                      shape = celltype_broad,
+                      size = n_identical)) +
+    scale_size_continuous(
+      range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
+    ) + 
+    theme_tree2() +
+    labs(
+      color = "Sample", shape = "Cell type", size = "N identical",
+      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
+      subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+    )
+  
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
 
 }
+
 # ------------------------------------------------------------------------------
 # 
 # ------------------------------------------------------------------------------
+
 
 
 # ------------------------------------------------------------------------------
