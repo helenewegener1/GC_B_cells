@@ -30,7 +30,7 @@ while IFS= read -r SAMPLE_NAME; do
   # Run this after exporting SCOPer results back to TSV from R
   singularity exec $IMAGE light_cluster.py \
       -d ${OUTDIR}/${SAMPLE_NAME}_heavy_germ-pass_clone-pass.tsv \
-      -e ${OUTDIR}/${SAMPLE_NAME}_light_parse-select.tsv \
+      -e ${OUTDIR}/${SAMPLE_NAME}_light_germ-pass_QC.tsv \
       -o ${OUTDIR}/${SAMPLE_NAME}_10X_clone-pass.tsv \
       --doublets count
     

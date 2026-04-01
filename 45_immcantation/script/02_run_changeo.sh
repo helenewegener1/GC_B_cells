@@ -60,4 +60,9 @@ singularity exec $IMAGE CreateGermlines.py \
     -r /usr/local/share/germlines/imgt/human/vdj/ \
     --outdir $OUTDIR --outname ${SAMPLE_NAME}_heavy
     
+singularity exec $IMAGE CreateGermlines.py \
+    -d ${OUTDIR}/${SAMPLE_NAME}_light_parse-select.tsv \
+    -r /usr/local/share/germlines/imgt/human/vdj/ \
+    --outdir $OUTDIR --outname ${SAMPLE_NAME}_light
+    
   

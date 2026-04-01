@@ -2,33 +2,33 @@ library(tidyverse)
 library(glue)
 
 # ------------------------------------------------------------------------------
-# Testing
+# Having a look 
 # ------------------------------------------------------------------------------
 
-x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
-# x <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-
-light <- read.delim(glue("45_immcantation/out/{x}/{x}_light_parse-select.tsv"))
-heavy <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass.tsv"))
-vj <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass_clone-pass.tsv"))
-clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
-
-nrow(light)
-nrow(heavy)
-nrow(vj)
-nrow(clone_10x)
-
-# table(light$cell_id %in% heavy$cell_id)
+# x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
+# # x <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
 # 
-# table(light$cell_id %in% vj$cell_id)
-# table(heavy$cell_id %in% vj$cell_id)
+# light <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass.tsv"))
+# light_qc <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass_QC.tsv"))
+# heavy <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass.tsv"))
+# vj <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass_clone-pass.tsv"))
+# clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
 # 
-# table(light$cell_id %in% clone_10x$cell_id)
-# table(heavy$cell_id %in% clone_10x$cell_id)
-
-table(vj$cell_id %in% clone_10x$cell_id)
-
-dowser::resolveLightChains
+# nrow(light)
+# nrow(light_qc)
+# nrow(heavy)
+# nrow(vj)
+# nrow(clone_10x)
+# 
+# # table(light$cell_id %in% heavy$cell_id)
+# # 
+# # table(light$cell_id %in% vj$cell_id)
+# # table(heavy$cell_id %in% vj$cell_id)
+# # 
+# # table(light$cell_id %in% clone_10x$cell_id)
+# # table(heavy$cell_id %in% clone_10x$cell_id)
+# 
+# table(vj$cell_id %in% clone_10x$cell_id)
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -59,59 +59,6 @@ clone_10x <- list(
   "HH117" = clone_10x_combined %>% filter(subject_id == "HH117"),
   "HH119" = clone_10x_combined %>% filter(subject_id == "HH119")
 )
-
-# ------------------------------------------------------------------------------
-# Inspect HH119 
-# ------------------------------------------------------------------------------
-
-HH <- "HH119"
-clone_10x[[HH]] %>% 
-  count(clone_id, sort = TRUE) %>% head()
-# count(clone_id, v_call, j_call, sort = TRUE)
-
-# Plot a histogram of inter and intra clonal distances
-# plot(clone_10x[[HH]], binwidth=0.02)
-
-top_clone <- clone_10x[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
-  head(1) %>% pull(clone_id)
-
-clone_10x[[HH]] %>% 
-  filter(clone_id == top_clone) %>% 
-  count(sample_clean, v_call, j_call, sort = TRUE) %>% 
-  head(n = 10 )
-
-# ------------------------------------------------------------------------------
-# Inspect HH117
-# ------------------------------------------------------------------------------
-
-# HH117 has larger clones than with hierical clustering.
-
-HH <- "HH117"
-clone_10x[[HH]] %>% 
-  count(clone_id, sort = TRUE) %>% 
-# count(clone_id, v_call, j_call, sort = TRUE)
-  head()
-
-# Plot a histogram of inter and intra clonal distances
-# plot(clone_10x[[HH]], binwidth=0.02)
-
-top_clone <- clone_10x[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
-  head(1) %>% pull(clone_id)
-
-clone_10x[[HH]] %>% 
-  filter(clone_id == top_clone) %>% 
-  count(sample_clean, v_call, j_call, sort = TRUE)
-
-# Several J genes in one clone??? Potential reasons:  
-# misassignments
-# IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
-
-# How large is the problem? - not that big :)
-clone_10x[[HH]] %>%
-  filter(clone_id == top_clone) %>%
-  mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
-  count(j_gene) %>%
-  mutate(pct = n/sum(n)*100)
 
 # ------------------------------------------------------------------------------
 # Define top clones
@@ -191,10 +138,11 @@ for (HH in patients){
     v_gene <- plot_df$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
     j_gene <- plot_df$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
     
+    # Color by cell type
     plot_df %>%   
       ggplot(aes(y = sample_clean_fol, fill = celltype_broad)) +
       geom_bar() + 
-      scale_fill_manual(values = celltype_colors) + 
+      scale_fill_manual(values = celltype_colors) +
       geom_text(aes(x = Count, label = Count), 
                 hjust = -0.2, color = "black",
                 stat = "unique") +
@@ -208,6 +156,68 @@ for (HH in patients){
     
     ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_ligth_chain_corrected/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
     
+    # Heatmap of sample_clean_fol and c_call (Isotype)
+    plot_df %>% 
+      mutate(c_call = ifelse(c_call == "", NA, c_call)) %>% 
+      group_by(sample_clean_fol, c_call) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      complete(sample_clean_fol, c_call, fill = list(Count = 0)) %>%
+      ggplot(aes(x = sample_clean_fol, y = c_call, fill = Count)) + 
+      geom_tile(color = "white", linewidth = 0.3) +
+      geom_text(aes(label = ifelse(Count > 0, Count, "0")), 
+                color = "white", size = 2.5) +
+      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                          limits = c(0, NA)) +
+      labs(
+        x = NULL, 
+        y = "Ig Class", 
+        fill = "Count",  
+        title = glue("{HH}: Top {clone_nr} GCB clone spec_vj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}"),
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 9),
+        panel.grid = element_blank(),
+        legend.position = "right"
+      )
+    
+    ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_ligth_chain_corrected/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes.png"), width = 15, height = 8.5)
+    
+    # Heatmap of sample_clean_fol and c_call (Isotype) and celltype
+    plot_df %>%
+      mutate(c_call = ifelse(c_call == "", NA, c_call)) %>%
+      group_by(sample_clean_fol, c_call, celltype_broad) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      complete(sample_clean_fol, c_call, celltype_broad, 
+               fill = list(Count = 0)) %>%
+      ggplot(aes(x = sample_clean_fol, y = c_call, fill = Count)) +
+      geom_tile(color = "white", linewidth = 0.3) +
+      geom_text(aes(label = ifelse(Count > 0, Count, "")),
+                color = "white", size = 2.5) +
+      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                          limits = c(0, NA)) +
+      facet_wrap(~ celltype_broad, nrow = 2) +
+      labs(
+        x = NULL,
+        y = "Ig Class",
+        fill = "Count",
+        title = glue("{HH}: Top {clone_nr} GCB clone spec_vj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 9),
+        panel.grid = element_blank(),
+        strip.text = element_text(size = 9, face = "bold"),
+        legend.position = "right"
+      )
+    
+    ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_ligth_chain_corrected/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 17, height = 8)
   }
 }
 

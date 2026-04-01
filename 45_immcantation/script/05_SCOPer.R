@@ -20,7 +20,7 @@ data(HH_S5F)  # or S5F, RS5NF depending on your preference
 
 list_thresholds <- readRDS("45_immcantation/out/rds/list_thresholds.rds")
 
-bcr_data <- readRDS("45_immcantation/out/rds/bcr_data_qc_annot.rds")
+bcr_data <- readRDS("45_immcantation/out/rds/heavy_bcr_data_qc_annot.rds")
 
 patients <- names(bcr_data)
 
@@ -304,69 +304,7 @@ for (HH in patients) {
 
 clone_10x <- read.delim("45_immcantation/out/HH117-SILP-INF-PC/HH117-SILP-INF-PC_10X_clone-pass.tsv")
 nrow(clone_10x)
-spec_clones_vj[["HH117"]] %>% filter(sample_id == "HH117-SILP-INF-PC") %>% 
-
-# -------------------
-# HH119 - vj method
-# -------------------
-
-HH <- "HH119"
-spec_clones_vj[[HH]] %>% 
-  count(clone_id, sort = TRUE)
-# count(clone_id, v_call, j_call, sort = TRUE)
-
-# Plot a histogram of inter and intra clonal distances
-# plot(spec_clones_vj[[HH]], binwidth=0.02)
-
-top_clone <- spec_clones_vj[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
-  head(1) %>% pull(clone_id)
-
-spec_clones_vj[[HH]] %>% 
-  filter(clone_id == top_clone) %>% 
-  count(sample_clean, v_call, j_call, sort = TRUE)
-
-# Several J genes in one clone??? Potential reasons:  
-# misassignments
-# IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
-
-# How large is the problem? - not that big :)
-spec_clones_vj[[HH]] %>%
-  filter(clone_id == top_clone) %>%
-  mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
-  count(j_gene) %>%
-  mutate(pct = n/sum(n)*100)
-
-# -------------------
-# HH117 - vj method
-# -------------------
-
-# HH117 has larger clones than with hierical clustering.
-
-HH <- "HH117"
-spec_clones_vj[[HH]] %>% 
-  count(clone_id, sort = TRUE)
-# count(clone_id, v_call, j_call, sort = TRUE)
-
-# Plot a histogram of inter and intra clonal distances
-# plot(spec_clones_vj[[HH]], binwidth=0.02)
-
-top_clone <- spec_clones_vj[[HH]] %>% count(clone_id, v_call, j_call, sort = TRUE) %>% 
-  head(1) %>% pull(clone_id)
-
-spec_clones_vj[[HH]] %>% 
-  filter(clone_id == top_clone) %>% 
-  count(sample_clean, v_call, j_call, sort = TRUE)
-
-# Several J genes in one clone??? Potential reasons:  
-# misassignments
-# IGHJ4 --> extensive SHM --> sequence looks more like IGHJ5 now
-
-# How large is the problem? - not that big :)
-spec_clones_vj[[HH]] %>%
-  filter(clone_id == top_clone) %>%
-  mutate(j_gene = sub("\\*.*", "", j_call)) %>%  # strip allele, keep gene
-  count(j_gene) %>%
-  mutate(pct = n/sum(n)*100)
+spec_clones_vj[["HH117"]] %>% filter(sample_id == "HH117-SILP-INF-PC")
 
 # -------------------
 # Define top clones vj

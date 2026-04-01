@@ -17,66 +17,37 @@ sample_names <- files[1:length(files)-1]
 # Load light chain corrected 
 clone_10x_list <- lapply(sample_names, function(x){
   
+  # x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
+  
   clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
+  
   clone_10x$sample_id <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
   clone_10x$cell_id <- paste(clone_10x$cell_id, clone_10x$sample_id, sep = "_")
   clone_10x$sequence_id <- paste(clone_10x$sequence_id, "Heavy", sep = "_")
-  
-  # # Filter cells based on multiple heavy chains
-  # clone_10x <- clone_10x %>%
-  #   group_by(cell_id) %>%
-  #   arrange(desc(umi_count), .by_group = TRUE) %>%
-  #   mutate(
-  #     n_heavy = n(),
-  #     dominant = case_when(
-  #       n_heavy == 1 ~ TRUE,                          # only one heavy chain, keep it
-  #       umi_count[1] >= 2 * umi_count[2] ~ row_number() == 1,  # dominant contig has 2x UMIs
-  #       TRUE ~ FALSE                                  # ambiguous, drop all contigs for this cell
-  #     )
-  #   ) %>%
-  #   filter(dominant) %>%
-  #   select(-n_heavy, -dominant) %>%
-  #   ungroup()
   
   return(clone_10x)
   
 }) %>% setNames(sample_names)
 clone_10x_combined <- bind_rows(clone_10x_list)
 
-# Load light chains 
 light_chain_list <- lapply(sample_names, function(x){
   
   # x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
   
-  light_chain <- read.delim(glue("45_immcantation/out/{x}/{x}_light_parse-select.tsv"))
+  light_chain <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass_QC.tsv"))
   
   light_chain$sample_id <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
-  light_chain$sample_clean <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2")
   light_chain$cell_id <- paste(light_chain$cell_id, light_chain$sample_id, sep = "_")
-  light_chain$subject_id <- str_split_i(x, "-", 1)
-  light_chain$sequence_id <- paste(light_chain$sample_id, light_chain$sequence_id, "Light", sep = "_")
+  light_chain$sequence_id <- paste(light_chain$sequence_id, "Light", sep = "_")
   
-  # Filter cells based on multiple light chains
-  light_chain <- light_chain %>%
-    group_by(cell_id) %>%
-    arrange(desc(umi_count), .by_group = TRUE) %>%
-    mutate(
-      n_light = n(),
-      dominant = case_when(
-        n_light == 1 ~ TRUE,                          # only one light chain, keep it
-        umi_count[1] >= 2 * umi_count[2] ~ row_number() == 1,  # dominant contig has 2x UMIs
-        TRUE ~ FALSE                                  # ambiguous, drop all contigs for this cell
-      )
-    ) %>%
-    filter(dominant) %>%
-    select(-n_light, -dominant) %>%
-    ungroup()
+  light_chain <- light_chain %>%  mutate(
+    sample_clean_fol = ifelse(!is.na(manual_ADT_ID), paste(sample_clean, manual_ADT_ID, sep = "_"), sample_clean)
+  )
   
   return(light_chain)
   
 }) %>% setNames(sample_names)
 light_chain_combined <- bind_rows(light_chain_list)
-
 
 # Combine heavy and light chain in one df
 clone_10x_combined$cell_id %>% str_split_i("_", 2) %>% unique()
@@ -122,7 +93,6 @@ clone_10x_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% uniqu
 light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% length()
 light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% unique() %>% length()
 
-
 # Run resolveLightChains
 patients <- names(both_combined)
 
@@ -137,7 +107,8 @@ resolve_LC_list <- lapply(patients, function(HH){
   # Get meta data from heavy chains
   meta <- resolve_LC_HH %>% 
     filter(!is.na(celltype_broad)) %>% 
-    select(cell_id, celltype_broad)
+    select(cell_id, celltype_broad) %>% 
+    distinct()
   
   # Clear celltype 
   resolve_LC_HH$celltype_broad <- NULL 
@@ -145,14 +116,14 @@ resolve_LC_list <- lapply(patients, function(HH){
   # Add metadata
   resolve_LC_HH <- resolve_LC_HH %>% left_join(meta, by = "cell_id")
   
-  table(resolve_LC_HH$celltype_broad, useNA = "always")
+  # table(resolve_LC_HH$celltype_broad, useNA = "always")
   
   return(resolve_LC_HH)
   
 }) %>% setNames(patients)
 
-# saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
-resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
+# resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
 
 # Check output
 resolve_LC_list$HH119$clone_id %>% head()
@@ -162,11 +133,14 @@ resolve_LC_list$HH119$clone_subgroup_id %>% head()
 resolve_LC_list$HH117$clone_subgroup %>% table()
 resolve_LC_list$HH119$clone_subgroup %>% table()
 
-clone_10x %>% filter(subject_id == "HH117") %>% nrow()
+# clone_10x %>% filter(subject_id == "HH117") %>% nrow()
 light_chain_combined %>% filter(subject_id == "HH117") %>% nrow()
 
 resolve_LC_list$HH117$cell_id %>% length()
 resolve_LC_list$HH117$cell_id %>% unique() %>% length()
+
+resolve_LC_list$HH119$cell_id %>% length()
+resolve_LC_list$HH119$cell_id %>% unique() %>% length()
 
 resolve_LC_list$HH119$locus %>% table()
 
@@ -218,27 +192,32 @@ lapply(patients, function(HH){
     mutate(
       j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
     ) %>% 
-    count(clone_id, clone_subgroup_id, v_gene, j_gene, sort = TRUE) %>% 
+    count(clone_id, clone_subgroup_id, locus, v_gene, j_gene, sort = TRUE) %>% 
     head(n = 20)
   
 }) %>% setNames(patients)
 
 # -------------------
-# Look into subclones of top clone
+# Look into subclones 
 # -------------------
 
 HH <- "HH119"
-clone_nr <- 1
 
+clones_with_sub_clones <- resolve_LC_list[[HH]] %>%
+  filter(clone_subgroup != 1) %>%
+  pull(clone_id) %>% 
+  unique()
+  
 resolve_LC_list[[HH]] %>% 
-  filter(clone_id == top_GC_clones_vj[[HH]][[clone_nr]]) %>% 
+  filter(clone_id %in% clones_with_sub_clones) %>% 
   mutate(
     v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
-  ) %>% 
+  ) %>%
   mutate(
     j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
-  ) %>% 
+  ) %>%
   count(clone_id, clone_subgroup_id, v_gene, j_gene)
+
 
 # -------------------
 # Visualize top clones vj
@@ -253,10 +232,11 @@ for (HH in patients){
   
   for (clone_nr in 1:length(HH_top_clones)){
     
-    # clone_nr <- 2
+    # clone_nr <- 1
     clone <- HH_top_clones[clone_nr]
     
     plot_df <- resolve_LC_list[[HH]] %>% 
+      filter(locus == "IGH") %>% 
       filter(clone_id == clone) %>% 
       mutate(sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev()) %>%
       add_count(sample_clean_fol, name = "Count")
@@ -309,7 +289,7 @@ HH_spec_clones_vj <- resolve_LC_list[[HH]]
 db <- select(HH_spec_clones_vj, -"germline_alignment", -"germline_alignment_d_mask")
 
 # Reconstruct germline sequences
-HH_spec_clones_vj <- createGermlines(db, references, nproc=1)
+HH_spec_clones_vj <- createGermlines(db, references, nproc=1,clone = "clone_subgroup_id",)
 
 # Check germline of first row
 HH_spec_clones_vj$germline_alignment_d_mask[1]
@@ -321,91 +301,115 @@ HH_spec_clones_vj$germline_alignment_d_mask[1]
 # ------------------------------------------------------------------------------
 # Format clones
 # ------------------------------------------------------------------------------
+source("10_broad_annotation/script/color_palette.R")
 
-# Top clone
-clone_nr <- 2
-clone <- top_GC_clones_vj[[HH]][[clone_nr]]
+clone_nrs <- 1:5
 
-# Subset data for this example
-HH_spec_clones_vj_clone <- HH_spec_clones_vj[HH_spec_clones_vj$clone_id == clone,]
-
-# Meta data
-n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
-v_gene <- HH_spec_clones_vj_clone$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
-j_gene <- HH_spec_clones_vj_clone$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
-
-# Add count for identical clones - used for tipsize of tree
-HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
-  group_by(clone_id, sequence_alignment) %>%
-  mutate(n_identical = n()) %>%
-  ungroup()
-
-# Process example data using default settings
-clones <- formatClones(
-  HH_spec_clones_vj_clone, 
-  text_fields = c("c_call", "celltype_broad", "sample_clean_fol"), 
-  num_fields=c("n_identical"),
-  chain = "HL", 
-  light_traits = TRUE
-)
-
-print(clones)
-
-# ------------------------------------------------------------------------------
-# Build trees
-# ------------------------------------------------------------------------------
-
-# Maximum parsimony trees using phangorn.
-# clones <- getTrees(clones, nproc=1)
-
-# Maximum likelihood trees using phangorn
-clones <- getTrees(clones, build="pml")
-
-# ------------------------------------------------------------------------------
-# Plot tree
-# ------------------------------------------------------------------------------
-
-# plotTrees(clones)
-
-plotTrees(
-  clones, 
-  tips="c_call", 
-  tipsize="n_identical",
-  title = FALSE
-)[[1]] + 
-  plot_annotation(
-    title = glue("{HH}: Clone number {clone_nr} ({clone})"),
-    subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+for (clone_nr in clone_nrs){
+  
+  # Top clone
+  # clone_nr <- 3
+  clone <- top_GC_clones_vj[[HH]][[clone_nr]]
+  
+  # Subset data for this example
+  HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
+    filter(clone_subgroup_id == paste0(clone, "_1"))  # _1 = dominant subgroup
+  
+  # Meta data
+  n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
+  v_gene <- HH_spec_clones_vj_clone$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+  j_gene <- HH_spec_clones_vj_clone$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+  
+  # Add count for identical clones - used for tipsize of tree
+  HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
+    group_by(clone_id, locus, sequence_alignment) %>%
+    mutate(n_identical = n()) %>%
+    ungroup()
+  
+  # Process example data using default settings
+  clones <- formatClones(
+    HH_spec_clones_vj_clone, 
+    clone = "clone_subgroup_id",
+    text_fields = c("c_call", "celltype_broad", "sample_clean_fol"), 
+    num_fields=c("n_identical"),
+    chain = "HL", 
+    light_traits = TRUE
   )
+  
+  print(clones)
+  
+  # ------------------------------------------------------------------------------
+  # Build trees
+  # ------------------------------------------------------------------------------
+  
+  # Maximum parsimony trees using phangorn.
+  # clones <- getTrees(clones, nproc=1)
+  
+  # Maximum likelihood trees using phangorn
+  clones <- getTrees(clones, build="pml")
+  
+  # ------------------------------------------------------------------------------
+  # Plot tree
+  # ------------------------------------------------------------------------------
+  
+  # plotTrees(clones)
+  
+  plotTrees(
+    clones, 
+    tips="c_call", 
+    tipsize="n_identical",
+    title = FALSE
+  )[[1]] + 
+    plot_annotation(
+      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
+      subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+    )
+  
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = 15, height = 25, dpi = 1000)
+  
+  plotTrees(
+    clones, 
+    tips="celltype_broad", 
+    tipsize="n_identical",
+    title = FALSE
+  )[[1]] + 
+    plot_annotation(
+      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
+      subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+    )
+  
+  # # extract node data
+  # node_data <- p$data %>%
+  #   filter(!is.na(celltype_broad)) %>%
+  #   select(node, celltype_broad) %>%
+  #   separate_rows(celltype_broad, sep = ",") %>%
+  #   count(node, celltype_broad) %>%
+  #   pivot_wider(names_from = celltype_broad, values_from = n, values_fill = 0)
+  # 
+  # # add pie charts
+  # pies <- nodepie(node_data, cols = 2:ncol(node_data),
+  #                 color = celltype_colors[c("GC_B_cells", "PCs_PBs")])
+  # 
+  # library(ggimage)
+  # p + node_data +
+  #   geom_inset(pies, width = 0.1, height = 0.1)
+  
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = 15, height = 25, dpi = 1000)
+  
+  plotTrees(
+    clones, 
+    tips="sample_clean_fol", 
+    tipsize="n_identical",
+    title = FALSE
+  )[[1]] + 
+    plot_annotation(
+      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"), 
+      subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+    )
+  
+  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = 25, height = 25, dpi = 1000)
 
-ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = 15, height = 25, dpi = 1000)
-
-plotTrees(
-  clones, 
-  tips="celltype_broad", 
-  tipsize="n_identical",
-  title = FALSE
-)[[1]] + 
-  plot_annotation(
-    title = glue("{HH}: Clone number {clone_nr} ({clone})"),
-    subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-  )
-
-ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = 15, height = 25, dpi = 1000)
-
-plotTrees(
-  clones, 
-  tips="sample_clean_fol", 
-  tipsize="n_identical",
-  title = FALSE
-)[[1]] + 
-  plot_annotation(
-    title = glue("{HH}: Clone number {clone_nr} ({clone})"), 
-    subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-  )
-
-ggsave(glue("45_immcantation/plot/11_dowser/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = 25, height = 25, dpi = 1000)
-
+}
 # ------------------------------------------------------------------------------
 # 
 # ------------------------------------------------------------------------------
