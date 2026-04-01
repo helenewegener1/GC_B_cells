@@ -217,7 +217,14 @@ for (HH in patients){
         legend.position = "right"
       )
     
-    ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_ligth_chain_corrected/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 17, height = 8)
+    n_samples <- plot_df$sample_clean_fol %>% unique() %>% length()
+    
+    if (n_samples > 8){
+      ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_ligth_chain_corrected/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 17, height = 8, dpi = 1000)
+    } else {
+      ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_ligth_chain_corrected/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 8, height = 8, dpi = 1000)
+    }
+    
   }
 }
 

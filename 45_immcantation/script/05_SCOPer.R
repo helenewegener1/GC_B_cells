@@ -250,30 +250,30 @@ bcr_data <- lapply(patients, function(HH){
 # vj method: Groups clones based on junction sequences and SHM in V and J sequences
 # ------------------------------------------------------------------------------
 
-spec_clones_vj <- lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  spectralClones(
-    bcr_data[[HH]], 
-    method="vj", 
-    threshold = list_thresholds[[HH]]$density, 
-    germline = "germline_alignment_d_mask",
-    cell_id = "cell_id", 
-    junction = "junction",
-    first = TRUE,
-    targeting_model = HH_S5F
-  )
-  
-}) %>% setNames(patients)
-
-saveRDS(spec_clones_vj, "45_immcantation/out/rds/spec_clones_vj.rds")
+# spec_clones_vj <- lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   spectralClones(
+#     bcr_data[[HH]], 
+#     method="vj", 
+#     threshold = list_thresholds[[HH]]$density, 
+#     germline = "germline_alignment_d_mask",
+#     cell_id = "cell_id", 
+#     junction = "junction",
+#     first = TRUE,
+#     targeting_model = HH_S5F
+#   )
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(spec_clones_vj, "45_immcantation/out/rds/spec_clones_vj.rds")
 
 # -------------------
 # Save clone_ids per sample
 # -------------------
 
 # Load data
-# spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
+spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
 
 patients <- names(spec_clones_vj)
 
