@@ -1,34 +1,53 @@
 library(tidyverse) 
 library(glue)
 
+# NOT DOING light_cluster.py SINCE IT'S TOO STRICT (removes cells without light chains)
+
 # ------------------------------------------------------------------------------
 # Having a look 
 # ------------------------------------------------------------------------------
 
 # x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
 # # x <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-# 
+# # 
 # light <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass.tsv"))
 # light_qc <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass_QC.tsv"))
 # heavy <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass.tsv"))
 # vj <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass_clone-pass.tsv"))
 # clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
-# 
+#
 # nrow(light)
 # nrow(light_qc)
 # nrow(heavy)
 # nrow(vj)
 # nrow(clone_10x)
 # 
-# # table(light$cell_id %in% heavy$cell_id)
-# # 
-# # table(light$cell_id %in% vj$cell_id)
-# # table(heavy$cell_id %in% vj$cell_id)
-# # 
-# # table(light$cell_id %in% clone_10x$cell_id)
-# # table(heavy$cell_id %in% clone_10x$cell_id)
+# clone_10x %>% count(clone_id, sort = T) %>% head()
+# 
+# table(light$cell_id %in% heavy$cell_id)
+#
+# table(light$cell_id %in% vj$cell_id)
+# table(heavy$cell_id %in% vj$cell_id)
+#
+# table(light$cell_id %in% clone_10x$cell_id)
+# table(heavy$cell_id %in% clone_10x$cell_id)
 # 
 # table(vj$cell_id %in% clone_10x$cell_id)
+
+# Compare rds objects 
+
+# spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
+# resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+# 
+# spec_clones_vj$HH119 %>% count(clone_id, sort = TRUE) %>% head(10)
+# 
+# light_qc %>% nrow()
+# spec_clones_vj$HH119 %>% filter(sample_id == x) %>% nrow()
+# resolve_LC_list$HH119 %>% filter(sample_id == x) %>% nrow()
+# 
+# spec_clones_vj$HH119 %>% filter(sample_id == x) %>% count(clone_id, sort = TRUE) %>% head(10)
+# resolve_LC_list$HH119 %>% filter(sample_id == x) %>% count(clone_id, locus, sort = TRUE) %>% head(10)
+
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -37,28 +56,30 @@ library(glue)
 # clone_10x <- readRDS("45_immcantation/out/rds/clone_10x.rds")
 # patients <- names(clone_10x)
 
-# Load light chain corrected 
-files <- list.files("45_immcantation/out/")
-sample_names <- files[1:length(files)-1]
+# # Load light chain corrected 
+# files <- list.files("45_immcantation/out/")
+# sample_names <- files[1:length(files)-1]
+# 
+# clone_10x_list <- lapply(sample_names, function(x){
+#   
+#   clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
+#   
+#   return(clone_10x)
+#   
+# }) %>% setNames(sample_names)
+# 
+# clone_10x_combined <- bind_rows(clone_10x_list)
 
-clone_10x_list <- lapply(sample_names, function(x){
-  
-  clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
-  
-  return(clone_10x)
-  
-}) %>% setNames(sample_names)
 
-clone_10x_combined <- bind_rows(clone_10x_list)
 
 # ------------------------------------------------------------------------------
 # Alter format
 # ------------------------------------------------------------------------------
 
-clone_10x <- list(
-  "HH117" = clone_10x_combined %>% filter(subject_id == "HH117"),
-  "HH119" = clone_10x_combined %>% filter(subject_id == "HH119")
-)
+# clone_10x <- list(
+#   "HH117" = clone_10x_combined %>% filter(subject_id == "HH117"),
+#   "HH119" = clone_10x_combined %>% filter(subject_id == "HH119")
+# )
 
 # ------------------------------------------------------------------------------
 # Define top clones
@@ -120,13 +141,13 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_top_clones <- top_GC_clones_vj[[HH]]
   
   for (clone_nr in 1:length(HH_top_clones)){
     
-    # clone_nr <- 1
-    clone <- HH_top_clones[clone_nr]
+    # clone_nr <- 2
+    clone <- HH_top_clones[clone_nr] %>% str_split_i("_", 1)
     
     plot_df <- clone_10x[[HH]] %>% 
       filter(clone_id == clone) %>% 

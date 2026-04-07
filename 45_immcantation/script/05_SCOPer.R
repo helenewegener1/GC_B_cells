@@ -250,23 +250,23 @@ bcr_data <- lapply(patients, function(HH){
 # vj method: Groups clones based on junction sequences and SHM in V and J sequences
 # ------------------------------------------------------------------------------
 
-# spec_clones_vj <- lapply(patients, function(HH){
-#   
-#   # HH <- "HH119"
-#   spectralClones(
-#     bcr_data[[HH]], 
-#     method="vj", 
-#     threshold = list_thresholds[[HH]]$density, 
-#     germline = "germline_alignment_d_mask",
-#     cell_id = "cell_id", 
-#     junction = "junction",
-#     first = TRUE,
-#     targeting_model = HH_S5F
-#   )
-#   
-# }) %>% setNames(patients)
-# 
-# saveRDS(spec_clones_vj, "45_immcantation/out/rds/spec_clones_vj.rds")
+spec_clones_vj <- lapply(patients, function(HH){
+
+  # HH <- "HH119"
+  spectralClones(
+    bcr_data[[HH]],
+    method="vj",
+    # threshold = list_thresholds[[HH]]$density,
+    germline = "germline_alignment_d_mask",
+    cell_id = "cell_id",
+    junction = "junction",
+    first = TRUE,
+    targeting_model = HH_S5F
+  )
+
+}) %>% setNames(patients)
+
+saveRDS(spec_clones_vj, "45_immcantation/out/rds/spec_clones_vj.rds")
 
 # -------------------
 # Save clone_ids per sample
@@ -277,24 +277,28 @@ spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
 
 patients <- names(spec_clones_vj)
 
+# CLONES ARE SPLIT ON SAMPLE LEVEL AND NOT PATIENT LEVEL
+# CLONES WILL ONLY BE PER SAMPLE AND NOT ACROSS - so fix this if we choose to go with this. 
+# ligth_cluster.py removes cells without light chains which might be too strict.
+# resolveLightChains is softer
 for (HH in patients) {
-  
+
   # HH <- "HH119"
   # get the cloned data for this patient
   spec_clones_vj_HH <- spec_clones_vj[[HH]]
-  
+
   # split back by sample and write one file per sample
   for (s in unique(spec_clones_vj_HH$sample_id)) {
-    
+
     # s <- "HH119-SILP-PC"
-    
+
     sample_db <- spec_clones_vj_HH %>% filter(sample_id == s)
     sample_db$cell_id <- sample_db$cell_id %>% str_split_i("_", 2)
-    
+
     outfile <- glue("45_immcantation/out/{s}/{s}_heavy_germ-pass_clone-pass.tsv")
-    
+
     airr::write_rearrangement(sample_db, outfile)
-    
+
   }
 }
 
@@ -302,9 +306,9 @@ for (HH in patients) {
 # light <- read.delim("45_immcantation/out/HH117-SILP-INF-PC/HH117-SILP-INF-PC_light_parse-select.tsv")
 # table(light$cell_id %in% heavy$cell_id)
 
-clone_10x <- read.delim("45_immcantation/out/HH117-SILP-INF-PC/HH117-SILP-INF-PC_10X_clone-pass.tsv")
-nrow(clone_10x)
-spec_clones_vj[["HH117"]] %>% filter(sample_id == "HH117-SILP-INF-PC")
+# clone_10x <- read.delim("45_immcantation/out/HH117-SILP-INF-PC/HH117-SILP-INF-PC_10X_clone-pass.tsv")
+# nrow(clone_10x)
+# spec_clones_vj[["HH117"]] %>% filter(sample_id == "HH117-SILP-INF-PC")
 
 # -------------------
 # Define top clones vj
@@ -364,7 +368,7 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_top_clones <- top_GC_clones_vj[[HH]]
   
   for (clone_nr in 1:length(HH_top_clones)){
@@ -382,6 +386,7 @@ for (HH in patients){
     v_gene <- plot_df$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
     j_gene <- plot_df$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
     
+    # Color by cell type
     plot_df %>%   
       ggplot(aes(y = sample_clean_fol, fill = celltype_broad)) +
       geom_bar() + 
@@ -398,6 +403,45 @@ for (HH in patients){
       theme_bw()
     
     ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
+    
+    # Heatmap of sample_clean_fol and c_call (Isotype) and celltype
+    plot_df %>%
+      mutate(c_call = ifelse(c_call == "", NA, c_call)) %>%
+      group_by(sample_clean_fol, c_call, celltype_broad) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      complete(sample_clean_fol, c_call, celltype_broad, 
+               fill = list(Count = 0)) %>%
+      ggplot(aes(x = sample_clean_fol, y = c_call, fill = Count)) +
+      geom_tile(color = "white", linewidth = 0.3) +
+      geom_text(aes(label = ifelse(Count > 0, Count, "")),
+                color = "white", size = 2.5) +
+      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                          limits = c(0, NA)) +
+      facet_wrap(~ celltype_broad, nrow = 2) +
+      labs(
+        x = NULL,
+        y = "Ig Class",
+        fill = "Count",
+        title = glue("{HH}: Top {clone_nr} GCB clone spec_vj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 9),
+        panel.grid = element_blank(),
+        strip.text = element_text(size = 9, face = "bold"),
+        legend.position = "right"
+      )
+    
+    n_samples <- plot_df$sample_clean_fol %>% unique() %>% length()
+    
+    if (n_samples > 8){
+      ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 20, height = 8, dpi = 1000)
+    } else {
+      ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 8, height = 6, dpi = 1000)
+    }
     
   }
 }

@@ -14,21 +14,25 @@ library(glue)
 files <- list.files("45_immcantation/out/")
 sample_names <- files[1:length(files)-1]
 
-# Load light chain corrected 
-clone_10x_list <- lapply(sample_names, function(x){
-  
-  # x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
-  
-  clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
-  
-  clone_10x$sample_id <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
-  clone_10x$cell_id <- paste(clone_10x$cell_id, clone_10x$sample_id, sep = "_")
-  clone_10x$sequence_id <- paste(clone_10x$sequence_id, "Heavy", sep = "_")
-  
-  return(clone_10x)
-  
-}) %>% setNames(sample_names)
-clone_10x_combined <- bind_rows(clone_10x_list)
+# # Load light chain corrected
+# clone_10x_list <- lapply(sample_names, function(x){
+# 
+#   # x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
+# 
+#   # These files are created using light_clusters.py via 06_add_light_chain. 
+#   # We are not doing this anymore. See 07_summarise_clones.R
+#   clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
+#   
+#   clone_10x$sample_id <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+#   clone_10x$cell_id <- paste(clone_10x$sample_id, clone_10x$cell_id, sep = "_")
+#   clone_10x$sequence_id <- paste(clone_10x$sequence_id, "Heavy", sep = "_")
+# 
+#   return(clone_10x)
+# 
+# }) %>% setNames(sample_names)
+# clone_10x_combined <- bind_rows(clone_10x_list)
+
+clone_10x_combined <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds") %>% bind_rows()
 
 light_chain_list <- lapply(sample_names, function(x){
   
@@ -37,7 +41,7 @@ light_chain_list <- lapply(sample_names, function(x){
   light_chain <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass_QC.tsv"))
   
   light_chain$sample_id <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
-  light_chain$cell_id <- paste(light_chain$cell_id, light_chain$sample_id, sep = "_")
+  light_chain$cell_id <- paste(light_chain$sample_id, light_chain$cell_id, sep = "_")
   light_chain$sequence_id <- paste(light_chain$sequence_id, "Light", sep = "_")
   
   light_chain <- light_chain %>%  mutate(
@@ -49,9 +53,15 @@ light_chain_list <- lapply(sample_names, function(x){
 }) %>% setNames(sample_names)
 light_chain_combined <- bind_rows(light_chain_list)
 
+# Check cell IDs of heavy and light chain
+clone_10x_combined$cell_id %>% str_split_i("_", 1) %>% unique()
+light_chain_combined$cell_id %>% str_split_i("_", 1) %>% unique()
+
+table(light_chain_combined$cell_id %in% clone_10x_combined$cell_id)
+table(clone_10x_combined$cell_id %in% light_chain_combined$cell_id)
+
 # Combine heavy and light chain in one df
-clone_10x_combined$cell_id %>% str_split_i("_", 2) %>% unique()
-light_chain_combined$cell_id %>% str_split_i("_", 2) %>% unique()
+light_chain_combined$barcode_suffix <- as.character(light_chain_combined$barcode_suffix)
 
 both_combined_all <- bind_rows(clone_10x_combined, light_chain_combined)
 
@@ -96,31 +106,31 @@ light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% uni
 # Run resolveLightChains
 patients <- names(both_combined)
 
-# resolve_LC_list <- lapply(patients, function(HH){
-#   
-#   # HH <- "HH117"
-#   
-#   resolve_LC_HH <- resolveLightChains(both_combined[[HH]])
-#   
-#   table(resolve_LC_HH$celltype_broad, useNA = "always")
-#   
-#   # Get meta data from heavy chains
-#   meta <- resolve_LC_HH %>% 
-#     filter(!is.na(celltype_broad)) %>% 
-#     select(cell_id, celltype_broad) %>% 
-#     distinct()
-#   
-#   # Clear celltype 
-#   resolve_LC_HH$celltype_broad <- NULL 
-#   
-#   # Add metadata
-#   resolve_LC_HH <- resolve_LC_HH %>% left_join(meta, by = "cell_id")
-#   
-#   # table(resolve_LC_HH$celltype_broad, useNA = "always")
-#   
-#   return(resolve_LC_HH)
-#   
-# }) %>% setNames(patients)
+resolve_LC_list <- lapply(patients, function(HH){
+
+  # HH <- "HH117"
+
+  resolve_LC_HH <- resolveLightChains(both_combined[[HH]])
+
+  table(resolve_LC_HH$celltype_broad, useNA = "always")
+
+  # Get meta data from heavy chains
+  meta <- resolve_LC_HH %>%
+    filter(!is.na(celltype_broad)) %>%
+    select(cell_id, celltype_broad) %>%
+    distinct()
+
+  # Clear celltype
+  resolve_LC_HH$celltype_broad <- NULL
+
+  # Add metadata
+  resolve_LC_HH <- resolve_LC_HH %>% left_join(meta, by = "cell_id")
+
+  # table(resolve_LC_HH$celltype_broad, useNA = "always")
+
+  return(resolve_LC_HH)
+
+}) %>% setNames(patients)
 # 
 # saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
 resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
