@@ -231,7 +231,7 @@ source("10_broad_annotation/script/color_palette.R")
 library(patchwork)
 library(ggtree)
 
-HH <- "HH117"
+HH <- "HH119"
 HH_spec_clones_vj <- resolve_LC_list[[HH]]
 
 # Download (IMGT) germline reference database
@@ -270,7 +270,7 @@ clone_nrs <- 1:5
 for (clone_nr in clone_nrs){
 
   # Top clone
-  # clone_nr <- 2
+  # clone_nr <- 1
   clone <- top_GC_clones_vj[[HH]][[clone_nr]]
 
   # Subset data for this example
@@ -332,7 +332,7 @@ for (clone_nr in clone_nrs){
     title = FALSE
   )[[1]] +
     plot_annotation(
-      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
+      title = glue("{HH}: Clone number {clone_nr} ({clone})"),
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
@@ -374,44 +374,44 @@ for (clone_nr in clone_nrs){
     title = FALSE
   )[[1]] +
     plot_annotation(
-      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
+      title = glue("{HH}: Clone number {clone_nr} ({clone})"),
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
   ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
 
 
-  # join with your metadata
-  tree <- clones$trees[[1]]
-  tree_data <- fortify(tree)
-
-  table(tree_data$label[str_detect(tree_data$label, "Heavy")] %>% na.omit() %in% HH_spec_clones_vj_clone$sequence_id[str_detect(HH_spec_clones_vj_clone$sequence_id, "Heavy")])
-
-  tree_data <- tree_data %>%
-    left_join(
-      HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
-                         celltype_broad, n_identical, sequence_alignment),
-      by = c("label" = "sequence_id")
-    )
-
-  # build plot manually
-  tree_data %>%
-    ggplot(aes(x = x, y = y)) +
-    geom_tree() +
-    geom_tippoint(aes(color = sample_clean_fol,
-                      shape = celltype_broad,
-                      size = n_identical)) +
-    scale_size_continuous(
-      range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
-    ) +
-    theme_tree2() +
-    labs(
-      color = "Sample", shape = "Cell type", size = "N identical",
-      title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
-      subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-    )
-
-  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
+  # # join with your metadata
+  # tree <- clones$trees[[1]]
+  # tree_data <- fortify(tree)
+  # 
+  # # table(tree_data$label[str_detect(tree_data$label, "Heavy")] %>% na.omit() %in% HH_spec_clones_vj_clone$sequence_id[str_detect(HH_spec_clones_vj_clone$sequence_id, "Heavy")])
+  # 
+  # tree_data <- tree_data %>%
+  #   left_join(
+  #     HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
+  #                        celltype_broad, n_identical, sequence_alignment),
+  #     by = c("label" = "sequence_id")
+  #   )
+  # 
+  # # build plot manually
+  # tree_data %>%
+  #   ggplot(aes(x = x, y = y)) +
+  #   geom_tree() +
+  #   geom_tippoint(aes(color = sample_clean_fol,
+  #                     shape = celltype_broad,
+  #                     size = n_identical)) +
+  #   scale_size_continuous(
+  #     range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
+  #   ) +
+  #   theme_tree2() +
+  #   labs(
+  #     color = "Sample", shape = "Cell type", size = "N identical",
+  #     title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+  #     subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+  #   )
+  # 
+  # ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
 
 }
 
