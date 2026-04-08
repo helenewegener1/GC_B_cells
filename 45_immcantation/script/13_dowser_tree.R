@@ -231,7 +231,7 @@ source("10_broad_annotation/script/color_palette.R")
 library(patchwork)
 library(ggtree)
 
-HH <- "HH119"
+HH <- "HH117"
 HH_spec_clones_vj <- resolve_LC_list[[HH]]
 
 # Download (IMGT) germline reference database
@@ -276,7 +276,7 @@ for (clone_nr in clone_nrs){
   # Subset data for this example
   HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
     # filter(clone_subgroup_id == paste0(clone, "_1") & celltype_broad == "GC_B_cells")   # _1 = dominant subgroup
-    filter(clone_subgroup_id == clone) 
+    filter(clone_subgroup_id == clone & celltype_broad == "GC_B_cells") 
 
   # Meta data
   n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
@@ -336,7 +336,7 @@ for (clone_nr in clone_nrs){
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
-  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
 
   plotTrees(
     clones,
@@ -365,7 +365,7 @@ for (clone_nr in clone_nrs){
   # p + node_data +
   #   geom_inset(pies, width = 0.1, height = 0.1)
 
-  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
 
   plotTrees(
     clones,
@@ -378,7 +378,7 @@ for (clone_nr in clone_nrs){
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
-  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
 
 
   # join with your metadata
@@ -411,7 +411,7 @@ for (clone_nr in clone_nrs){
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
-  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC_GC_trees/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
 
 }
 
