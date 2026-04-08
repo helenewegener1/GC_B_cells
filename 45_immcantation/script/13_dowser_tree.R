@@ -192,12 +192,46 @@ for (HH in patients){
 }
 
 # ------------------------------------------------------------------------------
+# Define top subclones for trees
+# ------------------------------------------------------------------------------
+
+patients <- names(resolve_LC_list)
+
+top_GC_clones_vj <- lapply(patients, function(HH) {
+  
+  # # find clones that contain at least 1 GC cell
+  # GC_clones <- resolve_LC_list[[HH]] %>%
+  #   filter(celltype_broad == "GC_B_cells") %>%
+  #   pull(clone_id) %>%
+  #   unique()
+  
+  # HH <- "HH117"
+  
+  # find clones that have GC cells in at least 2 different sample_ids
+  GC_clones <- resolve_LC_list[[HH]] %>%
+    filter(celltype_broad == "GC_B_cells") %>%
+    group_by(clone_subgroup_id) %>%
+    summarise(n_samples = n_distinct(sample_clean_fol)) %>%
+    filter(n_samples >= 2) %>%
+    pull(clone_subgroup_id)
+  
+  # rank those clones by total size (all cell types) and take top 10
+  resolve_LC_list[[HH]] %>%
+    filter(clone_subgroup_id %in% GC_clones) %>%
+    count(clone_subgroup_id, sort = TRUE) %>%
+    slice_head(n = 10) %>%
+    pull(clone_subgroup_id)
+  
+}) %>% setNames(patients)
+
+# ------------------------------------------------------------------------------
 # Construct clonal germlines
 # ------------------------------------------------------------------------------
 source("10_broad_annotation/script/color_palette.R")
 library(patchwork)
+library(ggtree)
 
-HH <- "HH117"
+HH <- "HH119"
 HH_spec_clones_vj <- resolve_LC_list[[HH]]
 
 # Download (IMGT) germline reference database
@@ -222,11 +256,13 @@ HH_spec_clones_vj$germline_alignment_d_mask[1]
 # Build Lineage Trees...
 # ------------------------------------------------------------------------------
 # https://dowser.readthedocs.io/en/stable/vignettes/Resolve-Light-Chains-Vignette/
+
 # ------------------------------------------------------------------------------
 # Format clones
 # ------------------------------------------------------------------------------
 source("10_broad_annotation/script/color_palette.R")
 library(scatterpie)
+library(ggtree)
 
 clone_nrs <- 1:5
 # clone_nrs <- 2:5
@@ -234,12 +270,13 @@ clone_nrs <- 1:5
 for (clone_nr in clone_nrs){
 
   # Top clone
-  # clone_nr <- 1
+  # clone_nr <- 2
   clone <- top_GC_clones_vj[[HH]][[clone_nr]]
 
   # Subset data for this example
   HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
-    filter(clone_subgroup_id == paste0(clone, "_1") & celltype_broad == "GC_B_cells")   # _1 = dominant subgroup
+    # filter(clone_subgroup_id == paste0(clone, "_1") & celltype_broad == "GC_B_cells")   # _1 = dominant subgroup
+    filter(clone_subgroup_id == clone) 
 
   # Meta data
   n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
@@ -299,7 +336,7 @@ for (clone_nr in clone_nrs){
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
-  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
 
   plotTrees(
     clones,
@@ -328,7 +365,7 @@ for (clone_nr in clone_nrs){
   # p + node_data +
   #   geom_inset(pies, width = 0.1, height = 0.1)
 
-  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
 
   plotTrees(
     clones,
@@ -341,7 +378,7 @@ for (clone_nr in clone_nrs){
       subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
     )
 
-  ggsave(glue("45_immcantation/plot/12_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/13_dowser_resolve_LC/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
 
 
   # join with your metadata
