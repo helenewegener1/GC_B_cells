@@ -281,26 +281,26 @@ patients <- names(spec_clones_vj)
 # CLONES WILL ONLY BE PER SAMPLE AND NOT ACROSS - so fix this if we choose to go with this. 
 # ligth_cluster.py removes cells without light chains which might be too strict.
 # resolveLightChains is softer
-for (HH in patients) {
-
-  # HH <- "HH119"
-  # get the cloned data for this patient
-  spec_clones_vj_HH <- spec_clones_vj[[HH]]
-
-  # split back by sample and write one file per sample
-  for (s in unique(spec_clones_vj_HH$sample_id)) {
-
-    # s <- "HH119-SILP-PC"
-
-    sample_db <- spec_clones_vj_HH %>% filter(sample_id == s)
-    sample_db$cell_id <- sample_db$cell_id %>% str_split_i("_", 2)
-
-    outfile <- glue("45_immcantation/out/{s}/{s}_heavy_germ-pass_clone-pass.tsv")
-
-    airr::write_rearrangement(sample_db, outfile)
-
-  }
-}
+# for (HH in patients) {
+# 
+#   # HH <- "HH119"
+#   # get the cloned data for this patient
+#   spec_clones_vj_HH <- spec_clones_vj[[HH]]
+# 
+#   # split back by sample and write one file per sample
+#   for (s in unique(spec_clones_vj_HH$sample_id)) {
+# 
+#     # s <- "HH119-SILP-PC"
+# 
+#     sample_db <- spec_clones_vj_HH %>% filter(sample_id == s)
+#     sample_db$cell_id <- sample_db$cell_id %>% str_split_i("_", 2)
+# 
+#     outfile <- glue("45_immcantation/out/{s}/{s}_heavy_germ-pass_clone-pass.tsv")
+# 
+#     airr::write_rearrangement(sample_db, outfile)
+# 
+#   }
+# }
 
 # heavy <- read.delim("45_immcantation/out/HH117-SILP-INF-PC/HH117-SILP-INF-PC_heavy_germ-pass_clone-pass.tsv")
 # light <- read.delim("45_immcantation/out/HH117-SILP-INF-PC/HH117-SILP-INF-PC_light_parse-select.tsv")
@@ -356,7 +356,8 @@ lapply(patients, function(HH){
     mutate(
       j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
     ) %>% 
-    count(clone_id, v_gene, j_gene, sort = TRUE) 
+    # count(clone_id, v_gene, j_gene, sort = TRUE) 
+    count(clone_id, sort = TRUE) 
   
 }) %>% setNames(patients)
 
