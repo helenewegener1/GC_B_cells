@@ -32,6 +32,11 @@ resolve_LC_list$HH119$cell_id %>% unique() %>% length()
 
 resolve_LC_list$HH119$locus %>% table()
 
+# Cell types across samples
+
+table(spec_clones_vj$HH117$celltype_broad, spec_clones_vj$HH117$sample_clean)
+table(spec_clones_vj$HH119$celltype_broad, spec_clones_vj$HH119$sample_clean)
+
 # ------------------------------------------------------------------------------
 # Define top clones
 # ------------------------------------------------------------------------------
@@ -227,21 +232,6 @@ top_GC_subclones_vj <- lapply(patients, function(HH) {
 # ------------------------------------------------------------------------------
 # Construct clonal germlines
 # ------------------------------------------------------------------------------
-source("10_broad_annotation/script/color_palette.R")
-library(patchwork)
-library(ggtree)
-
-HH <- "HH119"
-HH_spec_clones_vj <- resolve_LC_list[[HH]]
-
-HH_spec_clones_vj <- HH_spec_clones_vj %>% 
-  mutate(
-    v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
-  ) %>%
-  mutate(
-    j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
-  )
-
 
 # Download (IMGT) germline reference database
 # In terminal
@@ -249,17 +239,38 @@ HH_spec_clones_vj <- HH_spec_clones_vj %>%
 # cd immcantation/scripts
 # fetch_imgtdb.sh -o germlines # Run script to obtain IMGT gapped sequences
 
-# Read in IMGT-gapped sequences
+# # Read in IMGT-gapped sequences
 # references <- readIMGT(dir = "../packages/immcantation/scripts/germlines/human/vdj")
-
-# remove germline alignment columns for this example
-db <- select(HH_spec_clones_vj, -"germline_alignment", -"germline_alignment_d_mask")
-
-# Reconstruct germline sequences
-HH_spec_clones_vj <- createGermlines(db, references, nproc=1, clone = "clone_subgroup_id")
-
-# Check germline of first row
-HH_spec_clones_vj$germline_alignment_d_mask[1]
+# 
+# resolve_LC_list_germlined <- list()
+# 
+# for (HH in patients){
+#   
+#   HH_spec_clones_vj <- resolve_LC_list[[HH]]
+#   
+#   HH_spec_clones_vj <- HH_spec_clones_vj %>% 
+#     mutate(
+#       v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
+#     ) %>%
+#     mutate(
+#       j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
+#     )
+#   
+#   # remove germline alignment columns for this example
+#   db <- select(HH_spec_clones_vj, -"germline_alignment", -"germline_alignment_d_mask")
+#   
+#   # Reconstruct germline sequences
+#   HH_spec_clones_vj <- createGermlines(db, references, nproc=1, clone = "clone_subgroup_id")
+#   
+#   # Check germline of first row
+#   HH_spec_clones_vj$germline_alignment_d_mask[1]
+#   
+#   resolve_LC_list_germlined[[HH]] <- HH_spec_clones_vj
+#   
+# }
+# 
+# saveRDS(resolve_LC_list_germlined, "45_immcantation/out/rds/resolve_LC_list_germlined.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
 
 # ------------------------------------------------------------------------------
 # Build Lineage Trees per subclone
@@ -278,143 +289,330 @@ clone_nrs <- 1:5
 
 versions <- c("all cells", "only GCs")
 
-for (clone_nr in clone_nrs){
-
-  # Top clone
-  # clone_nr <- 2
-  clone <- top_GC_subclones_vj[[HH]][[clone_nr]]
+for (HH in patients){
   
-  # Subset data for this example
-  for (version in versions){
+  HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
+  
+  for (clone_nr in clone_nrs){
     
-    # version <- "all cells"
-    # version <- "only GCs"
+    # Top clone
+    # clone_nr <- 2
+    clone <- top_GC_subclones_vj[[HH]][[clone_nr]]
     
-    if (version == "all cells"){
+    # Subset data for this example
+    for (version in versions){
       
-      HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
-        filter(clone_subgroup_id == clone)
+      # version <- "all cells"
+      # version <- "only GCs"
       
-      outdir <- "45_immcantation/plot/13_dowser_resolve_LC_all_cells"
-      dir.create(outdir, recursive = TRUE)
+      if (version == "all cells"){
+        
+        HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
+          filter(clone_subgroup_id == clone)
+        
+        outdir <- "45_immcantation/plot/13_dowser_resolve_LC_all_cells"
+        dir.create(outdir, recursive = TRUE)
+        
+      } else if (version == "only GCs"){
+        
+        HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
+          filter(clone_subgroup_id == clone & celltype_broad == "GC_B_cells") 
+        
+        outdir <- "45_immcantation/plot/13_dowser_resolve_LC_only_GCs"
+        dir.create(outdir, recursive = TRUE)
+        
+      }
       
-    } else if (version == "only GCs"){
+      # Meta data
+      n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
+      v_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(v_gene) %>% unique()
+      j_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(j_gene) %>% unique()
       
-      HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
-        filter(clone_subgroup_id == clone & celltype_broad == "GC_B_cells") 
+      # Add count for identical clones - used for tipsize of tree
+      HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
+        group_by(clone_subgroup_id, locus, sequence_alignment) %>%
+        mutate(n_identical = n()) %>%
+        ungroup()
       
-      outdir <- "45_immcantation/plot/13_dowser_resolve_LC_only_GCs"
-      dir.create(outdir, recursive = TRUE)
-      
-    }
-    
-    # Meta data
-    n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
-    v_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(v_gene) %>% unique()
-    j_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(j_gene) %>% unique()
-    
-    # Add count for identical clones - used for tipsize of tree
-    HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
-      group_by(clone_subgroup_id, locus, sequence_alignment) %>%
-      mutate(n_identical = n()) %>%
-      ungroup()
-    
-    # Process example data using default settings
-    clones <- formatClones(
-      HH_spec_clones_vj_clone,
-      clone = "clone_subgroup_id",
-      text_fields = c("c_call", "celltype_broad", "sample_clean_fol"),
-      num_fields=c("n_identical"),
-      chain = "HL",
-      light_traits = TRUE
-    )
-    
-    # print(clones)
-    
-    # ------------------------------------------------------------------------------
-    # Build trees
-    # ------------------------------------------------------------------------------
-    
-    # Maximum parsimony trees using phangorn.
-    # clones <- getTrees(clones, nproc=1)
-    
-    # Maximum likelihood trees using phangorn
-    clones <- getTrees(clones, build="pml")
-    
-    # ------------------------------------------------------------------------------
-    # Plot tree
-    # ------------------------------------------------------------------------------
-    
-    if (HH == "HH119" & clone_nr == 1){
-      width <- 20
-      height <- 30
-    } else {
-      width <- 10
-      height <- 15
-    }
-    
-    # plotTrees(clones)
-    
-    plotTrees(
-      clones,
-      tips="c_call",
-      tipsize="n_identical",
-      title = FALSE
-    )[[1]] +
-      plot_annotation(
-        title = glue("{HH} {version}: Clone number {clone_nr} ({clone})"),
-        subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+      # Process example data using default settings
+      clones <- formatClones(
+        HH_spec_clones_vj_clone,
+        clone = "clone_subgroup_id",
+        text_fields = c("c_call", "celltype_broad", "sample_clean_fol"),
+        num_fields=c("n_identical"),
+        chain = "HL",
+        light_traits = TRUE
       )
-    
-    ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
-    
-    plotTrees(
-      clones,
-      tips="celltype_broad",
-      tipsize="n_identical",
-      title = FALSE
-    )[[1]] +
-      plot_annotation(
-        title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
-        subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-      )
-    
-    # # extract node data
-    # node_data <- p$data %>%
-    #   filter(!is.na(celltype_broad)) %>%
-    #   select(node, celltype_broad) %>%
-    #   separate_rows(celltype_broad, sep = ",") %>%
-    #   count(node, celltype_broad) %>%
-    #   pivot_wider(names_from = celltype_broad, values_from = n, values_fill = 0)
-    #
-    # # add pie charts
-    # pies <- nodepie(node_data, cols = 2:ncol(node_data),
-    #                 color = celltype_colors[c("GC_B_cells", "PCs_PBs")])
-    #
-    # library(ggimage)
-    # p + node_data +
-    #   geom_inset(pies, width = 0.1, height = 0.1)
-    
-    ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
-    
-    if (!(HH == "HH119" & clone_nr == 1)){
+      
+      # print(clones)
+      
+      # ------------------------------------------------------------------------------
+      # Build trees
+      # ------------------------------------------------------------------------------
+      
+      # Maximum parsimony trees using phangorn.
+      # clones <- getTrees(clones, nproc=1)
+      
+      # Maximum likelihood trees using phangorn
+      clones <- getTrees(clones, build="pml")
+      
+      # ------------------------------------------------------------------------------
+      # Plot tree
+      # ------------------------------------------------------------------------------
+      
+      if (HH == "HH119" & clone_nr == 1){
+        width <- 20
+        height <- 30
+      } else {
+        width <- 10
+        height <- 15
+      }
+      
+      # plotTrees(clones)
       
       plotTrees(
         clones,
-        tips="sample_clean_fol",
+        tips="c_call",
         tipsize="n_identical",
         title = FALSE
       )[[1]] +
         plot_annotation(
-          title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+          title = glue("{HH} {version}: Clone number {clone_nr} ({clone})"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
         )
       
-      ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
-    
+      ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
+      
+      plotTrees(
+        clones,
+        tips="celltype_broad",
+        tipsize="n_identical",
+        title = FALSE
+      )[[1]] +
+        plot_annotation(
+          title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
+          subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+        )
+      
+      # # extract node data
+      # node_data <- p$data %>%
+      #   filter(!is.na(celltype_broad)) %>%
+      #   select(node, celltype_broad) %>%
+      #   separate_rows(celltype_broad, sep = ",") %>%
+      #   count(node, celltype_broad) %>%
+      #   pivot_wider(names_from = celltype_broad, values_from = n, values_fill = 0)
+      #
+      # # add pie charts
+      # pies <- nodepie(node_data, cols = 2:ncol(node_data),
+      #                 color = celltype_colors[c("GC_B_cells", "PCs_PBs")])
+      #
+      # library(ggimage)
+      # p + node_data +
+      #   geom_inset(pies, width = 0.1, height = 0.1)
+      
+      ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
+      
+      if (!(HH == "HH119" & clone_nr == 1)){
+        
+        plotTrees(
+          clones,
+          tips="sample_clean_fol",
+          tipsize="n_identical",
+          title = FALSE
+        )[[1]] +
+          plot_annotation(
+            title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+            subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+          )
+        
+        ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
+        
+      }
+      
+      if (version == "all cells" & !(HH == "HH119" & clone_nr == 1)){
+        # join with your metadata
+        tree <- clones$trees[[1]]
+        tree_data <- fortify(tree)
+        
+        # table(tree_data$label[str_detect(tree_data$label, "Heavy")] %>% na.omit() %in% HH_spec_clones_vj_clone$sequence_id[str_detect(HH_spec_clones_vj_clone$sequence_id, "Heavy")])
+        
+        tree_data <- tree_data %>%
+          left_join(
+            HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
+                                               celltype_broad, n_identical, sequence_alignment),
+            by = c("label" = "sequence_id")
+          )
+        
+        # build plot manually
+        tree_data %>%
+          ggplot(aes(x = x, y = y)) +
+          geom_tree() +
+          geom_tippoint(aes(color = sample_clean_fol,
+                            shape = celltype_broad,
+                            size = n_identical)) +
+          scale_size_continuous(
+            range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
+          ) +
+          theme_tree2() +
+          labs(
+            color = "Sample", shape = "Cell type", size = "N identical",
+            title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+            subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+          )
+        
+        ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
+        
+      }
+      
     }
     
-    if (version == "all cells" & !(HH == "HH119" & clone_nr == 1)){
+  }
+  
+}
+
+
+# ------------------------------------------------------------------------------
+# Clones per follicle
+# ------------------------------------------------------------------------------
+
+clone_nrs <- 1:5
+# clone_nrs <- 2:5
+
+# Get non-follcile samples
+sample_names <- HH_spec_clones_vj$sample_clean_fol %>% unique()
+non_fol_samples <- sample_names[!str_detect(sample_names, "Fol")]
+
+# Get follicle sample names 
+follicle_sample_names <- sample_names[str_detect(sample_names, "Fol")]
+
+for (HH in patients){
+  
+  HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
+  
+  for (clone_nr in clone_nrs){
+    
+    # clone_nr <- 1
+    
+    for (sample_name in follicle_sample_names){
+      
+      # Define sample and clone_nr to look at
+      # sample_name <- "HH117-SI-PP-nonINF_Fol-2"
+      # sample_name <- "HH119-SI-PP_Fol-22"
+      
+      outdir <- glue("45_immcantation/plot/13_dowser_resolve_LC_per_follicle/{sample_name}")
+      dir.create(outdir, recursive = TRUE)
+      
+      # Get top "clone_nr" clone from given sample
+      clone <- HH_spec_clones_vj %>%
+        filter(sample_clean_fol == sample_name) %>% 
+        count(clone_subgroup_id, sort = TRUE) %>% 
+        slice(clone_nr) %>% 
+        pull(clone_subgroup_id)
+      
+      # Inspect clone
+      # HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% count(v_gene, j_gene, sort = TRUE)
+      
+      # Get clone from specic follicle and the non-fol samples
+      HH_spec_clones_vj_clone <- HH_spec_clones_vj %>% 
+        filter(clone_subgroup_id == clone & sample_clean_fol %in% c(sample_name, non_fol_samples))
+      
+      # Meta data
+      n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
+      # sub_clones <- HH_spec_clones_vj_clone %>% count(clone_subgroup_id, sort = TRUE)
+      v_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(v_gene) %>% unique()
+      j_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(j_gene) %>% unique()
+      
+      # Add count for identical clones - used for tipsize of tree
+      HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
+        group_by(clone_subgroup_id, locus, sequence_alignment) %>%
+        # group_by(clone_id, locus, sequence_alignment) %>%
+        mutate(n_identical = n()) %>%
+        ungroup()
+      
+      if (nrow(HH_spec_clones_vj_clone) < 3){
+        next
+      }
+      
+      # Process example data using default settings
+      clones <- formatClones(
+        HH_spec_clones_vj_clone,
+        clone = "clone_subgroup_id",
+        # clone = "clone_id",
+        text_fields = c("c_call", "celltype_broad", "sample_clean_fol"),
+        num_fields=c("n_identical"),
+        chain = "HL",
+        light_traits = TRUE
+      )
+      
+      if (nrow(clones) == 0){
+        next
+      }
+      
+      # print(clones)
+      
+      # ------------------------------------------------------------------------------
+      # Build trees
+      # ------------------------------------------------------------------------------
+      
+      # Maximum parsimony trees using phangorn.
+      # clones <- getTrees(clones, nproc=1)
+      
+      # Maximum likelihood trees using phangorn
+      clones <- getTrees(clones, build="pml")
+      
+      # ------------------------------------------------------------------------------
+      # Plot tree
+      # ------------------------------------------------------------------------------
+      
+      if (HH == "HH119" & clone_nr == 1){
+        width <- 20
+        height <- 30
+      } else {
+        width <- 10
+        height <- 10
+      }
+      
+      # plotTrees(clones)
+      
+      plotTrees(
+        clones,
+        tips="c_call",
+        tipsize="n_identical",
+        title = FALSE
+      )[[1]] +
+        plot_annotation(
+          title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
+          subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+        )
+      
+      ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
+      
+      # plotTrees(
+      #   clones,
+      #   tips="celltype_broad",
+      #   tipsize="n_identical",
+      #   title = FALSE
+      # )[[1]] +
+      #   plot_annotation(
+      #     title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone}_1)"),
+      #     subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+      #   )
+      # 
+      # ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
+      # 
+      # plotTrees(
+      #   clones,
+      #   tips="sample_clean_fol",
+      #   tipsize="n_identical",
+      #   title = FALSE
+      # )[[1]] +
+      #   plot_annotation(
+      #     title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
+      #     subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+      #   )
+      # 
+      # ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
+      # 
       # join with your metadata
       tree <- clones$trees[[1]]
       tree_data <- fortify(tree)
@@ -435,199 +633,27 @@ for (clone_nr in clone_nrs){
         geom_tippoint(aes(color = sample_clean_fol,
                           shape = celltype_broad,
                           size = n_identical)) +
-        scale_size_continuous(
-          range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
-        ) +
+        # scale_size_continuous(
+        #   range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
+        # ) +
         theme_tree2() +
         labs(
           color = "Sample", shape = "Cell type", size = "N identical",
-          title = glue("{HH}: Clone number {clone_nr} ({clone})"),
+          title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-        )
+        ) 
       
       ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
       
     }
     
   }
-
-}
-
-# ------------------------------------------------------------------------------
-# Clones per follicle
-# ------------------------------------------------------------------------------
-
-clone_nrs <- 1:5
-# clone_nrs <- 2:5
-
-# Get non-follcile samples
-sample_names <- HH_spec_clones_vj$sample_clean_fol %>% unique()
-non_fol_samples <- sample_names[!str_detect(sample_names, "Fol")]
-
-# Get follicle sample names 
-follicle_sample_names <- sample_names[str_detect(sample_names, "Fol")]
-
-for (clone_nr in clone_nrs){
   
-  # clone_nr <- 1
-  
-  for (sample_name in follicle_sample_names){
-    
-    # Define sample and clone_nr to look at
-    # sample_name <- "HH117-SI-PP-nonINF_Fol-2"
-    # sample_name <- "HH119-SI-PP_Fol-22"
-    
-    outdir <- glue("45_immcantation/plot/13_dowser_resolve_LC_per_follicle/{sample_name}")
-    dir.create(outdir, recursive = TRUE)
-    
-    # Get top "clone_nr" clone from given sample
-    clone <- HH_spec_clones_vj %>%
-      filter(sample_clean_fol == sample_name) %>% 
-      count(clone_subgroup_id, sort = TRUE) %>% 
-      slice(clone_nr) %>% 
-      pull(clone_subgroup_id)
-    
-    # Inspect clone
-    # HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% count(v_gene, j_gene, sort = TRUE)
-    
-    # Get clone from specic follicle and the non-fol samples
-    HH_spec_clones_vj_clone <- HH_spec_clones_vj %>% 
-      filter(clone_subgroup_id == clone & sample_clean_fol %in% c(sample_name, non_fol_samples))
-    
-    # Meta data
-    n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
-    # sub_clones <- HH_spec_clones_vj_clone %>% count(clone_subgroup_id, sort = TRUE)
-    v_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(v_gene) %>% unique()
-    j_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(j_gene) %>% unique()
-    
-    # Add count for identical clones - used for tipsize of tree
-    HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
-      group_by(clone_subgroup_id, locus, sequence_alignment) %>%
-      # group_by(clone_id, locus, sequence_alignment) %>%
-      mutate(n_identical = n()) %>%
-      ungroup()
-    
-    if (nrow(HH_spec_clones_vj_clone) < 3){
-      next
-    }
-    
-    # Process example data using default settings
-    clones <- formatClones(
-      HH_spec_clones_vj_clone,
-      clone = "clone_subgroup_id",
-      # clone = "clone_id",
-      text_fields = c("c_call", "celltype_broad", "sample_clean_fol"),
-      num_fields=c("n_identical"),
-      chain = "HL",
-      light_traits = TRUE
-    )
-    
-    if (nrow(clones) == 0){
-      next
-    }
-    
-    # print(clones)
-    
-    # ------------------------------------------------------------------------------
-    # Build trees
-    # ------------------------------------------------------------------------------
-    
-    # Maximum parsimony trees using phangorn.
-    # clones <- getTrees(clones, nproc=1)
-    
-    # Maximum likelihood trees using phangorn
-    clones <- getTrees(clones, build="pml")
-    
-    # ------------------------------------------------------------------------------
-    # Plot tree
-    # ------------------------------------------------------------------------------
-    
-    if (HH == "HH119" & clone_nr == 1){
-      width <- 20
-      height <- 30
-    } else {
-      width <- 10
-      height <- 10
-    }
-    
-    # plotTrees(clones)
-    
-    plotTrees(
-      clones,
-      tips="c_call",
-      tipsize="n_identical",
-      title = FALSE
-    )[[1]] +
-      plot_annotation(
-        title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
-        subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-      )
-    
-    ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
-    
-    # plotTrees(
-    #   clones,
-    #   tips="celltype_broad",
-    #   tipsize="n_identical",
-    #   title = FALSE
-    # )[[1]] +
-    #   plot_annotation(
-    #     title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone}_1)"),
-    #     subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-    #   )
-    # 
-    # ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_celltype.png"), width = width, height = height, dpi = 1000)
-    # 
-    # plotTrees(
-    #   clones,
-    #   tips="sample_clean_fol",
-    #   tipsize="n_identical",
-    #   title = FALSE
-    # )[[1]] +
-    #   plot_annotation(
-    #     title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
-    #     subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-    #   )
-    # 
-    # ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
-    # 
-    # join with your metadata
-    tree <- clones$trees[[1]]
-    tree_data <- fortify(tree)
-    
-    # table(tree_data$label[str_detect(tree_data$label, "Heavy")] %>% na.omit() %in% HH_spec_clones_vj_clone$sequence_id[str_detect(HH_spec_clones_vj_clone$sequence_id, "Heavy")])
-    
-    tree_data <- tree_data %>%
-      left_join(
-        HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
-                                           celltype_broad, n_identical, sequence_alignment),
-        by = c("label" = "sequence_id")
-      )
-    
-    # build plot manually
-    tree_data %>%
-      ggplot(aes(x = x, y = y)) +
-      geom_tree() +
-      geom_tippoint(aes(color = sample_clean_fol,
-                        shape = celltype_broad,
-                        size = n_identical)) +
-      # scale_size_continuous(
-      #   range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
-      # ) +
-      theme_tree2() +
-      labs(
-        color = "Sample", shape = "Cell type", size = "N identical",
-        title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
-        subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-      ) 
-    
-    ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
-    
-  }
-
 }
-
 
 # ------------------------------------------------------------------------------
 #
 # ------------------------------------------------------------------------------
+
+
+
