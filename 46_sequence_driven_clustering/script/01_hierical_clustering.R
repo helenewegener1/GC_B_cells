@@ -4,6 +4,7 @@ library(stats)
 library(ggtree)
 library(treeio)
 library(RColorBrewer)
+library(fastcluster)
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -125,29 +126,71 @@ ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta +
   # theme(legend.position = "none") + 
   labs(title = glue("{HH} colored by clone_id (N clones: {n_clones})"))
 
-ggsave(glue("46_sequence_driven_clustering/plot/{HH}_clone_ID.png"), width = 18, height = 16, dpi = 1000)
+ggsave(glue("46_sequence_driven_clustering/plot/{HH}_clone_ID_fan.png"), width = 18, height = 16, dpi = 1000)
 
+ggtree(tree_phylo, layout="rectangular", size=0.2) %<+% seqs_meta + 
+  geom_tippoint(aes(color = clone_id_top_10), size=0.5, alpha=0.8) +
+  theme_tree2() + 
+  scale_color_manual(values = clone_colors) + 
+  guides(color = guide_legend(override.aes = list(size = 4))) +
+  # theme(legend.position = "none") + 
+  labs(title = glue("{HH} colored by clone_id (N clones: {n_clones})"))
+
+ggsave(glue("46_sequence_driven_clustering/plot/{HH}_clone_ID_rectangular.png"), width = 10, height = 30, dpi = 1000)
+
+
+# Color by V gene
 ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
   geom_tippoint(aes(color = v_gene), size=0.5, alpha=0.8) +
   theme_tree2() + 
-  labs(title = glue("{HH} colored by V gene"))
-ggsave(glue("46_sequence_driven_clustering/plot/{HH}_v_gene.png"), width = 10, height = 9)
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  labs(title = glue("{HH} colored by V gene")) 
+ggsave(glue("46_sequence_driven_clustering/plot/{HH}_v_gene.png"), width = 18, height = 16, dpi = 1000)
 
 ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
   geom_tippoint(aes(color = j_gene), size=0.5, alpha=0.8) +
-  theme_tree2()
-ggsave(glue("46_sequence_driven_clustering/plot/{HH}_j_gene.png"), width = 9, height = 8)
+  theme_tree2() + 
+  labs(title = glue("{HH} colored by J gene"))
+ggsave(glue("46_sequence_driven_clustering/plot/{HH}_j_gene.png"), width = 18, height = 16, dpi = 1000)
 
-ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
+ggtree(tree_phylo, layout="fan", size=0.5) %<+% seqs_meta + 
   geom_tippoint(aes(color = junction_length), size=0.5, alpha=0.8) +
-  theme_tree2()
+  theme_tree2() + 
+  labs(title = glue("{HH} colored by junction length"))
+ggsave(glue("46_sequence_driven_clustering/plot/{HH}_junction_length.png"), width = 18, height = 16, dpi = 1000)
 
 
 
 
+# Other layouts
+# 'rectangular', 'dendrogram', 'slanted', 'ellipse', 'roundrect', 'fan', 'circular', 'inward_circular', 'radial', 'equal_angle', 'daylight', 'ape'
+ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
+  geom_tippoint(aes(color = v_gene), size=0.5, alpha=0.8) +
+  theme_tree2() + 
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  labs(title = glue("{HH} colored by V gene")) 
+
+ggtree(tree_phylo, layout="rectangular", size=0.2) %<+% seqs_meta + 
+  geom_tippoint(aes(color = v_gene), size=0.5, alpha=0.8) +
+  theme_tree2() + 
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  labs(title = glue("{HH} colored by V gene")) 
 
 
 
-# 4. Cut the tree at your desired threshold
-# If using normalized distance, 0.1 might be 90% similarity
-clusters <- cutree(fit, h = 3) # h = max number of edits allowed
+# ggsave(glue("46_sequence_driven_clustering/plot/{HH}_v_gene.png"), width = 18, height = 16, dpi = 1000)
+
+
+# ------------------------------------------------------------------------------
+# Visualize clustering as tree
+# ------------------------------------------------------------------------------
+
+# Cut tree
+clusters <- cutree(fit, k = 10 + 5)
+
+table(clusters)
+
+table(clusters, seqs_meta$clone_id_top_10)
+
+
+
