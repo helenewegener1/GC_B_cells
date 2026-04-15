@@ -34,7 +34,10 @@ sample_names <- files[1:length(files)-1]
 # }) %>% setNames(sample_names)
 # clone_10x_combined <- bind_rows(clone_10x_list)
 
-clone_10x_combined <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds") %>% bind_rows()
+clone_10x_combined <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds") %>% bind_rows()
+
+# HH <- "HH117"
+# clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
 
 light_chain_list <- lapply(sample_names, function(x){
   
@@ -131,7 +134,7 @@ patients <- names(both_combined)
 
 resolve_LC_list <- lapply(patients, function(HH){
 
-  # HH <- "HH119"
+  # HH <- "HH117"
   
   # both_combined[[HH]] %>% filter(locus == "IGH") %>% nrow()
   
@@ -140,22 +143,34 @@ resolve_LC_list <- lapply(patients, function(HH){
   
   # resolve_LC_HH %>% filter(locus == "IGH") %>% nrow()
 
-  table(resolve_LC_HH$celltype_broad, useNA = "always")
+  # table(resolve_LC_HH$celltype_broad, useNA = "always")
   
   # Get meta data from heavy chains
   meta <- resolve_LC_HH %>%
-    filter(!is.na(celltype_broad)) %>%
-    select(cell_id, celltype_broad) %>%
-    distinct()
+    filter(locus == "IGH", !is.na(celltype_broad)) %>%
+    select(cell_id, celltype_broad)
+  
+  # nrow(meta)
+  # table(resolve_LC_HH$cell_id %in% meta$cell_id)
 
-  # Clear celltype
-  resolve_LC_HH$celltype_broad <- NULL
+  # Clear and re-add 
+  resolve_LC_HH_final <- resolve_LC_HH %>%
+    select(-celltype_broad) %>%
+    left_join(meta, by = "cell_id")
+  
+  # resolve_LC_HH_test %>% filter(locus == "IGH") %>% nrow()
 
-  # Add metadata
-  resolve_LC_HH <- resolve_LC_HH %>% left_join(meta, by = "cell_id")
-
-  return(resolve_LC_HH)
+  return(resolve_LC_HH_final)
 
 }) %>% setNames(patients)
 
 saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
+
+## Test
+HH <- "HH117"
+clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
+resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
+
+HH <- "HH119"
+clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
+resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()

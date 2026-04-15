@@ -12,6 +12,7 @@ library(tibble)
 library(patchwork)
 library(forcats)
 library(glue)
+library(stringr)
 
 packageVersion("airr")
 packageVersion("alakazam")
@@ -231,6 +232,19 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   df$patient_id <- HH
   
   # -------------------
+  # Remove TFH cells and GC B cells from the LP
+  # -------------------
+  
+  LP_samples <- grep("LP", df$sample_clean, value = TRUE) %>% unique()
+  
+  # table(df$celltype_broad == "Tfh_like_cells")
+  # table(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  
+  df <- df %>% filter(
+    (celltype_broad != "Tfh_like_cells") & !(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  )
+  
+  # -------------------
   # Return final df
   # -------------------
   
@@ -264,8 +278,8 @@ cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
 # Export bcr_data_qc_annot
 # ------------------------------------------------------------------------------
 
-saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/light_bcr_data_qc_annot.rds")
-# bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/light_bcr_data_qc_annot.rds")
+saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_light_bcr_data_qc_annot.rds")
+# bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/03_light_bcr_data_qc_annot.rds")
 
 # ------------------------------------------------------------------------------
 # Export bcr_data_qc_annot per sample

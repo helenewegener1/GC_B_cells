@@ -1,52 +1,262 @@
 library(tidyverse) 
 library(glue)
 
-# NOT DOING light_cluster.py SINCE IT'S TOO STRICT (removes cells without light chains)
-
 # ------------------------------------------------------------------------------
 # Having a look 
 # ------------------------------------------------------------------------------
 
-# x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
-# # x <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-# # 
-# light <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass.tsv"))
-# light_qc <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass_QC.tsv"))
-# heavy <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass.tsv"))
-# vj <- read.delim(glue("45_immcantation/out/{x}/{x}_heavy_germ-pass_clone-pass.tsv"))
-# clone_10x <- read.delim(glue("45_immcantation/out/{x}/{x}_10X_clone-pass.tsv"))
-#
-# nrow(light)
-# nrow(light_qc)
-# nrow(heavy)
-# nrow(vj)
-# nrow(clone_10x)
-# 
-# clone_10x %>% count(clone_id, sort = T) %>% head()
-# 
-# table(light$cell_id %in% heavy$cell_id)
-#
-# table(light$cell_id %in% vj$cell_id)
-# table(heavy$cell_id %in% vj$cell_id)
-#
-# table(light$cell_id %in% clone_10x$cell_id)
-# table(heavy$cell_id %in% clone_10x$cell_id)
-# 
-# table(vj$cell_id %in% clone_10x$cell_id)
+heavy_clones <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
+light_clones <- readRDS("45_immcantation/out/rds/05_spec_clones_novj_light.rds")
 
-# Compare rds objects 
+HH <- "HH117"
 
-# spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
-# resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+heavy_clones_HH <- heavy_clones[[HH]]
+light_clones_HH <- light_clones[[HH]]
+
+nrow(heavy_clones_HH)
+nrow(light_clones_HH)
+
+# Check cell_id match 
+table(heavy_clones_HH$cell_id %in% light_clones_HH$cell_id) 
+table(light_clones_HH$cell_id %in% heavy_clones_HH$cell_id)
+
+# N clones
+heavy_clones_HH$clone_id %>% unique() %>% length()
+light_clones_HH$clone_id %>% unique() %>% length()
+
+# Combine
+# Remove light chains without heavy chain match and keep heavy chains without light chain match. 
+clones_HH <- heavy_clones_HH %>% 
+  left_join(light_clones_HH, by = "cell_id", suffix = c("_heavy", "_light")) %>% 
+  mutate(
+    clone_id_combine = paste(clone_id_heavy, clone_id_light, sep = "_")
+  )
+
+# N clones
+clones_HH$clone_id_heavy %>% unique() %>% length()
+clones_HH$clone_id_light %>% unique() %>% length()
+clones_HH$clone_id_combine %>% unique() %>% length()
+
+# Inspect clones 
+clones_HH %>% count(clone_id_heavy, sort = TRUE)
+
+top_clone <- clones_HH %>% count(clone_id_heavy, sort = TRUE) %>% head(n = 1) %>% pull(clone_id_heavy)
+
+clones_HH %>% filter(clone_id_heavy == top_clone) %>% count(clone_id_combine, sort = TRUE)
+
+# ------------------------------------------------------------------------------
+# Combine heavy and light chain data
+# ------------------------------------------------------------------------------
+
+patients <- names(heavy_clones)
+
+clones_combined <- lapply(patients, function(HH) {
+  
+  # HH <- "HH117"
+  
+  heavy_clones_HH <- heavy_clones[[HH]]
+  light_clones_HH <- light_clones[[HH]]
+  
+  # Build a lookup: cell_id -> clone_id for each locus
+  heavy_lookup <- heavy_clones_HH %>% select(cell_id, clone_id_heavy = clone_id)
+  light_lookup <- light_clones_HH %>% select(cell_id, clone_id_light = clone_id)
+  
+  # Stack into long format
+  rbind(heavy_clones_HH, light_clones_HH) %>%
+    # Join both lookups so every row knows both clone IDs
+    left_join(heavy_lookup, by = "cell_id") %>%
+    left_join(light_lookup, by = "cell_id") %>%
+    mutate(
+      clone_id_combine = paste(clone_id_heavy, clone_id_light, sep = "_")
+    )
+  
+}) %>% setNames(patients)
+
+
+# ------------------------------------------------------------------------------
+# Have a look at clone_id_combine
+# ------------------------------------------------------------------------------
+
+HH <- "HH117"
+
+top_clone <- clones_combined[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
+clones_combined[[HH]] %>% filter(locus == "IGH") %>% filter(clone_id == top_clone) %>% count(clone_id_combine, sort = TRUE)
+
+# ------------------------------------------------------------------------------
+# Define subclones based on light chain data
+# ------------------------------------------------------------------------------
+
+library(stringdist)
+
+clones_NA_resolved <- lapply(patients, function(HH) {
+  
+  # HH <- "HH117"
+  clones_HH <- clones_combined[[HH]]
+  
+  # Work on cell level using only IGH rows for the imputation logic
+  igh_rows <- clones_HH %>% filter(locus == "IGH")
+  
+  igh_has_light <- igh_rows %>% filter(!is.na(clone_id_light))
+  igh_no_light  <- igh_rows %>% filter(is.na(clone_id_light))
+  
+  if (nrow(igh_no_light) == 0) return(clones_HH %>% mutate(light_imputed = FALSE))
+  
+  # Impute on IGH rows only
+  igh_imputed <- igh_no_light %>%
+    rowwise() %>%
+    mutate(
+      clone_id_light = {
+        current_heavy_clone <- pick(clone_id_heavy)$clone_id_heavy
+        current_seq         <- pick(sequence_alignment)$sequence_alignment
+        
+        candidates <- igh_has_light %>%
+          filter(clone_id_heavy == current_heavy_clone)
+        
+        if (nrow(candidates) == 0) {
+          NA_character_
+        } else {
+          mean_dists <- candidates %>%
+            group_by(clone_id_light) %>%
+            summarise(
+              mean_dist = mean(stringdist(
+                current_seq,
+                sequence_alignment,
+                method = "hamming"
+              ), na.rm = TRUE)
+            )
+          mean_dists$clone_id_light[which.min(mean_dists$mean_dist)]
+        }
+      },
+      clone_id_combine = paste(clone_id_heavy, clone_id_light, sep = "_"),
+      light_imputed = TRUE
+    ) %>%
+    ungroup()
+  
+  # Lookup table: only the columns we want to patch, cleanly named
+  imputed_lookup <- igh_imputed %>%
+    select(cell_id, 
+           new_clone_id_light   = clone_id_light, 
+           new_clone_id_combine = clone_id_combine,
+           new_light_imputed    = light_imputed)
+  
+  # Apply imputed values back to ALL rows of those cells
+  clones_HH %>%
+    left_join(imputed_lookup, by = "cell_id") %>%
+    mutate(
+      clone_id_light   = coalesce(new_clone_id_light,   clone_id_light),
+      clone_id_combine = coalesce(new_clone_id_combine, clone_id_combine),
+      light_imputed    = coalesce(new_light_imputed,    FALSE)
+    ) %>%
+    select(-new_clone_id_light, -new_clone_id_combine, -new_light_imputed)
+  
+}) %>% setNames(patients)
+
+# ------------------------------------------------------------------------------
+# Have a look at clone_id_combine before and after NA resolvement 
+# ------------------------------------------------------------------------------
+
+HH <- "HH117"
 # 
-# spec_clones_vj$HH119 %>% count(clone_id, sort = TRUE) %>% head(10)
-# 
-# light_qc %>% nrow()
-# spec_clones_vj$HH119 %>% filter(sample_id == x) %>% nrow()
-# resolve_LC_list$HH119 %>% filter(sample_id == x) %>% nrow()
-# 
-# spec_clones_vj$HH119 %>% filter(sample_id == x) %>% count(clone_id, sort = TRUE) %>% head(10)
-# resolve_LC_list$HH119 %>% filter(sample_id == x) %>% count(clone_id, locus, sort = TRUE) %>% head(10)
+# Get top heavy chain clone
+top_clone <- clones_combined[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
+
+# Before
+clones_combined[[HH]] %>% 
+  filter(locus == "IGH") %>% 
+  filter(clone_id == top_clone) %>% 
+  count(clone_id_combine, sort = TRUE)
+
+# After
+clones_NA_resolved[[HH]] %>% 
+  filter(locus == "IGH") %>%
+  filter(clone_id_heavy == top_clone) %>% 
+  count(clone_id_combine, sort = TRUE)
+
+saveRDS(clones_NA_resolved, "45_immcantation/out/rds/07_clones_combined_NA_resolved.rds")
+# clones_NA_resolved <- readRDS("45_immcantation/out/rds/07_clones_combined_NA_resolved.rds")
+
+# ------------------------------------------------------------------------------
+# Define top clones
+# ------------------------------------------------------------------------------
+
+patients <- names(clones_NA_resolved)
+
+top_GC_clones <- lapply(patients, function(HH) {
+  
+  # find clones that have GC cells in at least 2 different sample_ids
+  GC_clones <- clones_NA_resolved[[HH]] %>%
+    filter(locus == "IGH" & celltype_broad == "GC_B_cells") %>%
+    group_by(clone_id) %>%
+    summarise(n_samples = n_distinct(sample_clean_fol)) %>%
+    filter(n_samples >= 2) %>%
+    pull(clone_id)
+  
+  # rank those clones by total size (all cell types) and take top 10
+  clones_NA_resolved[[HH]] %>%
+    filter(locus == "IGH" & clone_id %in% GC_clones) %>%
+    count(clone_id, sort = TRUE) %>%
+    slice_head(n = 10) %>%
+    pull(clone_id)
+  
+}) %>% setNames(patients)
+
+
+# ------------------------------------------------------------------------------
+# Visualize top clones vj
+# ------------------------------------------------------------------------------
+
+for (HH in patients){
+  
+  # HH <- "HH117"
+  HH_top_clones <- top_GC_clones[[HH]]
+  
+  for (clone_nr in 1:length(HH_top_clones)){
+    
+    # clone_nr <- 1
+    clone <- HH_top_clones[clone_nr]
+    
+    df <- clones_NA_resolved[[HH]] %>%
+      filter(str_starts(clone_id_combine, paste0(clone, "_"))) %>%
+      mutate(
+        sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev(),
+        clone_subgroup_genes = as.character(clone_id) %>% paste(v_call_majority, j_call_majority, junction_length, sep = "_")
+      )
+    
+    # Meta data
+    n_cells <- df %>% filter(locus == "IGH") %>% nrow()
+    v_gene <- df %>% filter(locus == "IGH") %>% pull(v_call_majority) %>% unique()
+    j_gene <- df %>% filter(locus == "IGH") %>% pull(j_call_majority) %>% unique()
+    
+    # Plot data
+    plot_df <- df %>% 
+      filter(locus != "IGH") %>% 
+      count(clone_subgroup_genes, celltype_broad, sort = TRUE)
+    
+    plot_df %>%
+      mutate(clone_subgroup_genes = fct_reorder(
+        clone_subgroup_genes,
+        as.numeric(str_extract(clone_subgroup_genes, "^\\d+"))
+      )) %>% 
+      ggplot(aes(y = clone_subgroup_genes, x = celltype_broad, fill = n)) +
+      geom_tile(color = "white", linewidth = 0.3) +
+      geom_text(aes(label = ifelse(n > 0, n, "")),
+                color = "white", size = 2.5) +
+      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                          limits = c(0, NA)) +
+      labs(
+        title = glue("{HH}: Top {clone_nr} GCB clone - Light chain subgroups after resolveLightChains"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells heavy chain: {n_cells}\nV gene heavy chain: {v_gene}\n J gene heavy chain: {j_gene}"),
+        y = ""
+      ) +
+      theme_classic() + 
+      theme(legend.position = "none")
+    
+    # ggsave(glue("45_immcantation/plot/GC_clones_spec_vj_resolveLightChains/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 8, height = 8.5)
+    ggsave(glue("45_immcantation/plot/GC_clones_HW_combined/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 8, height = 8.5)
+    
+  }
+}
 
 
 # ------------------------------------------------------------------------------

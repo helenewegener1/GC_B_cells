@@ -3,6 +3,8 @@ library(scoper)
 library(dplyr)
 library(shazam)
 library(dowser)
+library(tidyverse)
+library(glue)
 
 # Newest versions
 packageVersion("scoper")
@@ -18,9 +20,9 @@ data(HH_S5F)  # or S5F, RS5NF depending on your preference
 # Load data
 # ------------------------------------------------------------------------------
 
-list_thresholds <- readRDS("45_immcantation/out/rds/list_thresholds.rds")
+# list_thresholds <- readRDS("45_immcantation/out/rds/list_thresholds.rds")
 
-bcr_data <- readRDS("45_immcantation/out/rds/heavy_bcr_data_qc_annot.rds")
+bcr_data <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
 
 patients <- names(bcr_data)
 
@@ -44,15 +46,15 @@ bcr_data <- lapply(patients, function(HH){
 # 
 # # Clonal assignment using identical nucleotide sequences
 # seq_clones <- lapply(patients, function(HH){
-#   
+# 
 #   identicalClones(
-#     bcr_data[[HH]], 
-#     method="nt", 
-#     cell_id = "cell_id", 
-#     junction = "junction", 
-#     first = TRUE
+#     bcr_data[[HH]],
+#     method="nt",
+#     cell_id = "cell_id",
+#     junction = "junction",
+#     first = FALSE
 #   )
-#   
+# 
 # }) %>% setNames(patients)
 # 
 # saveRDS(seq_clones, "45_immcantation/out/rds/seq_clones.rds")
@@ -260,20 +262,44 @@ spec_clones_vj <- lapply(patients, function(HH){
     germline = "germline_alignment_d_mask",
     cell_id = "cell_id",
     junction = "junction",
-    first = TRUE,
+    first = FALSE,
     targeting_model = HH_S5F
   )
 
 }) %>% setNames(patients)
 
-saveRDS(spec_clones_vj, "45_immcantation/out/rds/spec_clones_vj.rds")
+# -------------------
+# Detect main V and J gene for each clone
+# -------------------
+
+get_majority <- function(calls) {
+  genes <- unlist(strsplit(calls, ","))
+  tab <- table(genes)
+  max_count <- max(tab)
+  paste(names(tab[tab == max_count]), collapse = ",")
+}
+
+spec_clones_vj <- lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  spec_clones_vj[[HH]] %>%
+    group_by(clone_id) %>%
+    mutate(
+      v_call_majority = get_majority(v_call),
+      j_call_majority = get_majority(j_call)
+    ) %>%
+    ungroup()
+  
+}) %>% setNames(patients)
+
+saveRDS(spec_clones_vj, "45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 
 # -------------------
 # Save clone_ids per sample
 # -------------------
 
 # Load data
-spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
+spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 
 patients <- names(spec_clones_vj)
 
@@ -350,14 +376,8 @@ lapply(patients, function(HH){
   
   spec_clones_vj[[HH]] %>% 
     filter(clone_id %in% top_GC_clones_vj[[HH]]) %>% 
-    mutate(
-      v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
-    ) %>% 
-    mutate(
-      j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
-    ) %>% 
-    # count(clone_id, v_gene, j_gene, sort = TRUE) 
-    count(clone_id, sort = TRUE) 
+    # count(clone_id, v_gene, j_gene, sort = TRUE)
+    count(clone_id, v_call_majority, j_call_majority, sort = TRUE) 
   
 }) %>% setNames(patients)
 
@@ -384,8 +404,8 @@ for (HH in patients){
     
     # Meta data
     n_cells <- plot_df %>% nrow()
-    v_gene <- plot_df$v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
-    j_gene <- plot_df$j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", ")
+    v_gene <- plot_df$v_call_majority %>% unique()
+    j_gene <- plot_df$j_call_majority %>% unique()
     
     # Color by cell type
     plot_df %>%   
@@ -452,47 +472,43 @@ for (HH in patients){
 # Compare methods: novj VS vj 
 # ------------------------------------------------------------------------------
 
-# -------------------
-# HH117 
-# -------------------
-
-HH <- "HH119"
-
-HH_spec_clones_vj <- spec_clones_vj[[HH]]
-HH_spec_clones_novj <- spec_clones_novj[[HH]]
-
-# Not in the same order...
-table(HH_spec_clones_vj$cell_id %in% HH_spec_clones_novj$cell_id) 
-table(HH_spec_clones_vj$cell_id == HH_spec_clones_novj$cell_id) 
-length(HH_spec_clones_vj$cell_id)
-length(HH_spec_clones_novj$cell_id)
-
-# reorder novj to match the order of vj
-HH_spec_clones_novj <- HH_spec_clones_novj[match(HH_spec_clones_vj$cell_id_seurat, HH_spec_clones_novj$cell_id_seurat), ]
-
-# verify they now match
-table(HH_spec_clones_vj$cell_id_seurat == HH_spec_clones_novj$cell_id_seurat)
-
-# Investigate clone overlap clone_ids
-
-# get top N clones from each method
-top_n <- 50
-
-top_vj <- HH_spec_clones_vj %>% count(clone_id, sort = TRUE) %>% slice_head(n = top_n) %>% pull(clone_id)
-top_novj <- HH_spec_clones_novj %>% count(clone_id, sort = TRUE) %>% slice_head(n = top_n) %>% pull(clone_id)
-
-# build overlap table for top clones only
-overlap <- HH_spec_clones_vj %>%
-  select(cell_id_seurat, clone_vj = clone_id) %>%
-  left_join(HH_spec_clones_novj %>% select(cell_id_seurat, clone_novj = clone_id),
-            by = "cell_id_seurat") %>%
-  filter(clone_vj %in% top_vj, clone_novj %in% top_novj) %>%
-  count(clone_vj, clone_novj)
-
-# heatmap
-ggplot(overlap, aes(x = factor(clone_novj), y = factor(clone_vj), fill = n)) +
-  geom_tile() +
-  scale_fill_viridis_c() +
-  labs(x = "noVJ clone", y = "VJ clone", fill = "# cells") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# HH <- "HH119"
+# 
+# HH_spec_clones_vj <- spec_clones_vj[[HH]]
+# HH_spec_clones_novj <- spec_clones_novj[[HH]]
+# 
+# # Not in the same order...
+# table(HH_spec_clones_vj$cell_id %in% HH_spec_clones_novj$cell_id) 
+# table(HH_spec_clones_vj$cell_id == HH_spec_clones_novj$cell_id) 
+# length(HH_spec_clones_vj$cell_id)
+# length(HH_spec_clones_novj$cell_id)
+# 
+# # reorder novj to match the order of vj
+# HH_spec_clones_novj <- HH_spec_clones_novj[match(HH_spec_clones_vj$cell_id_seurat, HH_spec_clones_novj$cell_id_seurat), ]
+# 
+# # verify they now match
+# table(HH_spec_clones_vj$cell_id_seurat == HH_spec_clones_novj$cell_id_seurat)
+# 
+# # Investigate clone overlap clone_ids
+# 
+# # get top N clones from each method
+# top_n <- 50
+# 
+# top_vj <- HH_spec_clones_vj %>% count(clone_id, sort = TRUE) %>% slice_head(n = top_n) %>% pull(clone_id)
+# top_novj <- HH_spec_clones_novj %>% count(clone_id, sort = TRUE) %>% slice_head(n = top_n) %>% pull(clone_id)
+# 
+# # build overlap table for top clones only
+# overlap <- HH_spec_clones_vj %>%
+#   select(cell_id_seurat, clone_vj = clone_id) %>%
+#   left_join(HH_spec_clones_novj %>% select(cell_id_seurat, clone_novj = clone_id),
+#             by = "cell_id_seurat") %>%
+#   filter(clone_vj %in% top_vj, clone_novj %in% top_novj) %>%
+#   count(clone_vj, clone_novj)
+# 
+# # heatmap
+# ggplot(overlap, aes(x = factor(clone_novj), y = factor(clone_vj), fill = n)) +
+#   geom_tile() +
+#   scale_fill_viridis_c() +
+#   labs(x = "noVJ clone", y = "VJ clone", fill = "# cells") +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1))

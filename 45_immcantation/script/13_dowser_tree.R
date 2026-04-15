@@ -5,7 +5,7 @@ library(tidyverse)
 library(shazam)
 library(glue)
 
-spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
+spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
 
 spec_clones_vj$HH117 %>% nrow()
@@ -149,22 +149,17 @@ for (HH in patients){
     clone <- HH_top_clones[clone_nr]
 
     df <- resolve_LC_list[[HH]] %>%
-      filter(clone_id == clone) %>%
-      mutate(
-        v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
-      ) %>%
-      mutate(
-        j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
-      ) %>% 
+      filter(str_starts(clone_subgroup_id, paste0(clone, "_"))) %>%
+      # filter(clone_id == clone) %>%
       mutate(
         sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev(), 
-        clone_subgroup_genes = as.character(clone_subgroup) %>% paste(v_gene, j_gene, junction_length, sep = "_")
+        clone_subgroup_genes = as.character(clone_subgroup) %>% paste(v_call_majority, j_call_majority, junction_length, sep = "_")
       )
     
     # Meta data
     n_cells <- df %>% filter(locus == "IGH") %>% nrow()
-    v_gene <- df %>% filter(locus == "IGH") %>% pull(v_gene) %>% unique()
-    j_gene <- df %>% filter(locus == "IGH") %>% pull(j_gene) %>% unique()
+    v_gene <- df %>% filter(locus == "IGH") %>% pull(v_call_majority) %>% unique()
+    j_gene <- df %>% filter(locus == "IGH") %>% pull(j_call_majority) %>% unique()
       
     # Plot data
     plot_df <- df %>% 
@@ -380,6 +375,9 @@ for (HH in patients){
           title = glue("{HH} {version}: Clone number {clone_nr} ({clone})"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
         )
+      
+      # TRY TO ADD THIS FOR LARGER COLORS DOTS IN THE LEGEND
+      # guides(color = guide_legend(override.aes = list(size = 4))) +
       
       ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
       
@@ -655,5 +653,20 @@ for (HH in patients){
 #
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# Compare methods
+# ------------------------------------------------------------------------------
+
+HH <- "HH117"
+
+top_clone <- clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
+# resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
+
+heavy_clones[[HH]] %>% filter(clone_id == top_clone) %>% nrow()
+clones_NA_resolved[[HH]] %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
+resolve_LC_list[[HH]]  %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
 
 
+heavy_clones[[HH]] %>% nrow()
+clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% nrow()
+resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow() # Too many - what is going on????
