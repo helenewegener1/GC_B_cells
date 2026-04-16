@@ -668,7 +668,7 @@ heavy_clones[[HH]] %>% nrow()
 resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow() 
 clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% nrow()
 
-top_clone <- clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
+top_clone <- clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% slice(2) %>% pull(clone_id)
 # resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
 
 # N cells in top clone
@@ -684,7 +684,7 @@ clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine,
 resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% count(clone_subgroup_id, v_call, j_call, junction_length, sort = TRUE) %>% head(20)
 clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, v_call, j_call, junction_length, sort = TRUE) %>% head(20)
 
-clones_NA_resolved[[HH]] %>% filter(locus != "IGH", clone_id_combine == "579_536") %>% count(clone_id_combine, v_call, j_call, junction_length, sort = TRUE)
+# clones_NA_resolved[[HH]] %>% filter(locus != "IGH", clone_id_combine == "579_536") %>% count(clone_id_combine, v_call, j_call, junction_length, sort = TRUE)
 
 # Which cells end up in which subclones?
 df_LC <- resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(cell_id, clone_subgroup_id, v_call, j_call, junction_length)
@@ -698,9 +698,8 @@ table(df_LC$cell_id == df_sp$cell_id)
 # LC <- df_LC %>% mutate(LC_clones = as.character(clone_subgroup_id) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(LC_clones)
 # sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(sp_clones)
 
-LC <- df_LC %>% mutate(LC_clones = as.character(clone_subgroup_id) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(LC_clones)
-sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(sp_clones)
-
+LC <- df_LC %>% pull(clone_subgroup_id)
+sp <- df_sp %>% pull(clone_id_combine)
 
 # Build co-occurrence table
 cooccurrence <- table(LC = LC, sp = sp) %>% as.data.frame()
@@ -730,7 +729,7 @@ cooccurrence %>% mutate(
     title = glue("{HH} clone {top_clone}")
   )
 
-ggsave(glue("45_immcantation/plot/13_compare_methods/{HH}_clone{top_clone}.png"), dpi = 1000, height = 25, width = 25)
+ggsave(glue("45_immcantation/plot/13_compare_methods/{HH}_clone{top_clone}.png"), dpi = 1000, height = 20, width = 20)
 
 
 # Investigate top subclones
