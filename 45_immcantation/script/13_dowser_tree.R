@@ -681,8 +681,10 @@ resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, p
 clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(clone_id_combine) %>% unique() %>% nrow()
 
 # N cells in subclones in top clone
-resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% count(clone_subgroup_id, sort = TRUE)
-clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, sort = TRUE)
+resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% count(clone_subgroup_id, v_call, j_call, junction_length, sort = TRUE) %>% head(20)
+clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, v_call, j_call, junction_length, sort = TRUE) %>% head(20)
+
+clones_NA_resolved[[HH]] %>% filter(locus != "IGH", clone_id_combine == "579_536") %>% count(clone_id_combine, v_call, j_call, junction_length, sort = TRUE)
 
 # Which cells end up in which subclones?
 df_LC <- resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(cell_id, clone_subgroup_id, v_call, j_call, junction_length)
@@ -693,8 +695,12 @@ df_sp <- df_sp %>% arrange(match(cell_id, df_LC$cell_id))
 
 table(df_LC$cell_id == df_sp$cell_id)
 
+# LC <- df_LC %>% mutate(LC_clones = as.character(clone_subgroup_id) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(LC_clones)
+# sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(sp_clones)
+
 LC <- df_LC %>% mutate(LC_clones = as.character(clone_subgroup_id) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(LC_clones)
 sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(sp_clones)
+
 
 # Build co-occurrence table
 cooccurrence <- table(LC = LC, sp = sp) %>% as.data.frame()
