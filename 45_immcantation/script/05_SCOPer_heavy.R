@@ -299,7 +299,7 @@ saveRDS(spec_clones_vj, "45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 # -------------------
 
 # Load data
-# spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
+spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 
 patients <- names(spec_clones_vj)
 
