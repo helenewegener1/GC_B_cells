@@ -685,23 +685,28 @@ resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, p
 clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, sort = TRUE)
 
 # Which cells end up in which subclones?
-df_LC <- resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(clone_subgroup_id, v_call, j_call, junction_length)
-df_sp <- clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(clone_id_combine, v_call, j_call, junction_length)
+df_LC <- resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(cell_id, clone_subgroup_id, v_call, j_call, junction_length)
+df_sp <- clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(cell_id, clone_id_combine, v_call, j_call, junction_length)
+
+LC_cell_id <- df_LC$cell_id
+df_sp <- df_sp %>% arrange(match(cell_id, df_LC$cell_id))
+
+table(df_LC$cell_id == df_sp$cell_id)
 
 LC <- df_LC %>% mutate(LC_clones = as.character(clone_subgroup_id) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(LC_clones)
 sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(sp_clones)
 
 # Build co-occurrence table
 cooccurrence <- table(LC = LC, sp = sp) %>% as.data.frame()
-# cooccurrence <- cooccurrence %>% arrange(desc(Freq)) 
+cooccurrence <- cooccurrence %>% arrange(desc(Freq))
 
-# LC_levels <- cooccurrence$LC %>% unique()
-# sp_levels <- cooccurrence$sp %>% unique()
+LC_levels <- cooccurrence$LC %>% unique()
+sp_levels <- cooccurrence$sp %>% unique()
 
-cooccurrence %>% #mutate(
-#   LC = factor(LC, levels = LC_levels)
-#   # sp = factor(sp, levels = sp_levels)
-# ) %>% 
+cooccurrence %>% mutate(
+  LC = factor(LC, levels = LC_levels),
+  sp = factor(sp, levels = sp_levels)
+) %>%
   ggplot(aes(x = LC, y = sp, fill = Freq)) +
   geom_tile() +
   geom_text(aes(label = Freq), color = "white", size = 3) +
