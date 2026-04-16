@@ -693,15 +693,15 @@ sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_ca
 
 # Build co-occurrence table
 cooccurrence <- table(LC = LC, sp = sp) %>% as.data.frame()
-cooccurrence <- cooccurrence %>% arrange(desc(Freq)) 
+# cooccurrence <- cooccurrence %>% arrange(desc(Freq)) 
 
-LC_levels <- cooccurrence$LC %>% unique()
-sp_levels <- cooccurrence$sp %>% unique()
+# LC_levels <- cooccurrence$LC %>% unique()
+# sp_levels <- cooccurrence$sp %>% unique()
 
-cooccurrence %>% mutate(
-  LC = factor(LC, levels = LC_levels),
-  sp = factor(sp, levels = sp_levels)
-) %>% 
+cooccurrence %>% #mutate(
+#   LC = factor(LC, levels = LC_levels)
+#   # sp = factor(sp, levels = sp_levels)
+# ) %>% 
   ggplot(aes(x = LC, y = sp, fill = Freq)) +
   geom_tile() +
   geom_text(aes(label = Freq), color = "white", size = 3) +
