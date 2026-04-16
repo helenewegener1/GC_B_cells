@@ -153,7 +153,7 @@ for (HH in patients){
       # filter(clone_id == clone) %>%
       mutate(
         sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev(), 
-        clone_subgroup_genes = as.character(clone_subgroup) %>% paste(v_call_majority, j_call_majority, junction_length, sep = "_")
+        clone_subgroup_genes = as.character(clone_subgroup) %>% paste(v_call, j_call, junction_length, sep = "_")
       )
     
     # Meta data
@@ -654,19 +654,34 @@ for (HH in patients){
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-# Compare methods
+# Compare methods (spectralClones on ligth chain VS resolveLigthChains)
 # ------------------------------------------------------------------------------
 
+heavy_clones <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds") # Before subclustering
+clones_NA_resolved <- readRDS("45_immcantation/out/rds/07_clones_combined_NA_resolved.rds")
+resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+
 HH <- "HH117"
+
+# N cells
+heavy_clones[[HH]] %>% nrow()
+clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% nrow()
+resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow() # Too many - what is going on????
 
 top_clone <- clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
 # resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
 
+# N cells in top clone
 heavy_clones[[HH]] %>% filter(clone_id == top_clone) %>% nrow()
 clones_NA_resolved[[HH]] %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
 resolve_LC_list[[HH]]  %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
 
+# N subclones in top clone
+clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(clone_id_combine) %>% unique() %>% nrow()
+resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(clone_subgroup_id) %>% unique() %>% nrow()
 
-heavy_clones[[HH]] %>% nrow()
-clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% nrow()
-resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow() # Too many - what is going on????
+# N cells in subclones in top clone
+clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, sort = TRUE)
+resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% count(clone_subgroup_id, sort = TRUE)
+
+
