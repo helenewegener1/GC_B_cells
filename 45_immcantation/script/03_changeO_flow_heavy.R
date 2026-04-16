@@ -200,7 +200,7 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   # -------------------
   
   seurat_meta <- seurat_obj[[]] %>% 
-    select(cell_id_seurat, celltype_broad, manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID)
+    select(cell_id_seurat, celltype_broad, L1_annotation, manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID)
   
   df <- df %>% left_join(seurat_meta, by = "cell_id_seurat")
   
@@ -233,17 +233,28 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   df$patient_id <- HH
   
   # -------------------
-  # Remove TFH cells and GC B cells from the LP
+  # Remove TFH cells and GC B cells from the LP and contamination 
   # -------------------
   
   LP_samples <- grep("LP", df$sample_clean, value = TRUE) %>% unique()
   
-  # table(df$celltype_broad == "Tfh_like_cells")
-  # table(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  # table(df$L1_annotation == "Tfh_cells")
+  # table(df$L1_annotation == "GC_B_cells" & df$sample_clean %in% LP_samples)
   
-  df <- df %>% filter(
-    (celltype_broad != "Tfh_like_cells") & !(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
-  )
+  # df <- df %>% filter(
+  #   (celltype_broad != "Tfh_like_cells") & !(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  # )
+  # nrow(df)
+  
+  df <- df %>% 
+    mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
+    filter(
+      (L1_annotation != "Tfh_cells"), 
+      !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), 
+      (str_detect(L1_annotation, "Contamination", negate = TRUE))
+    )
+
+  # nrow(df)
   
   # -------------------
   # Return final df
@@ -294,9 +305,9 @@ lapply(patients, function(HH){
   # HH <- "HH119"
   
   bcr_data_qc_annot[[HH]] %>% 
-    ggplot(aes(x = sample_clean, fill = celltype_broad)) + 
+    ggplot(aes(x = sample_clean, fill = L1_annotation)) +
     geom_bar() + 
-    scale_fill_manual(values = celltype_colors) + 
+    scale_fill_manual(values = L1_colors) + 
     theme_bw() + 
     labs(
       x = "", 
@@ -309,9 +320,9 @@ lapply(patients, function(HH){
   
   bcr_data_qc_annot[[HH]] %>% 
     filter(!is.na(manual_ADT_ID)) %>% 
-    ggplot(aes(x = manual_ADT_ID, fill = celltype_broad)) + 
+    ggplot(aes(x = manual_ADT_ID, fill = L1_annotation)) + 
     geom_bar() + 
-    scale_fill_manual(values = celltype_colors) + 
+    scale_fill_manual(values = L1_colors) + 
     theme_bw() + 
     labs(
       x = "", 

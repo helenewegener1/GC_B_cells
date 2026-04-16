@@ -661,7 +661,7 @@ heavy_clones <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds") #
 resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
 clones_NA_resolved <- readRDS("45_immcantation/out/rds/07_clones_combined_NA_resolved.rds")
 
-HH <- "HH117"
+HH <- "HH119"
 
 # N cells
 heavy_clones[[HH]] %>% nrow()
@@ -732,10 +732,5 @@ cooccurrence %>% mutate(
 ggsave(glue("45_immcantation/plot/13_compare_methods/{HH}_clone{top_clone}.png"), dpi = 1000, height = 20, width = 20)
 
 
-# Investigate top subclones
-LC_top_clone <- LC %>% table() %>% which.max() %>% names()
-sp_top_clone <- sp %>% table() %>% which.max() %>% names()
-
-resolve_LC_list[[HH]] %>% filter(locus != "IGH", clone_subgroup_id == LC_top_clone) %>% count(v_call, j_call)
 
 
