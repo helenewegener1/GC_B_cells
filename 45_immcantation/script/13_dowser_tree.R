@@ -658,30 +658,74 @@ for (HH in patients){
 # ------------------------------------------------------------------------------
 
 heavy_clones <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds") # Before subclustering
-clones_NA_resolved <- readRDS("45_immcantation/out/rds/07_clones_combined_NA_resolved.rds")
 resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+clones_NA_resolved <- readRDS("45_immcantation/out/rds/07_clones_combined_NA_resolved.rds")
 
 HH <- "HH117"
 
 # N cells
 heavy_clones[[HH]] %>% nrow()
+resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow() 
 clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% nrow()
-resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow() # Too many - what is going on????
 
 top_clone <- clones_NA_resolved[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
 # resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
 
 # N cells in top clone
 heavy_clones[[HH]] %>% filter(clone_id == top_clone) %>% nrow()
-clones_NA_resolved[[HH]] %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
 resolve_LC_list[[HH]]  %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
+clones_NA_resolved[[HH]] %>% filter(locus == "IGH" & clone_id == top_clone) %>% nrow()
 
 # N subclones in top clone
-clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(clone_id_combine) %>% unique() %>% nrow()
 resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(clone_subgroup_id) %>% unique() %>% nrow()
+clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(clone_id_combine) %>% unique() %>% nrow()
 
 # N cells in subclones in top clone
-clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, sort = TRUE)
 resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% count(clone_subgroup_id, sort = TRUE)
+clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% count(clone_id_combine, sort = TRUE)
+
+# Which cells end up in which subclones?
+df_LC <- resolve_LC_list[[HH]] %>% filter(locus != "IGH", str_starts(clone_subgroup_id, paste0(top_clone, "_"))) %>% select(clone_subgroup_id, v_call, j_call, junction_length)
+df_sp <- clones_NA_resolved[[HH]] %>% filter(locus != "IGH", str_starts(clone_id_combine, paste0(top_clone, "_"))) %>% select(clone_id_combine, v_call, j_call, junction_length)
+
+LC <- df_LC %>% mutate(LC_clones = as.character(clone_subgroup_id) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(LC_clones)
+sp <- df_sp %>% mutate(sp_clones = as.character(clone_id_combine) %>% paste(v_call, j_call, junction_length, sep = "_")) %>% pull(sp_clones)
+
+# Build co-occurrence table
+cooccurrence <- table(LC = LC, sp = sp) %>% as.data.frame()
+cooccurrence <- cooccurrence %>% arrange(desc(Freq)) 
+
+LC_levels <- cooccurrence$LC %>% unique()
+sp_levels <- cooccurrence$sp %>% unique()
+
+cooccurrence %>% mutate(
+  LC = factor(LC, levels = LC_levels),
+  sp = factor(sp, levels = sp_levels)
+) %>% 
+  ggplot(aes(x = LC, y = sp, fill = Freq)) +
+  geom_tile() +
+  geom_text(aes(label = Freq), color = "white", size = 3) +
+  scale_fill_viridis_c() +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  scale_fill_gradient(low = "white", high = "#0d2a4e",
+                      limits = c(0, NA)) +
+  labs(
+    x = "LC (resolveLightChains)",
+    y = "sp (spectralClones)",
+    fill = "N cells",
+    title = glue("{HH} clone {top_clone}")
+  )
+
+ggsave(glue("45_immcantation/plot/13_compare_methods/{HH}_clone{top_clone}.png"), dpi = 1000, height = 25, width = 25)
+
+
+# Investigate top subclones
+LC_top_clone <- LC %>% table() %>% which.max() %>% names()
+sp_top_clone <- sp %>% table() %>% which.max() %>% names()
+
+resolve_LC_list[[HH]] %>% filter(locus != "IGH", clone_subgroup_id == LC_top_clone) %>% count(v_call, j_call)
 
 
