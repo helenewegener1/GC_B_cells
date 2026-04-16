@@ -45,15 +45,9 @@ patients <- names(resolve_LC_list)
 
 top_GC_clones_vj <- lapply(patients, function(HH) {
 
-  # # find clones that contain at least 1 GC cell
-  # GC_clones <- resolve_LC_list[[HH]] %>%
-  #   filter(celltype_broad == "GC_B_cells") %>%
-  #   pull(clone_id) %>%
-  #   unique()
-
   # find clones that have GC cells in at least 2 different sample_ids
   GC_clones <- resolve_LC_list[[HH]] %>%
-    filter(celltype_broad == "GC_B_cells") %>%
+    filter(L1_annotation == "GC_B_cells") %>%
     group_by(clone_id) %>%
     summarise(n_samples = n_distinct(sample_clean_fol)) %>%
     filter(n_samples >= 2) %>%
@@ -164,14 +158,14 @@ for (HH in patients){
     # Plot data
     plot_df <- df %>% 
       filter(locus != "IGH") %>% 
-      count(clone_subgroup_genes, celltype_broad, sort = TRUE)
+      count(clone_subgroup_genes, L1_annotation, sort = TRUE)
 
     plot_df %>%
       mutate(clone_subgroup_genes = fct_reorder(
         clone_subgroup_genes,
         as.numeric(str_extract(clone_subgroup_genes, "^\\d+"))
       )) %>% 
-      ggplot(aes(y = clone_subgroup_genes, x = celltype_broad, fill = n)) +
+      ggplot(aes(y = clone_subgroup_genes, x = L1_annotation, fill = n)) +
       geom_tile(color = "white", linewidth = 0.3) +
       geom_text(aes(label = ifelse(n > 0, n, "")),
                 color = "white", size = 2.5) +
@@ -209,7 +203,7 @@ top_GC_subclones_vj <- lapply(patients, function(HH) {
   
   # find clones that have GC cells in at least 2 different sample_ids
   GC_clones <- resolve_LC_list[[HH]] %>%
-    filter(celltype_broad == "GC_B_cells") %>%
+    filter(L1_annotation == "GC_B_cells") %>%
     group_by(clone_subgroup_id) %>%
     summarise(n_samples = n_distinct(sample_clean_fol)) %>%
     filter(n_samples >= 2) %>%
@@ -240,28 +234,28 @@ top_GC_subclones_vj <- lapply(patients, function(HH) {
 # resolve_LC_list_germlined <- list()
 # 
 # for (HH in patients){
-#   
+# 
 #   HH_spec_clones_vj <- resolve_LC_list[[HH]]
-#   
-#   HH_spec_clones_vj <- HH_spec_clones_vj %>% 
+# 
+#   HH_spec_clones_vj <- HH_spec_clones_vj %>%
 #     mutate(
 #       v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
 #     ) %>%
 #     mutate(
 #       j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
 #     )
-#   
+# 
 #   # remove germline alignment columns for this example
 #   db <- select(HH_spec_clones_vj, -"germline_alignment", -"germline_alignment_d_mask")
-#   
+# 
 #   # Reconstruct germline sequences
 #   HH_spec_clones_vj <- createGermlines(db, references, nproc=1, clone = "clone_subgroup_id")
-#   
+# 
 #   # Check germline of first row
 #   HH_spec_clones_vj$germline_alignment_d_mask[1]
-#   
+# 
 #   resolve_LC_list_germlined[[HH]] <- HH_spec_clones_vj
-#   
+# 
 # }
 # 
 # saveRDS(resolve_LC_list_germlined, "45_immcantation/out/rds/resolve_LC_list_germlined.rds")
@@ -278,6 +272,7 @@ resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_ge
 source("10_broad_annotation/script/color_palette.R")
 library(scatterpie)
 library(ggtree)
+library(patchwork)
 
 clone_nrs <- 1:5
 # clone_nrs <- 2:5
@@ -286,12 +281,13 @@ versions <- c("all cells", "only GCs")
 
 for (HH in patients){
   
+  # HH <- "HH117"
   HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
   
   for (clone_nr in clone_nrs){
     
     # Top clone
-    # clone_nr <- 2
+    # clone_nr <- 1
     clone <- top_GC_subclones_vj[[HH]][[clone_nr]]
     
     # Subset data for this example
@@ -311,7 +307,7 @@ for (HH in patients){
       } else if (version == "only GCs"){
         
         HH_spec_clones_vj_clone <- HH_spec_clones_vj %>%
-          filter(clone_subgroup_id == clone & celltype_broad == "GC_B_cells") 
+          filter(clone_subgroup_id == clone & L1_annotation == "GC_B_cells") 
         
         outdir <- "45_immcantation/plot/13_dowser_resolve_LC_only_GCs"
         dir.create(outdir, recursive = TRUE)
@@ -320,8 +316,8 @@ for (HH in patients){
       
       # Meta data
       n_cells <- HH_spec_clones_vj_clone %>% pull(cell_id) %>% unique() %>% length()
-      v_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(v_gene) %>% unique()
-      j_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(j_gene) %>% unique()
+      v_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(v_call_majority) %>% unique()
+      j_gene <- HH_spec_clones_vj_clone %>% filter(locus == "IGH") %>% pull(j_call_majority) %>% unique()
       
       # Add count for identical clones - used for tipsize of tree
       HH_spec_clones_vj_clone <- HH_spec_clones_vj_clone %>%
@@ -333,7 +329,7 @@ for (HH in patients){
       clones <- formatClones(
         HH_spec_clones_vj_clone,
         clone = "clone_subgroup_id",
-        text_fields = c("c_call", "celltype_broad", "sample_clean_fol"),
+        text_fields = c("c_call", "L1_annotation", "sample_clean_fol"),
         num_fields=c("n_identical"),
         chain = "HL",
         light_traits = TRUE
@@ -374,23 +370,22 @@ for (HH in patients){
         plot_annotation(
           title = glue("{HH} {version}: Clone number {clone_nr} ({clone})"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-        )
-      
-      # TRY TO ADD THIS FOR LARGER COLORS DOTS IN THE LEGEND
-      # guides(color = guide_legend(override.aes = list(size = 4))) +
+        ) + 
+        guides(color = guide_legend(override.aes = list(size = 4))) 
       
       ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
       
       plotTrees(
         clones,
-        tips="celltype_broad",
+        tips="L1_annotation",
         tipsize="n_identical",
         title = FALSE
       )[[1]] +
         plot_annotation(
           title = glue("{HH}: Clone number {clone_nr} ({clone}_1)"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-        )
+        ) + 
+        guides(color = guide_legend(override.aes = list(size = 4)))
       
       # # extract node data
       # node_data <- p$data %>%
@@ -421,7 +416,8 @@ for (HH in patients){
           plot_annotation(
             title = glue("{HH}: Clone number {clone_nr} ({clone})"),
             subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-          )
+          ) + 
+          guides(color = guide_legend(override.aes = list(size = 4)))
         
         ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol.png"), width = width, height = height, dpi = 1000)
         
@@ -437,7 +433,7 @@ for (HH in patients){
         tree_data <- tree_data %>%
           left_join(
             HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
-                                               celltype_broad, n_identical, sequence_alignment),
+                                               L1_annotation, n_identical, sequence_alignment),
             by = c("label" = "sequence_id")
           )
         
@@ -446,7 +442,7 @@ for (HH in patients){
           ggplot(aes(x = x, y = y)) +
           geom_tree() +
           geom_tippoint(aes(color = sample_clean_fol,
-                            shape = celltype_broad,
+                            shape = L1_annotation,
                             size = n_identical)) +
           scale_size_continuous(
             range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
@@ -456,6 +452,10 @@ for (HH in patients){
             color = "Sample", shape = "Cell type", size = "N identical",
             title = glue("{HH}: Clone number {clone_nr} ({clone})"),
             subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+          ) + 
+          guides(
+            color = guide_legend(override.aes = list(size = 4)),
+            shape = guide_legend(override.aes = list(size = 4))
           )
         
         ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
@@ -476,16 +476,16 @@ for (HH in patients){
 clone_nrs <- 1:5
 # clone_nrs <- 2:5
 
-# Get non-follcile samples
-sample_names <- HH_spec_clones_vj$sample_clean_fol %>% unique()
-non_fol_samples <- sample_names[!str_detect(sample_names, "Fol")]
-
-# Get follicle sample names 
-follicle_sample_names <- sample_names[str_detect(sample_names, "Fol")]
-
 for (HH in patients){
   
   HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
+  
+  # Get non-follcile samples
+  sample_names <- HH_spec_clones_vj$sample_clean_fol %>% unique()
+  non_fol_samples <- sample_names[!str_detect(sample_names, "Fol")]
+  
+  # Get follicle sample names 
+  follicle_sample_names <- sample_names[str_detect(sample_names, "Fol")]
   
   for (clone_nr in clone_nrs){
     
@@ -536,13 +536,13 @@ for (HH in patients){
         HH_spec_clones_vj_clone,
         clone = "clone_subgroup_id",
         # clone = "clone_id",
-        text_fields = c("c_call", "celltype_broad", "sample_clean_fol"),
+        text_fields = c("c_call", "L1_annotation", "sample_clean_fol"),
         num_fields=c("n_identical"),
         chain = "HL",
         light_traits = TRUE
       )
       
-      if (nrow(clones) == 0){
+      if (nrow(clones) <= 1){
         next
       }
       
@@ -581,6 +581,9 @@ for (HH in patients){
         plot_annotation(
           title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+        ) + 
+        guides(
+          color = guide_legend(override.aes = list(size = 4))
         )
       
       ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_c_call.png"), width = width, height = height, dpi = 1000)
@@ -620,7 +623,7 @@ for (HH in patients){
       tree_data <- tree_data %>%
         left_join(
           HH_spec_clones_vj_clone %>% select(sequence_id, sample_clean_fol,
-                                             celltype_broad, n_identical, sequence_alignment),
+                                             L1_annotation, n_identical, sequence_alignment),
           by = c("label" = "sequence_id")
         )
       
@@ -629,7 +632,7 @@ for (HH in patients){
         ggplot(aes(x = x, y = y)) +
         geom_tree() +
         geom_tippoint(aes(color = sample_clean_fol,
-                          shape = celltype_broad,
+                          shape = L1_annotation,
                           size = n_identical)) +
         # scale_size_continuous(
         #   range = c(2, 8), breaks = scales::breaks_width(1)  # only whole number breaks
@@ -639,7 +642,11 @@ for (HH in patients){
           color = "Sample", shape = "Cell type", size = "N identical",
           title = glue("{HH} {sample_name}: Clone number {clone_nr} ({clone})"),
           subtitle = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
-        ) 
+        ) + 
+        guides(
+          color = guide_legend(override.aes = list(size = 4)),
+          shape = guide_legend(override.aes = list(size = 4))
+        )
       
       ggsave(glue("{outdir}/{HH}_dowser_tree_clone_{clone_nr}_sample_clean_fol_celltype.png"), width = width, height = height, dpi = 1000)
       

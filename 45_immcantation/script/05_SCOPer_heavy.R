@@ -389,7 +389,7 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_top_clones <- top_GC_clones_vj[[HH]]
   
   n_clones <- length(HH_top_clones)
@@ -401,17 +401,20 @@ for (HH in patients){
     group_by(clone_id, c_call) %>%
     summarise(Count = n(), .groups = "drop") %>%
     complete(clone_id, c_call, fill = list(Count = 0)) %>% 
+    group_by(clone_id) %>%
+    mutate(Pct = Count / sum(Count) * 100) %>%
+    ungroup() %>%
     mutate(clone_id = factor(clone_id, HH_top_clones)) %>% 
-    ggplot(aes(x = clone_id, y = c_call, fill = Count)) +
+    ggplot(aes(x = clone_id, y = c_call, fill = Pct)) +
     geom_tile(color = "white", linewidth = 0.3) +
-    geom_text(aes(label = ifelse(Count > 0, Count, "")),
+    geom_text(aes(label = ifelse(Pct > 0, sprintf("%.1f%%", Pct), "")),
               color = "white", size = 2.5) +
     scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
-                        limits = c(0, NA)) +
+                        limits = c(0, 100)) +
     labs(
       x = "Clone ID",
       y = "Ig Class",
-      fill = "Count",
+      fill = "% per clone",
       title = glue("{HH}: Top {n_clones} GCB clone spec_vj")
     ) +
     theme_minimal() +
@@ -420,10 +423,10 @@ for (HH in patients){
       axis.text.y = element_text(size = 9),
       panel.grid = element_blank(),
       strip.text = element_text(size = 9, face = "bold"),
-      legend.position = "right"
+      legend.position = "none"
     )
   
-  ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_heatmap_across_clones_and_isotypes.png"), width = 8, height = 4.5, dpi = 1000)
+  ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_heatmap_across_clones_and_isotypes.png"), width = 6, height = 4.5, dpi = 1000)
   
   for (clone_nr in 1:length(HH_top_clones)){
     
