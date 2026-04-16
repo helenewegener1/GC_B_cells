@@ -299,7 +299,7 @@ saveRDS(spec_clones_vj, "45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 # -------------------
 
 # Load data
-spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
+# spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 
 patients <- names(spec_clones_vj)
 
@@ -389,8 +389,41 @@ source("10_broad_annotation/script/color_palette.R")
 
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_top_clones <- top_GC_clones_vj[[HH]]
+  
+  n_clones <- length(HH_top_clones)
+  
+  # Heatmap of sample_clean_fol and c_call (Isotype)
+  spec_clones_vj[[HH]] %>% 
+    filter(clone_id %in% HH_top_clones) %>% 
+    mutate(c_call = ifelse(c_call == "", NA, c_call)) %>%
+    group_by(clone_id, c_call) %>%
+    summarise(Count = n(), .groups = "drop") %>%
+    complete(clone_id, c_call, fill = list(Count = 0)) %>% 
+    mutate(clone_id = factor(clone_id, HH_top_clones)) %>% 
+    ggplot(aes(x = clone_id, y = c_call, fill = Count)) +
+    geom_tile(color = "white", linewidth = 0.3) +
+    geom_text(aes(label = ifelse(Count > 0, Count, "")),
+              color = "white", size = 2.5) +
+    scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                        limits = c(0, NA)) +
+    labs(
+      x = "Clone ID",
+      y = "Ig Class",
+      fill = "Count",
+      title = glue("{HH}: Top {n_clones} GCB clone spec_vj")
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+      axis.text.y = element_text(size = 9),
+      panel.grid = element_blank(),
+      strip.text = element_text(size = 9, face = "bold"),
+      legend.position = "right"
+    )
+  
+  ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_heatmap_across_clones_and_isotypes.png"), width = 8, height = 4.5, dpi = 1000)
   
   for (clone_nr in 1:length(HH_top_clones)){
     
@@ -409,9 +442,9 @@ for (HH in patients){
     
     # Color by cell type
     plot_df %>%   
-      ggplot(aes(y = sample_clean_fol, fill = celltype_broad)) +
+      ggplot(aes(y = sample_clean_fol, fill = L1_annotation)) +
       geom_bar() + 
-      scale_fill_manual(values = celltype_colors) + 
+      scale_fill_manual(values = L1_colors) + 
       geom_text(aes(x = Count, label = Count), 
                 hjust = -0.2, color = "black",
                 stat = "unique") +
@@ -428,9 +461,9 @@ for (HH in patients){
     # Heatmap of sample_clean_fol and c_call (Isotype) and celltype
     plot_df %>%
       mutate(c_call = ifelse(c_call == "", NA, c_call)) %>%
-      group_by(sample_clean_fol, c_call, celltype_broad) %>%
+      group_by(sample_clean_fol, c_call, L1_annotation) %>%
       summarise(Count = n(), .groups = "drop") %>%
-      complete(sample_clean_fol, c_call, celltype_broad, 
+      complete(sample_clean_fol, c_call, L1_annotation, 
                fill = list(Count = 0)) %>%
       ggplot(aes(x = sample_clean_fol, y = c_call, fill = Count)) +
       geom_tile(color = "white", linewidth = 0.3) +
@@ -438,7 +471,7 @@ for (HH in patients){
                 color = "white", size = 2.5) +
       scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
                           limits = c(0, NA)) +
-      facet_wrap(~ celltype_broad, nrow = 2) +
+      facet_wrap(~ L1_annotation, nrow = 2) +
       labs(
         x = NULL,
         y = "Ig Class",
@@ -462,6 +495,165 @@ for (HH in patients){
       ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 20, height = 8, dpi = 1000)
     } else {
       ggsave(glue("45_immcantation/plot/GC_clones_spec_vj/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 8, height = 6, dpi = 1000)
+    }
+    
+  }
+}
+
+# ------------------------------------------------------------------------------
+# Clones (Not GC specific)
+# ------------------------------------------------------------------------------
+
+# -------------------
+# Define top clones vj
+# -------------------
+
+top_clones_vj <- lapply(patients, function(HH) {
+  
+  # find clones that have GC cells in at least 2 different sample_ids
+  clones <- spec_clones_vj[[HH]] %>%
+    count(clone_id, sort = TRUE) %>%
+    pull(clone_id)
+  
+  # rank those clones by total size (all cell types) and take top 10
+  spec_clones_vj[[HH]] %>%
+    filter(clone_id %in% clones) %>%
+    count(clone_id, sort = TRUE) %>%
+    slice_head(n = 10) %>%
+    pull(clone_id)
+  
+}) %>% setNames(patients)
+
+# -------------------
+# Look at top clones vj
+# -------------------
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  # HH <- "HH117"
+  
+  spec_clones_vj[[HH]] %>% 
+    filter(clone_id %in% top_clones_vj[[HH]]) %>% 
+    # count(clone_id, v_gene, j_gene, sort = TRUE)
+    count(clone_id, v_call_majority, j_call_majority, sort = TRUE) 
+  
+}) %>% setNames(patients)
+
+# -------------------
+# Visualize top clones vj
+# -------------------
+
+source("10_broad_annotation/script/color_palette.R")
+
+for (HH in patients){
+  
+  # HH <- "HH117"
+  HH_top_clones <- top_clones_vj[[HH]]
+  
+  n_clones <- length(HH_top_clones)
+  
+  # Heatmap of sample_clean_fol and c_call (Isotype)
+  spec_clones_vj[[HH]] %>% 
+    filter(clone_id %in% HH_top_clones) %>% 
+    mutate(c_call = ifelse(c_call == "", NA, c_call)) %>%
+    group_by(clone_id, c_call) %>%
+    summarise(Count = n(), .groups = "drop") %>%
+    complete(clone_id, c_call, fill = list(Count = 0)) %>% 
+    mutate(clone_id = factor(clone_id, HH_top_clones)) %>% 
+    ggplot(aes(x = clone_id, y = c_call, fill = Count)) +
+    geom_tile(color = "white", linewidth = 0.3) +
+    geom_text(aes(label = ifelse(Count > 0, Count, "")),
+              color = "white", size = 2.5) +
+    scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                        limits = c(0, NA)) +
+    labs(
+      x = "Clone ID",
+      y = "Ig Class",
+      fill = "Count",
+      title = glue("{HH}: Top {n_clones} clone spec_vj")
+    ) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+      axis.text.y = element_text(size = 9),
+      panel.grid = element_blank(),
+      strip.text = element_text(size = 9, face = "bold"),
+      legend.position = "right"
+    )
+  
+  ggsave(glue("45_immcantation/plot/clones_spec_vj/{HH}_heatmap_across_clones_and_isotypes.png"), width = 8, height = 4.5, dpi = 1000)
+  
+  for (clone_nr in 1:length(HH_top_clones)){
+    
+    # clone_nr <- 1
+    clone <- HH_top_clones[clone_nr]
+    
+    plot_df <- spec_clones_vj[[HH]] %>% 
+      filter(clone_id == clone) %>% 
+      mutate(sample_clean_fol = fct_infreq(sample_clean_fol) %>% fct_rev()) %>%
+      add_count(sample_clean_fol, name = "Count")
+    
+    # Meta data
+    n_cells <- plot_df %>% nrow()
+    v_gene <- plot_df$v_call_majority %>% unique()
+    j_gene <- plot_df$j_call_majority %>% unique()
+    
+    # Color by cell type
+    plot_df %>%   
+      ggplot(aes(y = sample_clean_fol, fill = L1_annotation)) +
+      geom_bar() + 
+      scale_fill_manual(values = L1_colors) + 
+      geom_text(aes(x = Count, label = Count), 
+                hjust = -0.2, color = "black",
+                stat = "unique") +
+      labs(
+        title = glue("{HH}: Top {clone_nr} clone spec_vj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
+        y = ""
+      ) +
+      theme_bw()
+    
+    ggsave(glue("45_immcantation/plot/clones_spec_vj/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5)
+    
+    # Heatmap of sample_clean_fol and c_call (Isotype) and celltype
+    plot_df %>%
+      mutate(c_call = ifelse(c_call == "", NA, c_call)) %>%
+      group_by(sample_clean_fol, c_call, L1_annotation) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      complete(sample_clean_fol, c_call, L1_annotation, 
+               fill = list(Count = 0)) %>%
+      ggplot(aes(x = sample_clean_fol, y = c_call, fill = Count)) +
+      geom_tile(color = "white", linewidth = 0.3) +
+      geom_text(aes(label = ifelse(Count > 0, Count, "")),
+                color = "white", size = 2.5) +
+      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                          limits = c(0, NA)) +
+      facet_wrap(~ L1_annotation, nrow = 2) +
+      labs(
+        x = NULL,
+        y = "Ig Class",
+        fill = "Count",
+        title = glue("{HH}: Top {clone_nr} clone spec_vj"),
+        subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}")
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 9),
+        panel.grid = element_blank(),
+        strip.text = element_text(size = 9, face = "bold"),
+        legend.position = "right"
+      )
+    
+    n_samples <- plot_df$sample_clean_fol %>% unique() %>% length()
+    
+    if (n_samples > 8){
+      ggsave(glue("45_immcantation/plot/clones_spec_vj/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 20, height = 8, dpi = 1000)
+    } else {
+      ggsave(glue("45_immcantation/plot/clones_spec_vj/{HH}_clone_nr_{clone_nr}_heatmap_across_samples_and_isotypes_and_celltype.png"), width = 8, height = 6, dpi = 1000)
     }
     
   }
