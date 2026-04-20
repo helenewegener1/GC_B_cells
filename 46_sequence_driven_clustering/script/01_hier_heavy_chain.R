@@ -60,6 +60,7 @@ spec_clones_vj_HH_heavy$j_call %>% str_split_i("\\*", 1) %>% table() %>% sort()
 # N V genes
 spec_clones_vj_HH_heavy %>% count(v_call, sort = TRUE)
 spec_clones_vj_HH_heavy$v_call %>% str_split_i("\\*", 1) %>% table() %>% sort()
+spec_clones_vj_HH_heavy$v_call %>% str_split_i("-", 1) %>% table() %>% sort()
 
 # Subset randomly
 seq_names <- spec_clones_vj_HH_heavy$sequence_id %>% sample(500)
