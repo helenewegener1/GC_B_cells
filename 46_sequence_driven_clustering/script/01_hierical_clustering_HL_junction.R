@@ -6,7 +6,7 @@ library(treeio)
 library(RColorBrewer)
 library(fastcluster)
 
-version <- "ligth_chain_full_seq"
+version <- "ligth_chain_junction"
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -75,8 +75,8 @@ spec_clones_vj_HH %>% filter(clone_id == top_clones & locus == "IGH") %>% nrow()
 # seqs <- spec_clones_vj_HH %>% filter(str_detect(v_call_majority, v_gene_regex), str_detect(j_call_majority, j_gene_regex)) %>% pull(sequence)
 # seq_names <- spec_clones_vj_HH %>% filter(str_detect(v_call_majority, v_gene_regex), str_detect(j_call_majority, j_gene_regex)) %>% pull(sequence_id)
 
-seqs <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(sequence)
-seq_names <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(sequence_id)
+seqs <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(junction)
+# seq_names <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(junction)
 
 seqs %>% length()
 seqs %>% unique() %>% length()
@@ -88,8 +88,7 @@ map(seqs, nchar) %>% unlist() %>% table()
 seqs_meta <- spec_clones_vj_HH %>% 
   filter(clone_id == top_clones & locus != "IGH") %>% 
   mutate(
-    label = sequence_id, 
-    junction_length = as.character(junction_length)
+    label = junction, 
   ) %>% 
   select(label, everything()) %>% # Move label to front
   as.data.frame()
@@ -102,8 +101,7 @@ seqs_meta$clone_subgroup_id %>% table()
 # Compute Levenshtein as sequences are not of the same length
 # ------------------------------------------------------------------------------
 
-# 'lv' is Levenshtein; 'qgram' or 'jaccard' are faster alternatives
-dist_matrix <- stringdistmatrix(seqs, seqs, method = "lv")
+dist_matrix <- stringdistmatrix(seqs_meta$junction, method = "lv")
 
 # Convert to full matrix first
 dist_mat <- as.matrix(dist_matrix)
@@ -120,7 +118,6 @@ dist_matrix_norm <- as.dist(dist_mat_norm)
 # Hierarchical Clustering
 # ------------------------------------------------------------------------------
 
-# fit <- hclust(as.dist(dist_matrix), method = "complete")
 fit <- hclust(as.dist(dist_matrix_norm), method = "complete")
 
 # ------------------------------------------------------------------------------
@@ -131,8 +128,8 @@ fit <- hclust(as.dist(dist_matrix_norm), method = "complete")
 tree_phylo <- as.phylo(fit)
 
 length(tree_phylo$tip.label)
-length(seq_names)
-tree_phylo$tip.label <- seq_names
+length(seqs)
+tree_phylo$tip.label <- seqs
 
 # Plot the tree using a 'fan' layout (best for high density)
 # 'mapping' connects the tree tips to your metadata
