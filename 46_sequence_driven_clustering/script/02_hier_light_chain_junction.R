@@ -107,8 +107,8 @@ dist_matrix <- stringdistmatrix(seqs_meta$junction, method = "lv")
 dist_mat <- as.matrix(dist_matrix)
 
 # Normalize by the longer of the two sequences
-junction_lengths <- nchar(seqs_meta$junction)
-length_mat <- outer(junction_lengths, junction_lengths, pmax)
+lengths <- nchar(seqs_meta$junction)
+length_mat <- outer(lengths, lengths, pmax)
 dist_mat_norm <- dist_mat / length_mat
 
 # Convert back to dist object for hclust
@@ -233,6 +233,18 @@ ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta +
 
 ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_gene_clan.png"), width = 9, height = 6.5, dpi = 1000)
 
+# Color by v_gene_subgroup
+ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
+  geom_tippoint(aes(color = v_gene_subgroup), size=1, alpha=0.8) +
+  theme_tree2() + 
+  guides(color = guide_legend(override.aes = list(size = 6))) +
+  # theme(legend.position = "none") + 
+  labs(title = glue("{HH} H clone {top_clones}"),
+       subtitle = version)
+
+ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_gene_subgroup.png"), width = 9, height = 6.5, dpi = 1000)
+
+
 # Color by locus
 ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
   geom_tippoint(aes(color = locus), size=1, alpha=0.8) +
@@ -267,39 +279,16 @@ ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta +
 
 ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_j_gene.png"), width = 9, height = 6.5, dpi = 1000)
 
-# # Color by V call
-# ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
-#   geom_tippoint(aes(color = v_call), size=0.5, alpha=0.8) +
-#   theme_tree2() + 
-#   guides(color = guide_legend(override.aes = list(size = 4))) +
-#   # theme(legend.position = "none") + 
-#   labs(title = glue("{HH} H clone {top_clones}"))
-# 
-# ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_call.png"), width = 18, height = 16, dpi = 1000)
-
-# # Color by v_j_junction
-# ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
-#   geom_tippoint(aes(color = v_j_junction), size=1, alpha=0.8) +
-#   theme_tree2() + 
-#   guides(color = guide_legend(override.aes = list(size = 6))) +
-#   theme(legend.position = "none") + 
-#   # theme(legend.position = "none") + 
-#   labs(title = glue("{HH} H clone {top_clones}"),
-#        subtitle = version)
-# 
-# ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_j_junction.png"), width = 9, height = 6.5, dpi = 1000)
-
-
-# Color by V gene
+# Color by j_gene_subgroup
 ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
-  geom_tippoint(aes(color = v_gene), size=1, alpha=0.8) +
+  geom_tippoint(aes(color = j_gene_subgroup), size=1, alpha=0.8) +
   theme_tree2() + 
   guides(color = guide_legend(override.aes = list(size = 6))) +
   # theme(legend.position = "none") + 
   labs(title = glue("{HH} H clone {top_clones}"),
        subtitle = version)
 
-ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_gene.png"), width = 9, height = 6.5, dpi = 1000)
+ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_j_gene_subgroup.png"), width = 9, height = 6.5, dpi = 1000)
 
 
 
