@@ -97,14 +97,41 @@ tree_phylo$tip.label <- seq_names
 ## N clones in this pool of sequences
 n_clones <- seqs_meta$clone_id %>% unique() %>% length()
 
+# N j_calls
+
+# N v_calls
+
+v_gene_clans <- c(
+  "IGKV1" = "K_clan_1",
+  "IGKV2" = "K_clan_2", "IGKV3" = "K_clan_2", "IGKV4" = "K_clan_2", "IGKV6" = "K_clan_2",
+  "IGKV5" = "K_clan_3", "IGKV7" = "K_clan_3",
+  "IGLV1" = "L_clan_1", "IGLV2" = "L_clan_1", "IGLV6" = "L_clan_1", "IGLV10" = "L_clan_1",
+  "IGLV3" = "L_clan_2",
+  "IGLV7" = "L_clan_3", "IGLV8" = "L_clan_3",
+  "IGLV5" = "L_clan_4", "IGLV11" = "L_clan_4",
+  "IGLV4" = "L_clan_5", "IGLV9" = "L_clan_5",
+  "IGHV" = 
+)
+
+
 ## Wrangle metadata to only color the top 10 clones
 seqs_meta <- seqs_meta %>% 
   mutate(
-    clone_id_top_10 = ifelse(clone_id %in% top_clones, clone_id, "other"), 
-    v_gene = v_call_majority %>% str_split_i(",", 1) %>% str_split_i("\\*", 1),
-    j_gene = j_call_majority %>% str_split_i(",", 1) %>% str_split_i("\\*", 1), 
-    v_j_junction = paste(v_gene, j_gene, junction_length, sep = "_")
+    # clone_id_top = ifelse(clone_subgroup_id %in% top_subclones, paste(clone_subgroup_id, v_gene, j_gene, junction_length, sep = "_"), "other"),
+    clone_id_top = ifelse(clone_subgroup_id %in% top_subclones, clone_subgroup_id, "other"),
+    v_gene = v_call %>% str_split_i(",", 1) %>% str_split_i("\\*", 1),
+    j_gene = j_call %>% str_split_i(",", 1) %>% str_split_i("\\*", 1), 
+    v_j_junction = paste(v_gene, j_gene, junction_length, sep = "_"), 
+    v_gene_subgroup = v_gene %>% str_split_i("-", 1),
+    j_gene_subgroup = j_gene %>% str_split_i("-", 1), 
+    v_gene_clan = coalesce(v_gene_clans[v_gene_subgroup], v_gene_subgroup)
   )
+
+seqs_meta$clone_id_top %>% table(useNA = "always") 
+# top_clones_names <- seqs_meta$clone_id_top %>% table() %>% names()
+
+seqs_meta$v_gene_clan %>% table(useNA = "always") 
+
 
 seqs_meta$clone_id_top_10 %>% table(useNA = "always") 
 

@@ -6,7 +6,7 @@ library(treeio)
 library(RColorBrewer)
 library(fastcluster)
 
-version <- "ligth_chain_full_seq"
+version <- "ligth_chain_junction"
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -54,7 +54,7 @@ spec_clones_vj_HH %>%
   count(clone_subgroup_id, sort = TRUE)
 
 # Get top clones
-top_clones <- spec_clones_vj_HH %>% count(clone_id, sort = TRUE) %>% head(n = 1) %>% pull(clone_id)
+top_clones <- spec_clones_vj_HH %>% count(clone_id, sort = TRUE) %>% slice(2) %>% pull(clone_id)
 
 # Check N cells in top clones
 spec_clones_vj_HH %>% filter(clone_id == top_clones & locus == "IGH") %>% nrow()
@@ -75,8 +75,8 @@ spec_clones_vj_HH %>% filter(clone_id == top_clones & locus == "IGH") %>% nrow()
 # seqs <- spec_clones_vj_HH %>% filter(str_detect(v_call_majority, v_gene_regex), str_detect(j_call_majority, j_gene_regex)) %>% pull(sequence)
 # seq_names <- spec_clones_vj_HH %>% filter(str_detect(v_call_majority, v_gene_regex), str_detect(j_call_majority, j_gene_regex)) %>% pull(sequence_id)
 
-seqs <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(sequence)
-seq_names <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(sequence_id)
+seqs <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(junction)
+# seq_names <- spec_clones_vj_HH %>% filter(clone_id == top_clones & locus != "IGH") %>% pull(junction)
 
 seqs %>% length()
 seqs %>% unique() %>% length()
@@ -88,8 +88,7 @@ map(seqs, nchar) %>% unlist() %>% table()
 seqs_meta <- spec_clones_vj_HH %>% 
   filter(clone_id == top_clones & locus != "IGH") %>% 
   mutate(
-    label = sequence_id, 
-    junction_length = as.character(junction_length)
+    label = junction, 
   ) %>% 
   select(label, everything()) %>% # Move label to front
   as.data.frame()
@@ -102,8 +101,7 @@ seqs_meta$clone_subgroup_id %>% table()
 # Compute Levenshtein as sequences are not of the same length
 # ------------------------------------------------------------------------------
 
-# 'lv' is Levenshtein; 'qgram' or 'jaccard' are faster alternatives
-dist_matrix <- stringdistmatrix(seqs, seqs, method = "lv")
+dist_matrix <- stringdistmatrix(seqs_meta$junction, method = "lv")
 
 # Convert to full matrix first
 dist_mat <- as.matrix(dist_matrix)
@@ -120,7 +118,6 @@ dist_matrix_norm <- as.dist(dist_mat_norm)
 # Hierarchical Clustering
 # ------------------------------------------------------------------------------
 
-# fit <- hclust(as.dist(dist_matrix), method = "complete")
 fit <- hclust(as.dist(dist_matrix_norm), method = "complete")
 
 # ------------------------------------------------------------------------------
@@ -131,8 +128,8 @@ fit <- hclust(as.dist(dist_matrix_norm), method = "complete")
 tree_phylo <- as.phylo(fit)
 
 length(tree_phylo$tip.label)
-length(seq_names)
-tree_phylo$tip.label <- seq_names
+length(seqs)
+tree_phylo$tip.label <- seqs
 
 # Plot the tree using a 'fan' layout (best for high density)
 # 'mapping' connects the tree tips to your metadata
@@ -185,13 +182,13 @@ seqs_meta <- seqs_meta %>%
     v_j_junction = paste(v_gene, j_gene, junction_length, sep = "_"), 
     v_gene_subgroup = v_gene %>% str_split_i("-", 1),
     j_gene_subgroup = j_gene %>% str_split_i("-", 1), 
-    v_gene_clade = coalesce(v_gene_clans[v_gene_subgroup], v_gene_subgroup)
+    v_gene_clan = coalesce(v_gene_clans[v_gene_subgroup], v_gene_subgroup)
   )
 
 seqs_meta$clone_id_top %>% table(useNA = "always") 
 # top_clones_names <- seqs_meta$clone_id_top %>% table() %>% names()
 
-seqs_meta$v_gene_clade %>% table(useNA = "always") 
+seqs_meta$v_gene_clan %>% table(useNA = "always") 
 
 clone_colors <- setNames(
   c("#E63946",  
@@ -225,16 +222,16 @@ ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta +
 
 ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_clone_ID_fan.png"), width = 9, height = 6.5, dpi = 1000)
 
-# Color by v_gene_clade
+# Color by v_gene_clan
 ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
-  geom_tippoint(aes(color = v_gene_clade), size=1, alpha=0.8) +
+  geom_tippoint(aes(color = v_gene_clan), size=1, alpha=0.8) +
   theme_tree2() + 
   guides(color = guide_legend(override.aes = list(size = 6))) +
   # theme(legend.position = "none") + 
   labs(title = glue("{HH} H clone {top_clones}"),
        subtitle = version)
 
-ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_gene_clade.png"), width = 9, height = 6.5, dpi = 1000)
+ggsave(glue("46_sequence_driven_clustering/plot/{version}/{HH}_{top_clones}_v_gene_clan.png"), width = 9, height = 6.5, dpi = 1000)
 
 # Color by locus
 ggtree(tree_phylo, layout="fan", size=0.2) %<+% seqs_meta + 
