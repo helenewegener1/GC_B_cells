@@ -25,15 +25,15 @@ spec_clones_vj_HH <- spec_clones_vj[[HH]]
 
 # Subset based on clones and genes 
 # # Look at top heavy chain clones defined with SCOPer
-# spec_clones_vj_HH %>% 
-#   count(clone_id, v_call_majority, j_call_majority, sort = TRUE)
-# 
-# # Get top 10 clones
-# top_clones <- spec_clones_vj_HH %>% count(clone_id, sort = TRUE) %>% head(n = 5) %>% pull(clone_id)
-# 
-# # Check N cells in top 10 clones
-# spec_clones_vj_HH %>% filter(clone_id %in% top_clones) %>% nrow()
-# 
+spec_clones_vj_HH %>%
+  count(clone_id, v_call_majority, j_call_majority, sort = TRUE)
+
+# Get top 10 clones
+top_clones <- spec_clones_vj_HH %>% count(clone_id, sort = TRUE) %>% head(n = 5) %>% pull(clone_id)
+
+# Check N cells in top 10 clones
+spec_clones_vj_HH %>% filter(clone_id %in% top_clones) %>% nrow()
+
 # # Get genes for the clones 
 # v_genes <- spec_clones_vj_HH %>% filter(clone_id %in% top_clones) %>% pull(v_call_majority) %>% unique() %>% str_split(",") %>% unlist() %>% unique()
 # j_genes <- spec_clones_vj_HH %>% filter(clone_id %in% top_clones) %>% pull(j_call_majority) %>% unique() %>% str_split(",") %>% unlist() %>% unique()
@@ -63,7 +63,8 @@ spec_clones_vj_HH_heavy$v_call %>% str_split_i("\\*", 1) %>% table() %>% sort()
 spec_clones_vj_HH_heavy$v_call %>% str_split_i("-", 1) %>% table() %>% sort()
 
 # Subset randomly
-seq_names <- spec_clones_vj_HH_heavy$sequence_id %>% sample(500)
+# seq_names <- spec_clones_vj_HH_heavy$sequence_id %>% sample(500)
+seq_names <- spec_clones_vj_HH_heavy %>% filter(clone_id %in% top_clones) %>% pull(sequence_id)
 seqs <- spec_clones_vj_HH_heavy %>% filter(sequence_id %in% seq_names) %>% pull(sequence)
 
 seqs %>% length()
