@@ -16,7 +16,7 @@ spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 # Extract sequences
 # ------------------------------------------------------------------------------
 
-HH <- "HH119"
+HH <- "HH117"
 
 # Define patient
 spec_clones_vj_HH <- spec_clones_vj[[HH]]
