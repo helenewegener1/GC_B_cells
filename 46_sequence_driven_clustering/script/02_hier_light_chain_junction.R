@@ -54,7 +54,7 @@ spec_clones_vj_HH %>%
   count(clone_subgroup_id, sort = TRUE)
 
 # Get top clones
-top_clones <- spec_clones_vj_HH %>% count(clone_id, sort = TRUE) %>% slice(2) %>% pull(clone_id)
+top_clones <- spec_clones_vj_HH %>% count(clone_id, sort = TRUE) %>% slice(1) %>% pull(clone_id)
 
 # Check N cells in top clones
 spec_clones_vj_HH %>% filter(clone_id == top_clones & locus == "IGH") %>% nrow()

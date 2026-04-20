@@ -319,7 +319,7 @@ clusters <- cutree(fit, k = 10 + 5)
 
 table(clusters)
 
-table(clusters, seqs_meta$clone_id_top_10)
+# table(clusters, seqs_meta$clone_id_top_10)
 
 
 
