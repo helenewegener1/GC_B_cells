@@ -15,53 +15,53 @@ patients <- names(resolve_LC_list)
 # Export BCR meta data to Gina 
 # ==============================================================================
 
-meta_4_Gina_list <- lapply(patients, function(HH){
-  
-  # HH <- "HH117"
-  
-  seurat_obj <- subset(seurat_integrated, patient == HH)
-  resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
-  
-  # Check IDs
-  seurat_obj %>% colnames() %>% head()
-  resolve_LC_HH$cell_id %>% head()
-  
-  seurat_obj %>% colnames() %>% length()
-  resolve_LC_HH$cell_id %>% length()
-  
-  (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
-  (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
-  
-  
-  # Wrangle IDs
-  seurat_ids <- seurat_obj %>% colnames()
-  LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
-  
-  (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
-  (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
-  
-  table(LC_ids %in% seurat_ids)
-  
-  # Prep for merge
-  resolve_LC_HH_meta <- resolve_LC_HH %>% 
-    mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>% 
-    select(cell_id_seurat_clean, c_call, clone_subgroup_id)
-  
-  # Merge and create final meta data for Gina
-  meta_4_Gina <- seurat_obj[[]] %>% 
-    select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID) %>% 
-    rownames_to_column("cell_id_seurat_clean") %>% 
-    left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>% 
-    column_to_rownames("cell_id_seurat_clean")
-  
-  # Check 
-  meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
-  
-  return(meta_4_Gina)
-  
-}) %>% setNames(patients)
-
-saveRDS(meta_4_Gina_list, "45_immcantation/out/rds/meta_4_Gina_list.rds")
+# meta_4_Gina_list <- lapply(patients, function(HH){
+#   
+#   # HH <- "HH117"
+#   
+#   seurat_obj <- subset(seurat_integrated, patient == HH)
+#   resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
+#   
+#   # Check IDs
+#   seurat_obj %>% colnames() %>% head()
+#   resolve_LC_HH$cell_id %>% head()
+#   
+#   seurat_obj %>% colnames() %>% length()
+#   resolve_LC_HH$cell_id %>% length()
+#   
+#   (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
+#   (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
+#   
+#   
+#   # Wrangle IDs
+#   seurat_ids <- seurat_obj %>% colnames()
+#   LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
+#   
+#   (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
+#   (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
+#   
+#   table(LC_ids %in% seurat_ids)
+#   
+#   # Prep for merge
+#   resolve_LC_HH_meta <- resolve_LC_HH %>% 
+#     mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>% 
+#     select(cell_id_seurat_clean, c_call, clone_subgroup_id)
+#   
+#   # Merge and create final meta data for Gina
+#   meta_4_Gina <- seurat_obj[[]] %>% 
+#     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID) %>% 
+#     rownames_to_column("cell_id_seurat_clean") %>% 
+#     left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>% 
+#     column_to_rownames("cell_id_seurat_clean")
+#   
+#   # Check 
+#   meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
+#   
+#   return(meta_4_Gina)
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(meta_4_Gina_list, "45_immcantation/out/rds/meta_4_Gina_list.rds")
 
 # ==============================================================================
 # All cells: Summary of cell types
@@ -161,7 +161,7 @@ lapply(patients, function(HH){
     )  
     # theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
-  ggsave(glue("{outdir_0}/{HH}_N_cells_across_samples.png"), width = 12, height = 7, dpi = 1000)
+  ggsave(glue("{outdir_2}/{HH}_N_cells_across_samples.png"), width = 12, height = 7, dpi = 1000)
   
   
   # Across follicles 
@@ -485,7 +485,7 @@ for (HH in patients){
       height <- 4
     }
     
-    ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types_and_isotype.png"), width = width, height = height, dpi = 1000)
+    ggsave(glue("{outdir_4}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types_and_isotype.png"), width = width, height = height, dpi = 1000)
     
   }
 }
@@ -552,7 +552,7 @@ dir.create(outdir_6, recursive = TRUE)
 
 n_clones <- 5
 
-lapply(patients, function(x){
+lapply(patients, function(HH){
   
   # HH <- "HH117"
   p <- patient_names[[HH]]
