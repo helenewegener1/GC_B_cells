@@ -46,3 +46,55 @@ celltype_colors <- c(
   "Contamination_MNPs"       = "#9F8C7A",  # muted mocha
   "Contamination_γδT_cell"   = "#D1D1D1"   # light grey
 )
+
+
+# L1 annotation 
+main_celltypes <- c(wes_palette("FantasticFox1"), "forestgreen")
+names(main_celltypes) <- c("Tfh_cells", "Naive_Bcells", "Memory_Bcells", "GC_B_cells", "PCs", "Unconventional_Bcells")
+
+main_celltypes[[1]] <- "hotpink"
+
+
+# L1_anno$L1_annotation %>% table()
+
+# All unique celltypes across all samples. 
+L1_colors <- c(
+  
+  "Tfh_cells"                  = "#E8608A",
+  "Naive_Bcells"               = "#D4C420",
+  "Memory_Bcells"              = "#2AAAC8",
+  "GC_B_cells"                 = "#E08C20",
+  "PCs"                        = "#C42030",
+  "Unconventional_Bcells"      = "#8855CC",
+  
+  # "Tfh_cells"                  = "#F2A0BC",
+  # "Naive_Bcells"               = "#E0D875",
+  # "Memory_Bcells"              = "#7ACFDF",
+  # "GC_B_cells"                 = "#F0B870",
+  # "PCs"                        = "#E07880",
+  # "Unconventional_Bcells"      = "#B899E8",
+    
+  "Contamination_mast_cells"  = "#B99674", 
+  "Contamination_myeloid_stroma"     = "#D1D1D1"
+)
+
+
+# Name mapping 
+patient_names <- list(
+  
+  "HH117" = "Crohn's Disease", 
+  "HH119" = "Colorectal Cancer"
+  
+)
+
+# Cell type names
+cell_type_names <- list(
+  
+  "Tfh_cells"                  = "Tfh cells",
+  "Naive_Bcells"               = "Naive B cells",
+  "Memory_Bcells"              = "Memory B cells",
+  "GC_B_cells"                 = "GC B cells",
+  "PCs"                        = "Plasma cells",
+  "Unconventional_Bcells"      = "Unconventional B cells"
+  
+)
