@@ -174,3 +174,7 @@ resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
 HH <- "HH119"
 clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
 resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
+
+
+
+

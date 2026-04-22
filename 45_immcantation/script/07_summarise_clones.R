@@ -62,7 +62,7 @@ clones_combined <- lapply(patients, function(HH) {
   light_lookup <- light_clones_HH %>% select(cell_id, clone_id_light = clone_id)
   
   # Stack into long format
-  rbind(heavy_clones_HH, light_clones_HH) %>%
+  bind_rows(heavy_clones_HH, light_clones_HH) %>%
     # Join both lookups so every row knows both clone IDs
     left_join(heavy_lookup, by = "cell_id") %>%
     left_join(light_lookup, by = "cell_id") %>%
@@ -71,6 +71,47 @@ clones_combined <- lapply(patients, function(HH) {
     )
   
 }) %>% setNames(patients)
+
+# ------------------------------------------------------------------------------
+# Top clones in heavy and ligth 
+# ------------------------------------------------------------------------------
+
+top_heavy_clones <- heavy_clones_HH %>% count(clone_id, sort = TRUE) %>% head(1) %>% pull(clone_id)
+top_light_clones <- light_clones_HH %>% count(clone_id, sort = TRUE) %>% slice(3) %>% pull(clone_id)
+
+HH_combined_clean <- clones_combined$HH117 %>% filter(!is.na(clone_id_heavy))
+
+# Look at top light chains 
+HH_combined_clean %>% filter(clone_id_light %in% top_light_clones) %>% 
+  count(clone_id_light, clone_id_heavy, sort = TRUE)
+
+
+HH_combined_clean %>% count(clone_id_heavy, clone_id_light, sort = TRUE) 
+
+# Create the table
+clone_table <- table(HH_combined_clean$clone_id_heavy, HH_combined_clean$clone_id_light)
+
+library(reshape2)
+# Convert to data frame for ggplot
+clone_df <- melt(as.matrix(clone_table))
+colnames(clone_df) <- c("Heavy", "Light", "Count")
+
+# Plot
+ggplot(clone_df, aes(x = Light, y = Heavy, fill = Count)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "white", high = "steelblue") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
+    axis.text.y = element_text(size = 8),
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  labs(
+    title = "Heavy vs Light Chain Clone Pairing",
+    x = "Light Chain Clone ID",
+    y = "Heavy Chain Clone ID",
+    fill = "Count"
+  )
 
 
 # ------------------------------------------------------------------------------
