@@ -1,0 +1,27 @@
+wget https://bitbucket.org/kleinstein/projects/src/master/Lindenbaum2020/core.py
+wget https://bitbucket.org/kleinstein/projects/src/master/Lindenbaum2020/Example.ipynb
+
+# Activate environment
+#source new_env/bin/activate
+
+#Currently Loaded Modulefiles:
+# 1) tools   2) anaconda3/2025.06-1 
+module load tools anaconda3/2025.06-1 
+
+# /services/tools/anaconda3/2025.06-1/bin/python -m venv /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/47_alignment_free_clone_identification/script/airr_env
+source /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/47_alignment_free_clone_identification/script/airr_env/bin/activate
+
+# If necessary
+# Clear the pip cache
+pip cache purge
+
+# Set pip cache to project directory
+export PIP_CACHE_DIR=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/.pip_cache
+
+############### RUNNING SCRIPT ############### 
+# screen -S alignment_free
+screen -r 2050544.alignment_free
+iqsub
+module load tools anaconda3/2025.06-1 
+source /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/47_alignment_free_clone_identification/script/airr_env/bin/activate
+./02_from_example.py
