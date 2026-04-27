@@ -462,7 +462,7 @@ dir.create(outdir_trees_zoom_this_cl_jl_v, showWarnings = FALSE, recursive = TRU
 variables <- c("clusters", "v_gene_subgroup", "v_gene", "v_call", "j_gene_subgroup", "j_call", "junction_length")
 for (var in variables){
   
-  var <- "j_call"
+  # var <- "j_call"
   # var <- "j_gene_subgroup"
   ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
     geom_tippoint(aes(color = !!sym(var)), size=1, alpha=0.8) +
