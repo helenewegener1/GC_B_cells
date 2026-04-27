@@ -5,6 +5,7 @@ library(ggtree)
 library(treeio)
 library(RColorBrewer)
 library(fastcluster)
+library(glue)
 
 version <- "00_PC_tree"
 
@@ -168,7 +169,6 @@ fit <- hclust(as.dist(dist_mat), method = "complete")
 # Cut the tree
 # ------------------------------------------------------------------------------
 
-
 k <- 20
 
 outdir <- glue("46_sequence_driven_clustering/plot/{version}/{HH}/{k}_clusters")
@@ -298,7 +298,7 @@ ggsave(glue("{outdir}/{HH}_{k}_clusters_junction_length.png"), width = 12.5, hei
 outdir_trees <- glue("{outdir}/trees")
 dir.create(outdir_trees, showWarnings = FALSE, recursive = TRUE)
 
-cl <- c(16, 9)
+cl <- c(6)
 idx <- which(clusters %in% cl)
 seqs_sub <- seqs[idx]
 
@@ -346,5 +346,133 @@ for (var in variables){
 
 
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# ZOOMING IN
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+outdir_trees_zoom <- glue("{outdir}/trees_zoom")
+dir.create(outdir_trees_zoom, showWarnings = FALSE, recursive = TRUE)
+
+# ------------------------------------------------------------------------------
+# 1 cluster - 1 junction length
+# ------------------------------------------------------------------------------
+
+# 1 cluster
+cl <- c(6)
+idx <- which(clusters %in% cl)
+seqs_sub <- seqs[idx]
+
+seqs_meta_cl <- seqs_meta %>% filter(clusters %in% cl)
+
+# 1 junction length
+jl <- c(60)
+idx <- which(seqs_meta_cl$junction_length %in% jl)
+seqs_sub_2 <- seqs_sub[idx]
+
+# Update metadata
+seqs_meta_final <- seqs_meta_cl %>% filter(junction_length %in% jl)
+table(length(seqs_sub_2) == nrow(seqs_meta_final))
+
+# TREE MAKING
+dist_sub <- as.dist(stringdistmatrix(seqs_sub_2, method = "hamming"))
+fit_sub  <- hclust(dist_sub, method = "complete")
+
+# Convert to phylo for nicer plotting
+tree <- as.phylo(fit_sub)
+
+length(tree$tip.label)
+length(seqs_meta_final$sequence_id)
+
+tree$tip.label <- seqs_meta_final$sequence_id
+
+# Plotting
+clusters_string <- paste("Cluster: ", cl, "\nJunction length: ", jl)
+clusters_string_path <- paste0("cluster", cl, "_", "jl", jl)
+
+outdir_trees_zoom_this_cl_jl <- glue("{outdir_trees_zoom}/{clusters_string_path}")
+dir.create(outdir_trees_zoom_this_cl_jl, showWarnings = FALSE, recursive = TRUE)
+
+variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "junction_length")
+for (var in variables){
+  
+  # var <- "v_gene_subgroup"
+  # var <- "j_gene_subgroup"
+  ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+    geom_tippoint(aes(color = !!sym(var)), size=0.5, alpha=0.8) +
+    theme_tree2() + 
+    guides(color = guide_legend(override.aes = list(size = 4))) + 
+    labs(
+      title = glue("{HH} colored by {var} - N clusters: {k}"),
+      subtitle = glue("Clusters: {clusters_string}")
+    )
+  
+  ggsave(glue("{outdir_trees_zoom_this_cl_jl}/{HH}_{k}_clusters_{clusters_string_path}_{var}.png"), width = 9, height = 6.5, dpi = 1000)
+  
+}
 
 
+# ------------------------------------------------------------------------------
+# 1 cluster - 1 junction length - 1 v gene
+# ------------------------------------------------------------------------------
+
+# 1 cluster
+cl <- c(6)
+idx <- which(clusters %in% cl)
+seqs_sub <- seqs[idx]
+
+seqs_meta_cl <- seqs_meta %>% filter(clusters %in% cl)
+
+# 1 junction length
+jl <- c(60)
+idx <- which(seqs_meta_cl$junction_length %in% jl)
+seqs_sub_2 <- seqs_sub[idx]
+
+seqs_meta_jl <- seqs_meta_cl %>% filter(junction_length %in% jl)
+
+# 1 V gene
+v_this_gene <- c("IGHV1")
+idx <- which(seqs_meta_jl$v_gene_subgroup %in% v_gene)
+seqs_sub_3 <- seqs_sub_2[idx]
+
+# Update metadata
+seqs_meta_final <- seqs_meta_jl %>% filter(v_gene_subgroup %in% v_this_gene)
+table(length(seqs_sub_3) == nrow(seqs_meta_final))
+
+# TREE MAKING
+dist_sub <- as.dist(stringdistmatrix(seqs_sub_3, method = "hamming"))
+fit_sub  <- hclust(dist_sub, method = "complete")
+
+# Convert to phylo for nicer plotting
+tree <- as.phylo(fit_sub)
+
+length(tree$tip.label)
+length(seqs_meta_final$sequence_id)
+
+tree$tip.label <- seqs_meta_final$sequence_id
+
+# Plotting
+clusters_string <- paste("Cluster: ", cl, "\nJunction length: ", jl, "\nV gene subgroup: ", v_this_gene)
+clusters_string_path <- paste0("cluster", cl, "_", "jl", jl, "_", v_this_gene)
+
+outdir_trees_zoom_this_cl_jl_v <- glue("{outdir_trees_zoom}/{clusters_string_path}")
+dir.create(outdir_trees_zoom_this_cl_jl_v, showWarnings = FALSE, recursive = TRUE)
+
+variables <- c("clusters", "v_gene_subgroup", "v_gene", "v_call", "j_gene_subgroup", "j_call", "junction_length")
+for (var in variables){
+  
+  var <- "j_call"
+  # var <- "j_gene_subgroup"
+  ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+    geom_tippoint(aes(color = !!sym(var)), size=1, alpha=0.8) +
+    theme_tree2() + 
+    guides(color = guide_legend(override.aes = list(size = 4))) + 
+    labs(
+      title = glue("{HH} colored by {var} - N clusters: {k}"),
+      subtitle = glue("Clusters: {clusters_string}")
+    )
+  
+  ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{HH}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), width = 9, height = 6.5, dpi = 1000)
+  
+}
