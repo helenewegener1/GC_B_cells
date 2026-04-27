@@ -330,7 +330,7 @@ clusters_string_path <- paste0(cl, collapse = "_")
 variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "junction_length")
 for (var in variables){
   
-  # var <- "junction_length"
+  # var <- "clusters"
   ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_cl + 
     geom_tippoint(aes(color = !!sym(var)), size=0.5, alpha=0.8) +
     theme_tree2() + 
@@ -440,6 +440,10 @@ seqs_sub_3 <- seqs_sub_2[idx]
 seqs_meta_final <- seqs_meta_jl %>% filter(v_gene_subgroup %in% v_this_gene)
 table(length(seqs_sub_3) == nrow(seqs_meta_final))
 
+# Wrangle metadata
+these_clones <- seqs_meta_final %>% count(clone_id, sort = TRUE) %>% head(10) %>% pull(clone_id)
+seqs_meta_final <- seqs_meta_final %>% mutate(clone_id_plot = ifelse(clone_id %in% these_clones, clone_id, "other"))
+
 # TREE MAKING
 dist_sub <- as.dist(stringdistmatrix(seqs_sub_3, method = "hamming"))
 fit_sub  <- hclust(dist_sub, method = "complete")
@@ -452,6 +456,7 @@ length(seqs_meta_final$sequence_id)
 
 tree$tip.label <- seqs_meta_final$sequence_id
 
+
 # Plotting
 clusters_string <- paste("Cluster: ", cl, "\nJunction length: ", jl, "\nV gene subgroup: ", v_this_gene)
 clusters_string_path <- paste0("cluster", cl, "_", "jl", jl, "_", v_this_gene)
@@ -463,9 +468,9 @@ variables <- c("clusters", "v_gene_subgroup", "v_gene", "v_call", "j_gene_subgro
 for (var in variables){
   
   # var <- "j_call"
-  # var <- "j_gene_subgroup"
+  # var <- "clone_id_plot"
   ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
-    geom_tippoint(aes(color = !!sym(var)), size=1, alpha=0.8) +
+    geom_tippoint(aes(color = !!sym(var)), size=1.5) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
     labs(
@@ -476,3 +481,34 @@ for (var in variables){
   ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{HH}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), width = 9, height = 6.5, dpi = 1000)
   
 }
+
+
+# clone_id_plot colors
+clone_colors <- setNames(
+  c("#E63946",
+    "#2196F3",
+    "#4CAF50",
+    "#FF9800",
+    "#9C27B0",
+    "#00BCD4",
+    "#FFEB3B",
+    "#FF4081",
+    "#795548",
+    "#76FF03",
+    "grey90"),
+  c(these_clones, "other")
+) # NAs will be grey
+
+var <- "clone_id_plot"
+ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+  geom_tippoint(aes(color = !!sym(var)), size=1.5) +
+  theme_tree2() + 
+  guides(color = guide_legend(override.aes = list(size = 4))) + 
+  scale_color_manual(values = clone_colors) + 
+  labs(
+    title = glue("{HH} colored by {var} - N clusters: {k}"),
+    subtitle = glue("Clusters: {clusters_string}")
+  )
+
+ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{HH}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), width = 9, height = 6.5, dpi = 1000)
+
