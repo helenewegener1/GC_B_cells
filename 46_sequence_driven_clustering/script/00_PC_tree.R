@@ -274,7 +274,7 @@ ggsave(glue("{outdir}/{HH}_{k}_clusters_Isotypes.png"))
 outdir_trees <- glue("{outdir}/trees")
 dir.create(outdir_trees, showWarnings = FALSE, recursive = TRUE)
 
-cl <- c(6, 9)
+cl <- c(16, 9)
 idx <- which(clusters %in% cl)
 seqs_sub <- seqs[idx]
 
