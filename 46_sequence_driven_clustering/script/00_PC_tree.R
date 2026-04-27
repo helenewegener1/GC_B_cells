@@ -32,7 +32,7 @@ v_gene_clans <- c(
 # Extract sequences
 # ------------------------------------------------------------------------------
 
-HH <- "HH119"
+HH <- "HH117"
 
 # Define patient
 spec_clones_vj_HH <- spec_clones_vj[[HH]]
@@ -57,7 +57,8 @@ PCs_heavy <- spec_clones_vj_HH %>%
   filter(locus == "IGH" & L1_annotation == "PCs") %>% 
   mutate(
     sequence_trimmed = str_sub(sequence, v_sequence_start, j_sequence_end),
-    sequence_trimmed_300 = str_sub(sequence_trimmed, nchar(sequence_trimmed)-299, nchar(sequence_trimmed))
+    sequence_trimmed_300 = str_sub(sequence_trimmed, nchar(sequence_trimmed)-299, nchar(sequence_trimmed)),
+    sequence_trimmed_250 = str_sub(sequence_trimmed, nchar(sequence_trimmed)-249, nchar(sequence_trimmed))
   )
 
 # Have a look 
@@ -65,9 +66,11 @@ PCs_heavy$sequence_trimmed %>% nchar() %>% range()
 PCs_heavy$sequence_trimmed %>% nchar() %>% hist()
 
 PCs_heavy$sequence_trimmed_300 %>% nchar() %>% unique()
+PCs_heavy$sequence_trimmed_250 %>% nchar() %>% unique()
 
 # Extract sequences
 seqs <- PCs_heavy$sequence_trimmed_300
+# seqs <- PCs_heavy$sequence_trimmed_250
 seq_names <- PCs_heavy$sequence_id
 
 # Get metadata of sequences
@@ -85,6 +88,7 @@ seqs_meta <- PCs_heavy %>%
 
 # Get distances 
 dist_mat <- stringdistmatrix(seqs, method = "hamming")
+# dist_mat <- stringdistmatrix(seqs, method = "lv")
 
 # ------------------------------------------------------------------------------
 # Hierarchical Clustering
@@ -264,6 +268,26 @@ table(seqs_meta$clusters, seqs_meta$c_call) %>%
     legend.position = "none"
   )
 ggsave(glue("{outdir}/{HH}_{k}_clusters_Isotypes.png"))
+
+table(seqs_meta$clusters, seqs_meta$junction_length) %>% 
+  as.data.frame() %>% 
+  ggplot(aes(x = Var2, y = Var1, fill = Freq)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = Freq), size = 3, color = "black") + 
+  scale_fill_gradient(low = "#EEF3FB", high = "#185FA5") +
+  labs(
+    x     = "Junction length",
+    y     = "Cluster",
+    fill  = "Count",
+    title = glue("{HH}: Cluster × Junciton length ({k} clusters)")
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x  = element_text(angle = 45, hjust = 1),
+    panel.grid   = element_blank(),
+    legend.position = "none"
+  )
+ggsave(glue("{outdir}/{HH}_{k}_clusters_junction_length.png"), width = 12.5, height = 8)
 
 
 
