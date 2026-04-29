@@ -18,7 +18,14 @@ fasta_files <- list.files(fasta_path)
 # Meta data file writing
 # ------------------------------------------------------------------------------
 
-
+L1_int_mapping <- c(
+  "Tfh_cells"                  = 1,
+  "Naive_Bcells"               = 2,
+  "Memory_Bcells"              = 3,
+  "GC_B_cells"                 = 4,
+  "PCs"                        = 5,
+  "Unconventional_Bcells"      = 6
+)
 
 clone_nrs <- 1:5
 
@@ -62,14 +69,26 @@ for (HH in patients){
         sample_clean_fol = paste(unique(sample_clean_fol), collapse = ":")
       ) %>% 
       mutate(
-        L1_annotation_int = as.integer(factor(L1_annotation)),
-        c_call_int = as.integer(factor(c_call)),
-        sample_clean_fol_int = as.integer(factor(sample_clean_fol))
+        L1_annotation_int = sapply(L1_annotation, function(x) {
+          parts <- str_split(x, ":")[[1]]
+          paste(L1_int_mapping[parts], collapse = ":")
+        })
       )
+      
+      # mutate(
+      #   L1_annotation_int = L1_int_mapping[[L1_annotation]],
+      #   c_call_int = as.integer(factor(c_call)),
+      #   sample_clean_fol_int = as.integer(factor(sample_clean_fol))
+      # )
     
     # gctree_meta$L1_annotation %>% table()
     # gctree_meta$c_call %>% table()
     # gctree_meta$sample_clean_fol %>% table()
+    
+    # gctree_meta$L1_annotation_int %>% table()
+    # gctree_meta$c_call %>% table()
+    # gctree_meta$sample_clean_fol %>% table()
+  
     
     write.csv(gctree_meta, glue("48_GCtree/gctree_meta/{sample}_gctree_meta.txt"), row.names = FALSE, quote = FALSE)
     
