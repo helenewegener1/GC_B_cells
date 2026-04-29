@@ -39,8 +39,8 @@ tmp
 .pip_cache
 */.pip_cache
 48_GCtree/install_phylip/phylip
-48_GCtree/script/gctree_evn
-*_env/"
+48_GCtree/script/gctree_env
+*_env/
 48_GCtree/fasta
 
 .DS_Store
