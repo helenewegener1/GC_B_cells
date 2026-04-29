@@ -91,6 +91,34 @@ for (HH in patients){
     
     write.csv(gctree_meta, glue("48_GCtree/gctree_meta/{sample}_gctree_meta.txt"), row.names = FALSE, quote = FALSE)
     
+    # L1_counts.csv
+    L1_counts <- gctree_meta %>%
+      separate_rows(seq_name, sep = ":") %>%
+      group_by(seq_unique, L1_annotation) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      pivot_wider(names_from = L1_annotation, values_from = count, values_fill = 0)
+    
+    write.csv(L1_counts, glue("48_GCtree/gctree_meta/{sample}_L1_counts.csv"), row.names = FALSE)
+    
+    # isotype_counts.csv
+    isotype_counts <- gctree_meta %>%
+      separate_rows(seq_name, sep = ":") %>%
+      group_by(seq_unique, c_call) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      # Pivot to wide format: one column per isotype
+      pivot_wider(names_from = c_call, values_from = count, values_fill = 0)
+    
+    write.csv(isotype_counts, glue("48_GCtree/gctree_meta/{sample}_isotype_counts.csv"), row.names = FALSE)
+    
+    # sample_clean_fol_counts.csv
+    sample_clean_fol_counts <- gctree_meta %>%
+      separate_rows(seq_name, sep = ":") %>%
+      group_by(seq_unique, sample_clean_fol) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      # Pivot to wide format: one column per isotype
+      pivot_wider(names_from = sample_clean_fol, values_from = count, values_fill = 0)
+    
+    write.csv(sample_clean_fol_counts, glue("48_GCtree/gctree_meta/{sample}_sample_clean_fol_counts.csv"), row.names = FALSE)
     
   }
   
