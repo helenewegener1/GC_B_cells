@@ -1,7 +1,3 @@
-#Currently Loaded Modulefiles:
-# 1) tools   2) anaconda3/2025.06-1 
-module load tools anaconda3/2025.06-1 
-
 # /services/tools/anaconda3/2025.06-1/bin/python -m venv /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree/script/gctree_env
 source gctree_env/bin/activate
 
@@ -33,8 +29,8 @@ cp phylip/phylip-3.697/exe/dnapars /home/projects/dtu_00062/people/helweg/projec
 
 ############### RUNNING SCRIPT ############### 
 # screen -S gctree
-screen -r XXXXX.gctree
+screen -r 2984649.gctree
 iqsub
-module load tools anaconda3/2025.06-1 
+cd /home/people/helweg/gcb/48_GCtree/script
 source gctree_env/bin/activate
-./02_from_example.py
+./02_run_gctree.sh

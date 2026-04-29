@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Define directories 
 WD=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree
@@ -10,10 +11,12 @@ PLOT_DIR=${WD}/plot
 sample_list=$(ls $DATA_DIR | cut -d "." -f1)
 
 # # Run gctree
-# for sample in $sample_list; do
+for sample in $sample_list; do
+
+  echo "Processing $sample..."
 
   # sample=HH117_clone_nr_10_clone_2587_1
-  sample=HH117_clone_nr_6_clone_1278_1
+  # sample=HH117_clone_nr_6_clone_1278_1
 
   # Make sample sepecific outdir
   OUT_DIR_SAMPLE=${OUT_DIR}/$sample
@@ -38,7 +41,7 @@ sample_list=$(ls $DATA_DIR | cut -d "." -f1)
   mkdir -p $PLOT_DIR_SAMPLE
 
   # Gctree Ranking
-  xvfb-run -a gctree infer outfile abundances.csv --root GL --frame 1 --verbose --outbase $PLOT_DIR_SAMPLE/$sample
+  xvfb-run -a gctree infer outfile abundances.csv --root GL --frame 1 --verbose --outbase $PLOT_DIR_SAMPLE/${sample}
 
-# done
+done
 
