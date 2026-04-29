@@ -1,4 +1,4 @@
-"seq_unique","PCs","PCs:Memory_Bcells"
+"seq_unique","PCs","Memory_Bcells"
 "seq1",12,0
 "seq10",2,0
 "seq11",4,0
@@ -12,7 +12,7 @@
 "seq19",2,0
 "seq2",2,0
 "seq3",3,0
-"seq4",0,26
+"seq4",25,1
 "seq5",9,0
 "seq6",3,0
 "seq7",1,0

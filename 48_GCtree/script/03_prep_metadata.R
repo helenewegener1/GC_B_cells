@@ -92,13 +92,15 @@ for (HH in patients){
     write.csv(gctree_meta, glue("48_GCtree/gctree_meta/{sample}_gctree_meta.txt"), row.names = FALSE, quote = FALSE)
     
     # L1_counts.csv
-    # L1_counts <- gctree_meta %>%
-    #   separate_rows(seq_name, sep = ":") %>%
-    #   group_by(seq_unique, L1_annotation) %>%
-    #   summarise(count = n(), .groups = "drop") %>%
-    #   pivot_wider(names_from = L1_annotation, values_from = count, values_fill = 0)
-    # 
-    # write.csv(L1_counts, glue("48_GCtree/gctree_meta/{sample}_L1_counts.csv"), row.names = FALSE)
+    L1_counts <- gctree_meta %>%
+      select(seq_unique, seq_name) %>%       
+      separate_rows(seq_name, sep = ":") %>% 
+      left_join(seqs_meta %>% select(seq_name, L1_annotation), by = "seq_name") %>%  
+      group_by(seq_unique, L1_annotation) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      pivot_wider(names_from = L1_annotation, values_from = count, values_fill = 0)
+
+    write.csv(L1_counts, glue("48_GCtree/gctree_meta/{sample}_L1_counts.csv"), row.names = FALSE)
     
     # isotype_counts.csv
     isotype_counts <- gctree_meta %>%
@@ -112,15 +114,16 @@ for (HH in patients){
     write.csv(isotype_counts, glue("48_GCtree/gctree_meta/{sample}_isotype_counts.csv"), row.names = FALSE)
     
     # sample_clean_fol_counts.csv
-    # sample_clean_fol_counts <- gctree_meta %>%
-    #   separate_rows(seq_name, sep = ":") %>%
-    #   group_by(seq_unique, sample_clean_fol) %>%
-    #   summarise(count = n(), .groups = "drop") %>%
-    #   # Pivot to wide format: one column per isotype
-    #   pivot_wider(names_from = sample_clean_fol, values_from = count, values_fill = 0)
-    # 
-    # write.csv(sample_clean_fol_counts, glue("48_GCtree/gctree_meta/{sample}_sample_clean_fol_counts.csv"), row.names = FALSE)
-    # 
+    sample_clean_fol_counts <- gctree_meta %>%
+      select(seq_unique, seq_name) %>%       
+      separate_rows(seq_name, sep = ":") %>% 
+      left_join(seqs_meta %>% select(seq_name, sample_clean_fol), by = "seq_name") %>%  
+      group_by(seq_unique, sample_clean_fol) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      pivot_wider(names_from = sample_clean_fol, values_from = count, values_fill = 0)
+
+    write.csv(sample_clean_fol_counts, glue("48_GCtree/gctree_meta/{sample}_sample_clean_fol_counts.csv"), row.names = FALSE)
+
   }
   
 }
