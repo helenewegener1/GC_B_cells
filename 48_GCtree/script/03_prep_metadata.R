@@ -59,6 +59,10 @@ for (HH in patients){
         seq_name = paste(seq_name, collapse = ":"),
         L1_annotation = paste(unique(L1_annotation), collapse = ":"),
         c_call = paste(unique(c_call), collapse = ":")
+      ) %>% 
+      mutate(
+        L1_annotation_int = as.integer(factor(L1_annotation)),
+        c_call_int = as.integer(factor(c_call))
       )
     
     # gctree_meta$L1_annotation %>% table()
