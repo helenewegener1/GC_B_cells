@@ -36,7 +36,7 @@ for (HH in patients){
     clone <- str_extract(filename, "\\d+_\\d+(?=\\.fasta)")
     
     # Extract metadata
-    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% select(L1_annotation, c_call)
+    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% select(L1_annotation, c_call, sample_clean_fol)
     
     # Map seq_names on meta data
     seq_names <- names(fasta)[1:length(fasta)-1]
@@ -58,15 +58,18 @@ for (HH in patients){
       summarise(
         seq_name = paste(seq_name, collapse = ":"),
         L1_annotation = paste(unique(L1_annotation), collapse = ":"),
-        c_call = paste(unique(c_call), collapse = ":")
+        c_call = paste(unique(c_call), collapse = ":"),
+        sample_clean_fol = paste(unique(sample_clean_fol), collapse = ":")
       ) %>% 
       mutate(
         L1_annotation_int = as.integer(factor(L1_annotation)),
-        c_call_int = as.integer(factor(c_call))
+        c_call_int = as.integer(factor(c_call)),
+        sample_clean_fol_int = as.integer(factor(sample_clean_fol))
       )
     
     # gctree_meta$L1_annotation %>% table()
     # gctree_meta$c_call %>% table()
+    # gctree_meta$sample_clean_fol %>% table()
     
     write.csv(gctree_meta, glue("48_GCtree/gctree_meta/{sample}_gctree_meta.txt"), row.names = FALSE, quote = FALSE)
     
