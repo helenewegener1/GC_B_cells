@@ -45,8 +45,25 @@ for (HH in patients){
     
     # Get top "clone_nr" clone from given sample
     # clone_nr <- 5
+    # clone <- HH_spec_clones_vj %>%
+    #   count(clone_subgroup_id, sort = TRUE) %>% 
+    #   dplyr::slice(clone_nr) %>% 
+    #   pull(clone_subgroup_id)
+    
+    # find clones that have GC cells in at least 2 different sample_ids
+    GC_clones <- HH_spec_clones_vj %>%
+      filter(locus == "IGH") %>% 
+      filter(L1_annotation == "GC_B_cells") %>%
+      group_by(clone_subgroup_id) %>%
+      summarise(n_samples = n_distinct(sample_clean_fol)) %>%
+      filter(n_samples >= 2) %>%
+      pull(clone_subgroup_id)
+    
+    # rank those clones by total size (all cell types) and take top 10
     clone <- HH_spec_clones_vj %>%
-      count(clone_subgroup_id, sort = TRUE) %>% 
+      filter(locus == "IGH") %>% 
+      filter(clone_subgroup_id %in% GC_clones) %>%
+      count(clone_subgroup_id, sort = TRUE) %>%
       dplyr::slice(clone_nr) %>% 
       pull(clone_subgroup_id)
     
@@ -84,7 +101,7 @@ for (HH in patients){
     # alignment_dna <- as(alignment, "DNAStringSet")
     
     # Export as FASTA file
-    writeXStringSet(final_fasta, filepath = glue("48_GCtree/fasta/{HH}_clone_nr_{clone_nr}_clone_{clone}.fasta"))
+    writeXStringSet(final_fasta, filepath = glue("48_GCtree/fasta/GC_clones/{HH}_clone_nr_{clone_nr}_clone_{clone}.fasta"))
     
   }
   

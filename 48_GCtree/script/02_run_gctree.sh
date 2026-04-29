@@ -3,7 +3,7 @@ set -e
 
 # Define directories 
 WD=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree
-DATA_DIR=${WD}/fasta
+DATA_DIR=${WD}/fasta/GC_clones
 OUT_DIR=${WD}/out
 PLOT_DIR=${WD}/plot
 
