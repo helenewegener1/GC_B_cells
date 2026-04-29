@@ -1,0 +1,40 @@
+#Currently Loaded Modulefiles:
+# 1) tools   2) anaconda3/2025.06-1 
+module load tools anaconda3/2025.06-1 
+
+# /services/tools/anaconda3/2025.06-1/bin/python -m venv /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree/script/gctree_env
+source gctree_env/bin/activate
+
+# If necessary
+# Clear the pip cache
+pip cache purge
+
+# Set pip cache to project directory
+export PIP_CACHE_DIR=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/.pip_cache
+
+# In 48_GCtree/script/gctree_env/lib/python3.11/site-packages/gctree
+# Change in line 388 and 1056
+@np.errstate(all="raise") 
+# to 
+@np.errstate(all="raise", over="raise", invalid="raise", under="ignore")
+
+
+
+# Install phylip 
+mkdir 48_GCtree/install_phylip
+cd 48_GCtree/install_phylip
+# From https://github.com/dunnlab/phylip:
+git clone https://github.com/dunnlab/phylip.git
+cd phylip/phylip-3.697/src/
+make -f Makefile.unx install
+# Move dnapars function to environment 
+cd 48_GCtree/install_phylip
+cp phylip/phylip-3.697/exe/dnapars /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree/script/gctree_env/bin/
+
+############### RUNNING SCRIPT ############### 
+# screen -S gctree
+screen -r XXXXX.gctree
+iqsub
+module load tools anaconda3/2025.06-1 
+source gctree_env/bin/activate
+./02_from_example.py
