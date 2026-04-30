@@ -784,13 +784,33 @@ lapply(patients, function(HH){
   # Define clone names
   clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
   
-  plot_df %>% 
-    filter(!is.na(manual_ADT_ID)) %>% 
-    mutate(
-      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-    ) %>% 
-    ggplot(aes(x = manual_ADT_ID_plot, fill = clone_subgroup_id_plot)) + 
-    geom_bar() + 
+  # plot_df %>% 
+  #   filter(!is.na(manual_ADT_ID)) %>% 
+  #   mutate(
+  #     manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+  #   ) %>% 
+  #   ggplot(aes(x = manual_ADT_ID_plot, fill = clone_subgroup_id_plot)) + 
+  #   geom_bar() + 
+  #   scale_fill_manual(
+  #     values = clone_colors, 
+  #     labels = clone_names
+  #   ) + 
+  #   scale_x_continuous(
+  #     breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+  #     limits = c(0.5, NA),
+  #     expand = c(0, 0.5)
+  #   ) + 
+  #   theme_classic() +
+  #   labs(
+  #     x = "Follicle number", 
+  #     y = "Count", 
+  #     title = glue ("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
+  #     subtitle = glue("Top {n_clones} clones highlighted"),
+  #     fill = "Clone"
+  #   )
+  
+  ggplot(aes(x = manual_ADT_ID_plot, fill = clone_subgroup_id_plot)) + 
+    geom_bar(position = "fill") + 
     scale_fill_manual(
       values = clone_colors, 
       labels = clone_names
@@ -800,11 +820,12 @@ lapply(patients, function(HH){
       limits = c(0.5, NA),
       expand = c(0, 0.5)
     ) + 
+    scale_y_continuous(labels = scales::percent) +
     theme_classic() +
     labs(
       x = "Follicle number", 
-      y = "Count", 
-      title = glue ("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
+      y = "Frequency", 
+      title = glue("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
       subtitle = glue("Top {n_clones} clones highlighted"),
       fill = "Clone"
     )
