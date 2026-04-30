@@ -13,8 +13,31 @@ import numpy as np
 import os
 import pandas as pd
 
+# For computerome run
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+os.environ["XDG_RUNTIME_DIR"] = "/tmp/runtime-runner"
+os.environ["MPLBACKEND"] = "agg"
+os.environ["MPLCONFIGDIR"] = "/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/.matplotlib"
+
+
+samples = [
+  "HH117_clone_nr_1_clone_578_1",
+  "HH117_clone_nr_2_clone_2587_1",
+  "HH117_clone_nr_3_clone_1282_1",
+  "HH117_clone_nr_4_clone_735_1",
+  "HH117_clone_nr_5_clone_617_1",
+  # "HH119_clone_nr_1_clone_4516_1",
+  "HH119_clone_nr_2_clone_5791_1",
+  "HH119_clone_nr_3_clone_2466_1",
+  "HH119_clone_nr_4_clone_3459_1",
+  "HH119_clone_nr_5_clone_2966_1",
+]
+
+# for sample in samples:
+
 # Define paths 
-sample = "HH117_clone_nr_5_clone_1856_1"
+# sample = "HH117_clone_nr_5_clone_1856_1"
+sample = "HH117_clone_nr_1_clone_578_1"
 plot_path = f"./../plot/{sample}"
 p_file = f"{plot_path}/{sample}.inference.1.p"
 # print(p_file)
@@ -65,6 +88,11 @@ print(df_meta.head())
 # Define colors 
 from matplotlib.colors import ListedColormap
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import cairosvg
+from PIL import Image
+import io
 
 ########################################################################################
 # Color by L1 annotation 
@@ -153,12 +181,6 @@ import matplotlib as mpl
 # # colormap = tree.feature_colormap("L1_annotation_int", cmap="plasma")
 # # tree.render(f"{custom_plot_path}/{sample}_L1_annotation_int.svg" , colormap=colormap, scale = 10, branch_margin=2)
 # # print(help(tree.feature_colormap))
-
-# import matplotlib.pyplot as plt
-# import matplotlib.patches as mpatches
-# import cairosvg
-# from PIL import Image
-# import io
 
 # # Render tree to SVG
 # svg_path = f"{custom_plot_path}/{sample}_L1_annotation_int.svg"
@@ -483,11 +505,17 @@ def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_d
     cairosvg.svg2png(url=svg_path, write_to=png_path, dpi=150)
 
     # Build legend
+    # present_labels = set(
+    #     part
+    #     for node in tree.tree.traverse()
+    #     for part in getattr(node, var, "NA").split(":")
+    #     if part != "NA" and part in color_dict
+    # )
     present_labels = set(
         part
         for node in tree.tree.traverse()
-        for part in getattr(node, var, "NA").split(":")
-        if part != "NA" and part in color_dict
+        for part in str(getattr(node, var, "NA")).split(":")
+        if part != "NA" and part != "nan" and part in color_dict
     )
 
     patches = [

@@ -38,7 +38,7 @@ clone_nrs <- 1:10
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
   
   for (clone_nr in clone_nrs){

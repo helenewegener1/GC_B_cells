@@ -11,7 +11,7 @@ resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_ge
 
 patients <- names(resolve_LC_list_germlined)
 
-fasta_path <- "48_GCtree/fasta"
+fasta_path <- "48_GCtree/fasta/GC_clones/"
 fasta_files <- list.files(fasta_path)
 
 # ------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ for (HH in patients){
     
     # Get top "clone_nr" clone from given sample
     # clone_nr <- 5
-    filename <- grep(glue("{HH}_clone_nr_{clone_nr}"), fasta_files, value = TRUE)
+    filename <- grep(glue("{HH}_clone_nr_{clone_nr}_"), fasta_files, value = TRUE)
     fasta <- readDNAStringSet(filepath = glue("{fasta_path}/{filename}"))
     clone <- str_extract(filename, "\\d+_\\d+(?=\\.fasta)")
     
