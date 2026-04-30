@@ -42,6 +42,7 @@ tmp
 48_GCtree/script/gctree_env
 *_env/
 48_GCtree/fasta
+48_GCtree/script/gctree_env_local/
 
 .DS_Store
 .Rproj.user
