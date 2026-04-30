@@ -1,5 +1,7 @@
 library(glue)
 library(tidyverse)
+library(UpSetR)
+library(grid)
 source("10_broad_annotation/script/color_palette.R")
 
 # ------------------------------------------------------------------------------
@@ -288,69 +290,175 @@ for (HH in patients){
     v_gene <- plot_df$v_call_majority %>% unique() %>% str_split_i(",", 1)
     j_gene <- plot_df$j_call_majority %>% unique() %>% str_split_i(",", 1)
     
-    # Color by cell type
-    plot_df %>%   
-      ggplot(aes(y = sample_clean_fol_plot, fill = L1_annotation)) +
-      geom_bar() + 
-      scale_fill_manual(
-        values = L1_colors, 
-        labels = cell_type_names
-      ) + 
-      geom_text(aes(x = Count, label = Count), 
-                hjust = -0.2, color = "black",
-                stat = "unique") +
-      labs(
-        title = glue("{p}: {clone_definition}"),
-        # subtitle = glue("Clone ID: {clone}"),
-        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
-        y = "Samples",
-        fill = "Cell type"
-      ) +
-      # theme_minimal()
-      theme_classic()
+    # # Color by cell type
+    # plot_df %>%   
+    #   ggplot(aes(y = sample_clean_fol_plot, fill = L1_annotation)) +
+    #   geom_bar() + 
+    #   scale_fill_manual(
+    #     values = L1_colors, 
+    #     labels = cell_type_names
+    #   ) + 
+    #   geom_text(aes(x = Count, label = Count), 
+    #             hjust = -0.2, color = "black",
+    #             stat = "unique") +
+    #   labs(
+    #     title = glue("{p}: {clone_definition}"),
+    #     # subtitle = glue("Clone ID: {clone}"),
+    #     caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
+    #     y = "Samples",
+    #     fill = "Cell type"
+    #   ) +
+    #   # theme_minimal()
+    #   theme_classic()
+    # 
+    # ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, dpi = 1000)
+    # 
+    # 
+    # # Isotype heatmap
+    # plot_df %>%
+    #   filter(!c_call %in% c("IGHE", "") & !is.na(c_call)) %>% 
+    #   group_by(sample_clean_fol_plot, c_call, L1_annotation) %>%
+    #   summarise(Count = n(), .groups = "drop") %>%
+    #   complete(sample_clean_fol_plot, c_call, L1_annotation, 
+    #            fill = list(Count = 0)) %>%
+    #   ggplot(aes(x = L1_annotation, y = c_call, fill = Count)) +
+    #   geom_tile(color = "white", linewidth = 0.3) +
+    #   geom_text(aes(label = ifelse(Count > 0, Count, "")),
+    #             color = "white", size = 2.5) +
+    #   scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+    #                       limits = c(0, NA)) +
+    #   facet_grid(~ sample_clean_fol_plot) +
+    #   labs(
+    #     x = "Cell type",
+    #     y = "Ig Class",
+    #     title = glue("{p}: {clone_definition}"),
+    #     # subtitle = glue("Clone ID: {clone}"),
+    #     caption = glue("N cells: {n_cells}\nV gene: {v_gene}\nJ gene: {j_gene}")
+    #   ) +
+    #   theme_minimal() +
+    #   theme(
+    #     axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+    #     axis.text.y = element_text(size = 9),
+    #     panel.grid = element_blank(),
+    #     strip.text = element_text(size = 9, face = "bold"),
+    #     legend.position = "none"
+    #   )
+    # 
+    # if (HH == "HH119" & clone_nr == 1){
+    #   width <- 20
+    #   height <- 8
+    # } else {
+    #   width <- 12
+    #   height <- 4
+    # }
+    # 
+    # ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types_and_isotype.png"), width = width, height = height, dpi = 1000)
+    # 
+    # Upset plot 
+    plot_df_upset <- plot_df %>%
+      filter(!c_call %in% c("IGHE", "") & !is.na(c_call))
     
-    ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, dpi = 1000)
+    # Assuming plot_df has one row per sequence with c_call and L1_annotation columns
+    upset_input_c <- plot_df_upset %>%
+      mutate(present = 1L) %>%
+      pivot_wider(
+        id_cols = sequence_id,
+        names_from = c_call,      
+        values_from = present,
+        values_fill = 0L
+      ) %>%
+      as.data.frame() %>% 
+      select(where(~ any(. != 0)))
     
+    upset_input_L1 <- plot_df_upset %>%
+      mutate(present = 1L) %>%
+      pivot_wider(
+        id_cols = sequence_id,
+        names_from = L1_annotation, 
+        values_from = present,
+        values_fill = 0L
+      ) %>%
+      as.data.frame() %>% 
+      select(where(~ any(. != 0)))
     
-    # ISOTYPE HEATMAP
-    plot_df %>%
-      filter(!c_call %in% c("IGHE", "") & !is.na(c_call)) %>% 
-      group_by(sample_clean_fol_plot, c_call, L1_annotation) %>%
-      summarise(Count = n(), .groups = "drop") %>%
-      complete(sample_clean_fol_plot, c_call, L1_annotation, 
-               fill = list(Count = 0)) %>%
-      ggplot(aes(x = L1_annotation, y = c_call, fill = Count)) +
-      geom_tile(color = "white", linewidth = 0.3) +
-      geom_text(aes(label = ifelse(Count > 0, Count, "")),
-                color = "white", size = 2.5) +
-      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
-                          limits = c(0, NA)) +
-      facet_grid(~ sample_clean_fol_plot) +
-      labs(
-        x = "Cell type",
-        y = "Ig Class",
-        title = glue("{p}: {clone_definition}"),
-        # subtitle = glue("Clone ID: {clone}"),
-        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\nJ gene: {j_gene}")
-      ) +
-      theme_minimal() +
-      theme(
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
-        axis.text.y = element_text(size = 9),
-        panel.grid = element_blank(),
-        strip.text = element_text(size = 9, face = "bold"),
-        legend.position = "none"
+    upset_input_sample <- plot_df_upset %>%
+      mutate(present = 1L) %>%
+      pivot_wider(
+        id_cols = sequence_id,
+        names_from = sample_clean_fol_plot, 
+        values_from = present,
+        values_fill = 0L
+      ) %>%
+      as.data.frame() %>% 
+      select(where(~ any(. != 0)))
+    
+    upset_input_final <- full_join(upset_input_c, upset_input_L1, by = "sequence_id") %>% full_join(upset_input_sample, by = "sequence_id")
+    
+    # Define order
+    c_order <- upset_input_c %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+    L1_order <- upset_input_L1 %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+    sample_order <- upset_input_sample %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+    
+    set_order <- c(L1_order, c_order, sample_order)
+    
+    set_colors <- c(
+      rep("blue", length(L1_order)),
+      rep("darkred", length(c_order)),
+      rep("darkgreen", length(sample_order))
+    )
+    
+    # Prep saving plot 
+    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = 11, height = 7, units = "in", res = 1000)
+    
+    # Plot 
+    UpSetR::upset(
+      upset_input_final,
+      sets     = set_order,
+      order.by = "freq",
+      keep.order = TRUE, 
+      sets.bar.color = set_colors
+    )
+    
+    # Title
+    grid.text(
+      glue("{p}: {clone_definition}"),
+      x = 0.65, y = 0.97,          # adjust position as needed
+      gp = gpar(fontsize = 14, fontface = "bold")
+    )
+    
+    # Caption 
+    grid.text(
+      glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}"),
+      just = "right", 
+      x = 0.99, y = 0.03,          # adjust position as needed
+      gp = gpar(fontsize = 8)
+    )
+    
+    # Legend
+    legend_labels <- c("Sample", "Isotype", "Cell type")
+    legend_colors <- c("darkgreen", "darkred", "blue")
+    
+    x_start <- 0.07
+    y_start <- 0.50
+    gap     <- 0.05
+    
+    for (i in seq_along(legend_labels)) {
+      grid.rect(
+        x = x_start, y = y_start - (i - 1) * gap,
+        width = 0.02, height = 0.025,
+        just = "left",
+        gp = gpar(fill = legend_colors[i], col = NA)
       )
-    
-    if (HH == "HH119" & clone_nr == 1){
-      width <- 20
-      height <- 8
-    } else {
-      width <- 12
-      height <- 4
+      grid.text(
+        legend_labels[i],
+        x = x_start + 0.03, y = y_start - (i - 1) * gap,
+        just = "left",
+        gp = gpar(fontsize = 9)
+      )
     }
     
-    ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types_and_isotype.png"), width = width, height = height, dpi = 1000)
+    dev.off()
+
     
   }
 }
@@ -551,94 +659,93 @@ lapply(patients, function(HH){
 })
 
 # ==============================================================================
-# ISOTYPES- Upset plot
+# ISOTYPES - Upset plot
 # ==============================================================================
 
 
 # upset
-library(UpSetR)
-library(grid)
 
-
-# HH <- "HH119"
-p <- patient_names[[HH]]
-
-plot_df <- resolve_LC_list[[HH]] %>%
-  filter(locus == "IGH") %>%
-  mutate(
-    sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-"))
-  ) %>%
-  filter(!c_call %in% c("IGHE", "") & !is.na(c_call))
-
-# Assuming plot_df has one row per sequence with c_call and L1_annotation columns
-upset_input_c <- plot_df %>%
-  mutate(present = 1L) %>%
-  pivot_wider(
-    id_cols = sequence_id,
-    names_from = c_call,        # or L1_annotation, or both
-    values_from = present,
-    values_fill = 0L
-  ) %>%
-  as.data.frame()
-
-upset_input_L1 <- plot_df %>%
-  mutate(present = 1L) %>%
-  pivot_wider(
-    id_cols = sequence_id,
-    names_from = L1_annotation,        # or L1_annotation, or both
-    values_from = present,
-    values_fill = 0L
-  ) %>%
-  as.data.frame()
-
-upset_input_sample <- plot_df %>%
-  mutate(present = 1L) %>%
-  pivot_wider(
-    id_cols = sequence_id,
-    names_from = sample_clean_plot,        # or L1_annotation, or both
-    values_from = present,
-    values_fill = 0L
-  ) %>%
-  as.data.frame()
-
-upset_input_final <- full_join(upset_input_c, upset_input_L1, by = "sequence_id") %>% full_join(upset_input_sample, by = "sequence_id")
-
-# Define order
-c_order <- upset_input_c %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
-L1_order <- upset_input_L1 %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
-sample_order <- upset_input_sample %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
-
-set_order <- c(L1_order, c_order, sample_order)
-
-set_colors <- c(
-  rep("darkgreen", length(sample_order)),
-  rep("blue", length(L1_order)),
-  rep("darkred", length(c_order))
-)
-
-
-# Prep saving plot 
-png(glue("{outdir_5}/{HH}_upsetplot.png"), width = 13, height = 6, units = "in", res = 300)
-
-# Plot 
-UpSetR::upset(
-  upset_input_final,
-  sets     = set_order,
-  order.by = "freq",
-  keep.order = TRUE, 
-  sets.bar.color = set_colors
-)
-
-# Title
-grid.text(
-  glue("{p}: Sample, isotype and cell type intersections"),
-  x = 0.65, y = 0.97,          # adjust position as needed
-  gp = gpar(fontsize = 14, fontface = "bold")
-)
-
-dev.off()
-
-
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  p <- patient_names[[HH]]
+  
+  plot_df <- resolve_LC_list[[HH]] %>%
+    filter(locus == "IGH") %>%
+    mutate(
+      sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-"))
+    ) %>%
+    filter(!c_call %in% c("IGHE", "") & !is.na(c_call))
+  
+  # Assuming plot_df has one row per sequence with c_call and L1_annotation columns
+  upset_input_c <- plot_df %>%
+    mutate(present = 1L) %>%
+    pivot_wider(
+      id_cols = sequence_id,
+      names_from = c_call,        # or L1_annotation, or both
+      values_from = present,
+      values_fill = 0L
+    ) %>%
+    as.data.frame()
+  
+  upset_input_L1 <- plot_df %>%
+    mutate(present = 1L) %>%
+    pivot_wider(
+      id_cols = sequence_id,
+      names_from = L1_annotation,        # or L1_annotation, or both
+      values_from = present,
+      values_fill = 0L
+    ) %>%
+    as.data.frame()
+  
+  upset_input_sample <- plot_df %>%
+    mutate(present = 1L) %>%
+    pivot_wider(
+      id_cols = sequence_id,
+      names_from = sample_clean_plot,        # or L1_annotation, or both
+      values_from = present,
+      values_fill = 0L
+    ) %>%
+    as.data.frame()
+  
+  upset_input_final <- full_join(upset_input_c, upset_input_L1, by = "sequence_id") %>% full_join(upset_input_sample, by = "sequence_id")
+  
+  # Define order
+  c_order <- upset_input_c %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+  L1_order <- upset_input_L1 %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+  sample_order <- upset_input_sample %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+  
+  set_order <- c(L1_order, c_order, sample_order)
+  
+  set_colors <- c(
+    rep("darkgreen", length(sample_order)),
+    rep("darkred", length(c_order)),
+    rep("blue", length(L1_order))
+  )
+  
+  
+  # Prep saving plot 
+  png(glue("{outdir_5}/{HH}_upsetplot.png"), width = 13, height = 6, units = "in", res = 1000)
+  
+  # Plot 
+  UpSetR::upset(
+    upset_input_final,
+    sets     = set_order,
+    order.by = "freq",
+    keep.order = TRUE, 
+    sets.bar.color = set_colors
+  )
+  
+  # Title
+  grid.text(
+    glue("{p}: Sample, isotype and cell type intersections"),
+    x = 0.65, y = 0.97,          # adjust position as needed
+    gp = gpar(fontsize = 14, fontface = "bold")
+  )
+  
+  dev.off()
+  
+})
 # ==============================================================================
 # Frequency of top clone per follicle 
 # ==============================================================================
