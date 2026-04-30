@@ -253,7 +253,7 @@ lapply(patients, function(HH){
 # Visualize top clones
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_top_clones <- top_GC_clones[[HH]]
   n_clones <- length(HH_top_clones)
   
@@ -407,7 +407,7 @@ for (HH in patients){
       rep("darkgreen", length(sample_order))
     )
     
-    if (HH == "HH119" & clone_nr %in% c(1, 2)){
+    if (HH == "HH119" & clone_nr == 1){
       height = 9
     } else {
       height = 5
@@ -419,11 +419,13 @@ for (HH in patients){
     # Plot 
     print(UpSetR::upset(
       upset_input_final,
-      sets     = set_order,
+      sets = set_order,
+      # nintersects = 40,
       order.by = "freq",
       keep.order = TRUE, 
       sets.bar.color = set_colors,
-      mb.ratio = c(0.4, 0.6)
+      mb.ratio = c(0.4, 0.6),
+      line.size = 0.3
     ))
     
     # Title
