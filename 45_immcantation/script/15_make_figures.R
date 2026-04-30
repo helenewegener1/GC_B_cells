@@ -411,13 +411,13 @@ for (HH in patients){
     png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = 11, height = 7, units = "in", res = 1000)
     
     # Plot 
-    UpSetR::upset(
+    print(UpSetR::upset(
       upset_input_final,
       sets     = set_order,
       order.by = "freq",
       keep.order = TRUE, 
       sets.bar.color = set_colors
-    )
+    ))
     
     # Title
     grid.text(
