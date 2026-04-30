@@ -3,6 +3,8 @@ library(msa) # mulitple sequence alignment
 library(tidyverse)
 library(glue)
 
+#### THIS SCRIPT IS COPIED TO GCTREE AND WILL BE EXECUTED THERE #### 
+
 # ------------------------------------------------------------------------------
 # Load data
 # ------------------------------------------------------------------------------

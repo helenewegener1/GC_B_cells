@@ -11,57 +11,65 @@ resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rd
 
 patients <- names(resolve_LC_list)
 
+ncol(seurat_integrated)
+
 # ==============================================================================
 # Export BCR meta data to Gina 
 # ==============================================================================
 
-# meta_4_Gina_list <- lapply(patients, function(HH){
-#   
-#   # HH <- "HH117"
-#   
-#   seurat_obj <- subset(seurat_integrated, patient == HH)
-#   resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
-#   
-#   # Check IDs
-#   seurat_obj %>% colnames() %>% head()
-#   resolve_LC_HH$cell_id %>% head()
-#   
-#   seurat_obj %>% colnames() %>% length()
-#   resolve_LC_HH$cell_id %>% length()
-#   
-#   (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
-#   (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
-#   
-#   
-#   # Wrangle IDs
-#   seurat_ids <- seurat_obj %>% colnames()
-#   LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
-#   
-#   (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
-#   (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
-#   
-#   table(LC_ids %in% seurat_ids)
-#   
-#   # Prep for merge
-#   resolve_LC_HH_meta <- resolve_LC_HH %>% 
-#     mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>% 
-#     select(cell_id_seurat_clean, c_call, clone_subgroup_id)
-#   
-#   # Merge and create final meta data for Gina
-#   meta_4_Gina <- seurat_obj[[]] %>% 
-#     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID) %>% 
-#     rownames_to_column("cell_id_seurat_clean") %>% 
-#     left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>% 
-#     column_to_rownames("cell_id_seurat_clean")
-#   
-#   # Check 
-#   meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
-#   
-#   return(meta_4_Gina)
-#   
-# }) %>% setNames(patients)
-# 
-# saveRDS(meta_4_Gina_list, "45_immcantation/out/rds/meta_4_Gina_list.rds")
+meta_4_Gina_list <- lapply(patients, function(HH){
+
+  # HH <- "HH119"
+
+  seurat_obj <- subset(seurat_integrated, patient == HH)
+  resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
+
+  # Check IDs
+  seurat_obj %>% colnames() %>% head()
+  resolve_LC_HH$cell_id %>% head()
+
+  seurat_obj %>% colnames() %>% length()
+  resolve_LC_HH$cell_id %>% length()
+
+  (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
+  (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
+
+
+  # Wrangle IDs
+  seurat_ids <- seurat_obj %>% colnames()
+  LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
+
+  (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
+  (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
+
+  table(LC_ids %in% seurat_ids)
+
+  # Prep for merge
+  resolve_LC_HH_meta <- resolve_LC_HH %>%
+    mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>%
+    select(cell_id_seurat_clean, c_call, clone_subgroup_id)
+
+  # Merge and create final meta data for Gina
+  meta_4_Gina <- seurat_obj[[]] %>%
+    select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample) %>%
+    rownames_to_column("cell_id_seurat_clean") %>%
+    left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
+    column_to_rownames("cell_id_seurat_clean")
+
+  # Check
+  meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
+
+  return(meta_4_Gina)
+
+}) %>% setNames(patients)
+
+saveRDS(meta_4_Gina_list %>% bind_rows(), "45_immcantation/out/rds/meta_4_Gina_list.rds")
+
+meta <- readRDS("45_immcantation/out/rds/meta_4_Gina_list.rds")
+
+
+resolve_LC_list$HH117$L1_annotation %>% table()
+
 
 # ==============================================================================
 # All cells: Summary of cell types
@@ -541,6 +549,94 @@ lapply(patients, function(HH){
   ggsave(glue("{outdir_5}/{HH}_isotypes_samples_cell_types.png"), width = 9.5, height = 5.5, dpi = 1000)
   
 })
+
+# ==============================================================================
+# ISOTYPES- Upset plot
+# ==============================================================================
+
+
+# upset
+library(UpSetR)
+library(grid)
+
+
+# HH <- "HH119"
+p <- patient_names[[HH]]
+
+plot_df <- resolve_LC_list[[HH]] %>%
+  filter(locus == "IGH") %>%
+  mutate(
+    sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-"))
+  ) %>%
+  filter(!c_call %in% c("IGHE", "") & !is.na(c_call))
+
+# Assuming plot_df has one row per sequence with c_call and L1_annotation columns
+upset_input_c <- plot_df %>%
+  mutate(present = 1L) %>%
+  pivot_wider(
+    id_cols = sequence_id,
+    names_from = c_call,        # or L1_annotation, or both
+    values_from = present,
+    values_fill = 0L
+  ) %>%
+  as.data.frame()
+
+upset_input_L1 <- plot_df %>%
+  mutate(present = 1L) %>%
+  pivot_wider(
+    id_cols = sequence_id,
+    names_from = L1_annotation,        # or L1_annotation, or both
+    values_from = present,
+    values_fill = 0L
+  ) %>%
+  as.data.frame()
+
+upset_input_sample <- plot_df %>%
+  mutate(present = 1L) %>%
+  pivot_wider(
+    id_cols = sequence_id,
+    names_from = sample_clean_plot,        # or L1_annotation, or both
+    values_from = present,
+    values_fill = 0L
+  ) %>%
+  as.data.frame()
+
+upset_input_final <- full_join(upset_input_c, upset_input_L1, by = "sequence_id") %>% full_join(upset_input_sample, by = "sequence_id")
+
+# Define order
+c_order <- upset_input_c %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+L1_order <- upset_input_L1 %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+sample_order <- upset_input_sample %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
+
+set_order <- c(L1_order, c_order, sample_order)
+
+set_colors <- c(
+  rep("darkgreen", length(sample_order)),
+  rep("blue", length(L1_order)),
+  rep("darkred", length(c_order))
+)
+
+
+# Prep saving plot 
+png(glue("{outdir_5}/{HH}_upsetplot.png"), width = 13, height = 6, units = "in", res = 300)
+
+# Plot 
+UpSetR::upset(
+  upset_input_final,
+  sets     = set_order,
+  order.by = "freq",
+  keep.order = TRUE, 
+  sets.bar.color = set_colors
+)
+
+# Title
+grid.text(
+  glue("{p}: Sample, isotype and cell type intersections"),
+  x = 0.65, y = 0.97,          # adjust position as needed
+  gp = gpar(fontsize = 14, fontface = "bold")
+)
+
+dev.off()
 
 
 # ==============================================================================
