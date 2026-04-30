@@ -407,8 +407,14 @@ for (HH in patients){
       rep("darkgreen", length(sample_order))
     )
     
+    if (HH == "HH119" & clone_nr %in% c(1, 2)){
+      height = 9
+    } else {
+      height = 5
+    }
+    
     # Prep saving plot 
-    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = 11, height = 7, units = "in", res = 1000)
+    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = 11, height = height, units = "in", res = 1000)
     
     # Plot 
     print(UpSetR::upset(
@@ -416,7 +422,8 @@ for (HH in patients){
       sets     = set_order,
       order.by = "freq",
       keep.order = TRUE, 
-      sets.bar.color = set_colors
+      sets.bar.color = set_colors,
+      mb.ratio = c(0.4, 0.6)
     ))
     
     # Title
@@ -439,7 +446,7 @@ for (HH in patients){
     legend_colors <- c("darkgreen", "darkred", "blue")
     
     x_start <- 0.07
-    y_start <- 0.50
+    y_start <- 0.80
     gap     <- 0.05
     
     for (i in seq_along(legend_labels)) {
