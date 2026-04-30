@@ -762,6 +762,95 @@ lapply(patients, function(HH){
 outdir_6 <- "45_immcantation/plot/15_poster_figures/Freq_of_clones_across_follicles"
 dir.create(outdir_6, recursive = TRUE)
 
+n_clones <- 10
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH117"
+  p <- patient_names[[HH]]
+  
+  # Subset to 5 clones
+  top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
+  
+  plot_df <- resolve_LC_list[[HH]] %>% 
+    filter(locus == "IGH") %>% 
+    mutate(
+      sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-")),
+      sample_clean_plot = fct_infreq(sample_clean_plot), #%>% fct_rev()
+      clone_subgroup_id_plot = ifelse(clone_subgroup_id %in% top_GC_clones_subset, clone_subgroup_id, "other"),
+      clone_subgroup_id_plot = factor(clone_subgroup_id_plot, levels = c(top_GC_clones_subset, "other"))
+    ) %>%
+    add_count(sample_clean_plot, name = "Count") 
+  
+  # Across follicles 
+  HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+  
+  # Define clone colors 
+  clone_colors <- list("#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
+                       "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+                       "grey") %>% setNames(c(top_GC_clones_subset, "other"))
+  
+  # Define clone names
+  clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
+  
+  # N clones with >= 3 cells
+  N_clones_per_fol <- plot_df %>%
+    filter(!is.na(manual_ADT_ID)) %>%
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+    ) %>% 
+    group_by(manual_ADT_ID_plot) %>% 
+    count(clone_subgroup_id) %>% 
+    filter(n >= 3) %>% 
+    count(manual_ADT_ID_plot) %>% 
+    ungroup() %>%
+    complete(
+      manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
+      fill = list(n = 0)
+    )
+
+  plot_df %>%
+    filter(!is.na(manual_ADT_ID)) %>%
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+    ) %>% 
+    ggplot(aes(x = manual_ADT_ID_plot)) + 
+    geom_bar(aes(fill = clone_subgroup_id_plot), position = "fill") + 
+    geom_text(
+      data = N_clones_per_fol, 
+      aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
+    ) +
+    scale_fill_manual(
+      values = clone_colors, 
+      labels = clone_names
+    ) + 
+    scale_x_continuous(
+      breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+      limits = c(0.5, NA),
+      expand = c(0, 0.5)
+    ) + 
+    scale_y_continuous(labels = scales::percent) +
+    theme_classic() +
+    labs(
+      x = "Follicle number", 
+      y = "Frequency", 
+      title = glue("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
+      subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 5 cells in each follicle is stated."),
+      fill = "Clone"
+    )
+  
+  ggsave(glue("{outdir_6}/{HH}_N_{n_clones}.png"), width = 14, height = 7, dpi = 1000)
+  
+})
+
+
+# ==============================================================================
+# Frequency of top clone per follicle 
+# ==============================================================================
+
+outdir_7 <- "45_immcantation/plot/15_poster_figures/Freq_of_clones_across_samples"
+dir.create(outdir_7, recursive = TRUE)
+
 n_clones <- 5
 
 lapply(patients, function(HH){
@@ -793,57 +882,38 @@ lapply(patients, function(HH){
   # Define clone names
   clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
   
-  # plot_df %>% 
-  #   filter(!is.na(manual_ADT_ID)) %>% 
-  #   mutate(
-  #     manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-  #   ) %>% 
-  #   ggplot(aes(x = manual_ADT_ID_plot, fill = clone_subgroup_id_plot)) + 
-  #   geom_bar() + 
-  #   scale_fill_manual(
-  #     values = clone_colors, 
-  #     labels = clone_names
-  #   ) + 
-  #   scale_x_continuous(
-  #     breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-  #     limits = c(0.5, NA),
-  #     expand = c(0, 0.5)
-  #   ) + 
-  #   theme_classic() +
-  #   labs(
-  #     x = "Follicle number", 
-  #     y = "Count", 
-  #     title = glue ("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
-  #     subtitle = glue("Top {n_clones} clones highlighted"),
-  #     fill = "Clone"
-  #   )
+  # N clones with >= 3 cells
+  N_clones_per_fol <- plot_df %>% 
+    group_by(sample_clean_plot) %>% 
+    count(clone_subgroup_id) %>% 
+    filter(n >= 3) %>% 
+    count(sample_clean_plot) %>% 
+    ungroup()
   
-  ggplot(aes(x = manual_ADT_ID_plot, fill = clone_subgroup_id_plot)) + 
-    geom_bar(position = "fill") + 
+  plot_df %>%
+    ggplot(aes(x = sample_clean_plot)) + 
+    geom_bar(aes(fill = clone_subgroup_id_plot), position = "fill") + 
     scale_fill_manual(
       values = clone_colors, 
       labels = clone_names
     ) + 
-    scale_x_continuous(
-      breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-      limits = c(0.5, NA),
-      expand = c(0, 0.5)
-    ) + 
+    geom_text(
+      data = N_clones_per_fol, 
+      aes(x = sample_clean_plot, y = 1.02, label = n)
+    ) +
     scale_y_continuous(labels = scales::percent) +
     theme_classic() +
     labs(
       x = "Follicle number", 
       y = "Frequency", 
-      title = glue("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
-      subtitle = glue("Top {n_clones} clones highlighted"),
+      title = glue("{p}: Distribution of clones across samples"),
+      subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 5 cells in each sample is stated."),
       fill = "Clone"
     )
   
-  ggsave(glue("{outdir_6}/{HH}.png"), width = 14, height = 7, dpi = 1000)
+  ggsave(glue("{outdir_7}/{HH}_N_{n_clones}.png"), width = 14, height = 7, dpi = 1000)
   
 })
-
-
 
 
 
