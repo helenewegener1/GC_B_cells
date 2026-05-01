@@ -19,58 +19,57 @@ ncol(seurat_integrated)
 # Export BCR meta data to Gina 
 # ==============================================================================
 
-meta_4_Gina_list <- lapply(patients, function(HH){
-
-  # HH <- "HH119"
-
-  seurat_obj <- subset(seurat_integrated, patient == HH)
-  resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
-
-  # Check IDs
-  seurat_obj %>% colnames() %>% head()
-  resolve_LC_HH$cell_id %>% head()
-
-  seurat_obj %>% colnames() %>% length()
-  resolve_LC_HH$cell_id %>% length()
-
-  (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
-  (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
-
-
-  # Wrangle IDs
-  seurat_ids <- seurat_obj %>% colnames()
-  LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
-
-  (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
-  (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
-
-  table(LC_ids %in% seurat_ids)
-
-  # Prep for merge
-  resolve_LC_HH_meta <- resolve_LC_HH %>%
-    mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>%
-    select(cell_id_seurat_clean, c_call, clone_subgroup_id)
-
-  # Merge and create final meta data for Gina
-  meta_4_Gina <- seurat_obj[[]] %>%
-    select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample) %>%
-    rownames_to_column("cell_id_seurat_clean") %>%
-    left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
-    column_to_rownames("cell_id_seurat_clean")
-
-  # Check
-  meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
-
-  return(meta_4_Gina)
-
-}) %>% setNames(patients)
+# meta_4_Gina_list <- lapply(patients, function(HH){
+# 
+#   # HH <- "HH119"
+# 
+#   seurat_obj <- subset(seurat_integrated, patient == HH)
+#   resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
+# 
+#   # Check IDs
+#   seurat_obj %>% colnames() %>% head()
+#   resolve_LC_HH$cell_id %>% head()
+# 
+#   seurat_obj %>% colnames() %>% length()
+#   resolve_LC_HH$cell_id %>% length()
+# 
+#   (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
+#   (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
+# 
+# 
+#   # Wrangle IDs
+#   seurat_ids <- seurat_obj %>% colnames()
+#   LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
+# 
+#   (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
+#   (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
+# 
+#   table(LC_ids %in% seurat_ids)
+# 
+#   # Prep for merge
+#   resolve_LC_HH_meta <- resolve_LC_HH %>%
+#     mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>%
+#     select(cell_id_seurat_clean, c_call, clone_subgroup_id)
+# 
+#   # Merge and create final meta data for Gina
+#   meta_4_Gina <- seurat_obj[[]] %>%
+#     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample) %>%
+#     rownames_to_column("cell_id_seurat_clean") %>%
+#     left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
+#     column_to_rownames("cell_id_seurat_clean")
+# 
+#   # Check
+#   meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
+# 
+#   return(meta_4_Gina)
+# 
+# }) %>% setNames(patients)
 
 saveRDS(meta_4_Gina_list %>% bind_rows(), "45_immcantation/out/rds/meta_4_Gina_list.rds")
 
-meta <- readRDS("45_immcantation/out/rds/meta_4_Gina_list.rds")
-
-
-resolve_LC_list$HH117$L1_annotation %>% table()
+# meta <- readRDS("45_immcantation/out/rds/meta_4_Gina_list.rds")
+# 
+# resolve_LC_list$HH117$L1_annotation %>% table()
 
 
 # ==============================================================================
@@ -124,7 +123,8 @@ lapply(patients, function(HH){
       y = "Count", 
       title = glue ("{p}: N cells across samples"),
       fill = "Cell type"
-    )
+    ) + 
+    theme(plot.title = element_text(face = "bold", size = 16))
   
   ggsave(glue("{outdir_1}/{HH}_N_cells_across_samples.png"), width = 12, height = 7, dpi = 1000)
   
@@ -168,7 +168,8 @@ lapply(patients, function(HH){
       y = "Count", 
       title = glue ("{p}: N B cells across samples"),
       fill = "Cell type"
-    )  
+    ) + 
+    theme(plot.title = element_text(face = "bold", size = 16))
     # theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
   ggsave(glue("{outdir_2}/{HH}_N_cells_across_samples.png"), width = 12, height = 7, dpi = 1000)
@@ -199,7 +200,8 @@ lapply(patients, function(HH){
       y = "Count", 
       title = glue ("{p}: N B cells across {HH_fol_sample_clean} follicles"),
       fill = "Cell type"
-    )
+    ) + 
+    theme(plot.title = element_text(face = "bold", size = 16))
   
   ggsave(glue("{outdir_2}/{HH}_N_cells_across_follicles.png"), width = 14, height = 7, dpi = 1000)
   
@@ -283,77 +285,79 @@ for (HH in patients){
                                        sample_clean_fol_plot),
         sample_clean_fol_plot = fct_infreq(sample_clean_fol_plot) %>% fct_rev()
       ) %>%
-      add_count(sample_clean_fol_plot, name = "Count") 
+      add_count(sample_clean_fol_plot, name = "Count")
     
     # Meta data
     n_cells <- plot_df %>% nrow()
     v_gene <- plot_df$v_call_majority %>% unique() %>% str_split_i(",", 1)
     j_gene <- plot_df$j_call_majority %>% unique() %>% str_split_i(",", 1)
     
-    # # Color by cell type
-    # plot_df %>%   
-    #   ggplot(aes(y = sample_clean_fol_plot, fill = L1_annotation)) +
-    #   geom_bar() + 
-    #   scale_fill_manual(
-    #     values = L1_colors, 
-    #     labels = cell_type_names
-    #   ) + 
-    #   geom_text(aes(x = Count, label = Count), 
-    #             hjust = -0.2, color = "black",
-    #             stat = "unique") +
-    #   labs(
-    #     title = glue("{p}: {clone_definition}"),
-    #     # subtitle = glue("Clone ID: {clone}"),
-    #     caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
-    #     y = "Samples",
-    #     fill = "Cell type"
-    #   ) +
-    #   # theme_minimal()
-    #   theme_classic()
-    # 
-    # ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, dpi = 1000)
-    # 
-    # 
-    # # Isotype heatmap
-    # plot_df %>%
-    #   filter(!c_call %in% c("IGHE", "") & !is.na(c_call)) %>% 
-    #   group_by(sample_clean_fol_plot, c_call, L1_annotation) %>%
-    #   summarise(Count = n(), .groups = "drop") %>%
-    #   complete(sample_clean_fol_plot, c_call, L1_annotation, 
-    #            fill = list(Count = 0)) %>%
-    #   ggplot(aes(x = L1_annotation, y = c_call, fill = Count)) +
-    #   geom_tile(color = "white", linewidth = 0.3) +
-    #   geom_text(aes(label = ifelse(Count > 0, Count, "")),
-    #             color = "white", size = 2.5) +
-    #   scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
-    #                       limits = c(0, NA)) +
-    #   facet_grid(~ sample_clean_fol_plot) +
-    #   labs(
-    #     x = "Cell type",
-    #     y = "Ig Class",
-    #     title = glue("{p}: {clone_definition}"),
-    #     # subtitle = glue("Clone ID: {clone}"),
-    #     caption = glue("N cells: {n_cells}\nV gene: {v_gene}\nJ gene: {j_gene}")
-    #   ) +
-    #   theme_minimal() +
-    #   theme(
-    #     axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
-    #     axis.text.y = element_text(size = 9),
-    #     panel.grid = element_blank(),
-    #     strip.text = element_text(size = 9, face = "bold"),
-    #     legend.position = "none"
-    #   )
-    # 
-    # if (HH == "HH119" & clone_nr == 1){
-    #   width <- 20
-    #   height <- 8
-    # } else {
-    #   width <- 12
-    #   height <- 4
-    # }
-    # 
-    # ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types_and_isotype.png"), width = width, height = height, dpi = 1000)
-    # 
+    # Color by cell type
+    plot_df %>%
+      ggplot(aes(y = sample_clean_fol_plot, fill = L1_annotation)) +
+      geom_bar() +
+      scale_fill_manual(
+        values = L1_colors,
+        labels = cell_type_names
+      ) +
+      geom_text(aes(x = Count, label = Count),
+                hjust = -0.2, color = "black",
+                stat = "unique") +
+      labs(
+        title = glue("{p}: {clone_definition}"),
+        # subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
+        y = "Samples",
+        fill = "Cell type"
+      ) +
+      # theme_minimal()
+      theme_classic() + 
+      theme(plot.title = element_text(face = "bold", size = 16))
+
+    ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, dpi = 1000)
+
+
+    # Isotype heatmap
+    plot_df %>%
+      filter(!c_call %in% c("IGHE", "") & !is.na(c_call)) %>%
+      group_by(sample_clean_fol_plot, c_call, L1_annotation) %>%
+      summarise(Count = n(), .groups = "drop") %>%
+      complete(sample_clean_fol_plot, c_call, L1_annotation,
+               fill = list(Count = 0)) %>%
+      ggplot(aes(x = L1_annotation, y = c_call, fill = Count)) +
+      geom_tile(color = "white", linewidth = 0.3) +
+      geom_text(aes(label = ifelse(Count > 0, Count, "")),
+                color = "white", size = 2.5) +
+      scale_fill_gradient(low = "#c8d8e8", high = "#0d2a4e",
+                          limits = c(0, NA)) +
+      facet_grid(~ sample_clean_fol_plot) +
+      labs(
+        x = "Cell type",
+        y = "Ig Class",
+        title = glue("{p}: {clone_definition}"),
+        # subtitle = glue("Clone ID: {clone}"),
+        caption = glue("N cells: {n_cells}\nV gene: {v_gene}\nJ gene: {j_gene}")
+      ) +
+      theme_minimal() +
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 9),
+        panel.grid = element_blank(),
+        strip.text = element_text(size = 9, face = "bold"),
+        legend.position = "none",
+        plot.title = element_text(face = "bold", size = 16)
+      )
+
+    if (HH == "HH119" & clone_nr == 1){
+      width <- 20
+      height <- 8
+    } else {
+      width <- 12
+      height <- 4
+    }
+
+    ggsave(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types_and_isotype.png"), width = width, height = height, dpi = 1000)
+
     # Upset plot 
     plot_df_upset <- plot_df %>%
       filter(!c_call %in% c("IGHE", "") & !is.na(c_call))
@@ -568,7 +572,8 @@ for (HH in patients){
         fill = "Cell type"
       ) +
       # theme_minimal()
-      theme_classic()
+      theme_classic() + 
+      theme(plot.title = element_text(face = "bold", size = 16))
     
     ggsave(glue("{outdir_4}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, dpi = 1000)
     
@@ -599,7 +604,8 @@ for (HH in patients){
         axis.text.y = element_text(size = 9),
         panel.grid = element_blank(),
         strip.text = element_text(size = 9, face = "bold"),
-        legend.position = "none"
+        legend.position = "none",
+        plot.title = element_text(face = "bold", size = 16)
       )
     
     if (HH == "HH119" & clone_nr == 1){
@@ -660,7 +666,8 @@ lapply(patients, function(HH){
       axis.text.y = element_text(size = 9),
       panel.grid = element_blank(),
       strip.text = element_text(size = 9, face = "bold"),
-      legend.position = "none"
+      legend.position = "none",
+      plot.title = element_text(face = "bold", size = 16)
     )
   
   ggsave(glue("{outdir_5}/{HH}_isotypes_samples_cell_types.png"), width = 9.5, height = 5.5, dpi = 1000)
@@ -762,7 +769,7 @@ lapply(patients, function(HH){
 outdir_6 <- "45_immcantation/plot/15_poster_figures/Freq_of_clones_across_follicles"
 dir.create(outdir_6, recursive = TRUE)
 
-n_clones <- 10
+n_clones <- 5
 
 lapply(patients, function(HH){
   
@@ -787,7 +794,7 @@ lapply(patients, function(HH){
   
   # Define clone colors 
   clone_colors <- list("#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
-                       "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+                       # "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
                        "grey") %>% setNames(c(top_GC_clones_subset, "other"))
   
   # Define clone names
@@ -835,9 +842,10 @@ lapply(patients, function(HH){
       x = "Follicle number", 
       y = "Frequency", 
       title = glue("{p}: Distribution of clones across {HH_fol_sample_clean} follicles"),
-      subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 5 cells in each follicle is stated."),
+      subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 3 cells in each follicle is stated."),
       fill = "Clone"
-    )
+    ) + 
+    theme(plot.title = element_text(face = "bold", size = 16))
   
   ggsave(glue("{outdir_6}/{HH}_N_{n_clones}.png"), width = 14, height = 7, dpi = 1000)
   
@@ -907,9 +915,10 @@ lapply(patients, function(HH){
       x = "Follicle number", 
       y = "Frequency", 
       title = glue("{p}: Distribution of clones across samples"),
-      subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 5 cells in each sample is stated."),
+      subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 3 cells in each sample is stated."),
       fill = "Clone"
-    )
+    ) + 
+    theme(plot.title = element_text(face = "bold", size = 16))
   
   ggsave(glue("{outdir_7}/{HH}_N_{n_clones}.png"), width = 14, height = 7, dpi = 1000)
   
