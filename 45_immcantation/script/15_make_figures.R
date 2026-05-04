@@ -433,8 +433,8 @@ for (HH in patients){
     )
 
     if (HH == "HH119" & clone_nr == 1){
-      width <- 8
-      height <- 10
+      width <- 10
+      height <- 9.5
       nintersects <- 27
       more_than_N_cells <- 10
     } else if (HH == "HH117" & clone_nr == 1){
@@ -473,7 +473,7 @@ for (HH in patients){
     grid.text(
       glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}\nCombinations with >= {more_than_N_cells} cells are shown."),
       just = "right", 
-      x = 0.99, y = 0.03,          # adjust position as needed
+      x = 0.99, y = 0.02,          # adjust position as needed
       gp = gpar(fontsize = 8)
     )
     
@@ -483,12 +483,12 @@ for (HH in patients){
     
     x_start <- 0.07
     y_start <- 0.80
-    gap     <- 0.05
+    gap     <- 0.03
     
     for (i in seq_along(legend_labels)) {
       grid.rect(
         x = x_start, y = y_start - (i - 1) * gap,
-        width = 0.02, height = 0.025,
+        width = 0.02, height = 0.020,
         just = "left",
         gp = gpar(fill = legend_colors[i], col = NA)
       )
