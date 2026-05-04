@@ -433,7 +433,7 @@ for (HH in patients){
     )
 
     if (HH == "HH119" & clone_nr == 1){
-      width <- 10
+      width <- 8
       height <- 9.5
       nintersects <- 27
       more_than_N_cells <- 10
@@ -445,6 +445,7 @@ for (HH in patients){
     } else {
       width <- 11
       height <- 4
+      more_than_N_cells <- 1
     }
     
     # Prep saving plot 
@@ -462,10 +463,17 @@ for (HH in patients){
       line.size = 0.3
     ))
     
+    # White background rectangle behind title
+    grid.rect(
+      x = 0.50, y = 0.98,
+      width = 0.7, height = 0.05,   # adjust size to fit your text
+      gp = gpar(fill = "white", col = NA)  # col = NA removes border
+    )
+    
     # Title
     grid.text(
       glue("{p}: {clone_definition}"),
-      x = 0.65, y = 0.97,          # adjust position as needed
+      x = 0.50, y = 0.97,          # adjust position as needed
       gp = gpar(fontsize = 14, fontface = "bold")
     )
     
