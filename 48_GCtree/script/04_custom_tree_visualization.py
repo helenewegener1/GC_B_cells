@@ -12,6 +12,7 @@ import pickle
 import numpy as np
 import os
 import pandas as pd
+import re
 
 # For computerome run
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
@@ -36,10 +37,16 @@ samples = [
 
 # for sample in samples:
 
-# Define paths 
+# Define samples 
 # sample = "HH117_clone_nr_5_clone_1856_1"
+
 # sample = "HH117_clone_nr_1_clone_578_1"
+# sample_name = "Crohn's Diease: Largest clone with GC B cells across samples"
+
 sample = "HH119_clone_nr_2_clone_5791_1"
+sample_name = "Colorectal Cancer: Second largest clone with GC B cells across samples"
+
+HH = sample.split("_")[0]
 plot_path = f"./../plot/{sample}"
 p_file = f"{plot_path}/{sample}.inference.1.p"
 # print(p_file)
@@ -450,11 +457,38 @@ color_list = {
     
 }
 
+var_translate = {
+  "L1_annotation": "Cell type", 
+  "c_call": "Isotype",
+  "sample_clean_fol": "Sample"
+}
+
+label_translate = {
+    "L1_annotation": {
+        "Tfh_cells":             "Tfh cells",
+        "Naive_Bcells":          "Naive B cells",
+        "Memory_Bcells":         "Memory B cells",
+        "GC_B_cells":            "GC B cells",
+        "PCs":                   "Plasma cells",
+        "Unconventional_Bcells": "Unconventional B cells",
+    },
+    "c_call": {},        # no translation needed
+    "sample_clean_fol": {}  # handled by format_label
+}
+
+# sample_clean_fol translator
+def format_label(label, HH):
+    # Remove patient prefix e.g. "HH117-"
+    label = label.replace(f"{HH}-", "")
+    # Replace "Fol-1" with "Follicle 1"
+    label = re.sub(r".*_Fol-(\d+)", r"Follicle \1", label)
+    return label
+
 def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_dir=None):
     
     # Get color dict for this variable
     color_dict = color_list[var]
-    color_map_with_na = {**color_dict, "NA": "#808080"}
+    color_map_with_na = {**color_dict, "NA": "#C8C8C8"}
 
     # Build feature dicts
     dict_str = df_meta.set_index("seq_unique")[var].to_dict()
@@ -477,7 +511,7 @@ def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_d
             counts = pd.read_csv(counts_path, index_col=0)
 
     # Build colormap
-    def get_color(node, default="#808080"):
+    def get_color(node, default="#C8C8C8"):
         annotation = getattr(node, var, "NA")
         if annotation is None or annotation == "NA":
             return default
@@ -520,8 +554,13 @@ def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_d
         if part != "NA" and part != "nan" and part in color_dict
     )
 
+    translate = label_translate.get(var, {})
+    
     patches = [
-        mpatches.Patch(color=color_dict[label], label=label)
+        mpatches.Patch(
+          color=color_dict[label], 
+          label=translate.get(label, format_label(label, HH))  # translate if available, else format_label
+        )
         for label in present_labels
         if label in color_dict
     ]
@@ -535,15 +574,15 @@ def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_d
         )
     )
     if has_na:
-        patches.append(mpatches.Patch(color="#808080", label="NA"))
+        patches.append(mpatches.Patch(color="#C8C8C8", label="NA"))
 
     # Add legend and title to plot
     img = Image.open(png_path)
     fig, ax = plt.subplots(figsize=(img.width/200, img.height/200))
     ax.imshow(img)
     ax.axis("off")
-    ax.legend(handles=patches, loc="upper left", title=var, fontsize=14, title_fontsize=16)
-    ax.set_title(f"GC tree of {sample}", fontsize=20, fontweight="bold")
+    ax.legend(handles=patches, loc="upper left", title=var_translate[var], fontsize=14, title_fontsize=16)
+    ax.set_title(sample_name, fontsize=20, fontweight="bold")
     plt.savefig(png_path, bbox_inches="tight", dpi=150)
     plt.close()
 
