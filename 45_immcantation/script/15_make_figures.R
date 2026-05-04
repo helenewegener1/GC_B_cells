@@ -217,6 +217,66 @@ lapply(patients, function(HH){
   
   dev.off()
   
+  # Isotype
+  ## Count
+  png(glue("{outdir_2}/{HH}_Isotype_count_across_follicles.png"), width = 14, height = 7, res = 1000, units = "in")
+  
+  print(
+    plot_df %>% 
+      filter(!is.na(manual_ADT_ID)) %>% 
+      mutate(
+        manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+      ) %>% 
+      ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) + 
+      geom_bar() + 
+      scale_fill_manual(values = isotype_colors_custom) +
+      scale_x_continuous(
+        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+        limits = c(0.5, NA),
+        expand = c(0, 0.5)
+      ) + 
+      theme_classic() +
+      labs(
+        x = "Follicle number", 
+        y = "Count", 
+        title = glue ("{p}: Isotypes across {HH_fol_sample_clean} follicles"),
+        fill = "Cell type"
+      ) + 
+      theme(plot.title = element_text(face = "bold", size = 16))
+  )
+  
+  dev.off()
+  
+  ## Freq
+  png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles.png"), width = 14, height = 7, res = 1000, units = "in")
+  
+  print(
+    plot_df %>% 
+      filter(!is.na(manual_ADT_ID)) %>% 
+      mutate(
+        manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+      ) %>% 
+      ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) + 
+      geom_bar(position = "fill") +            # <-- changed
+      scale_fill_manual(values = isotype_colors_custom) +
+      scale_y_continuous(labels = scales::percent) +   # <-- optional: show % instead of 0-1
+      scale_x_continuous(
+        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+        limits = c(0.5, NA),
+        expand = c(0, 0.5)
+      ) + 
+      theme_classic() +
+      labs(
+        x = "Follicle number", 
+        y = "Frequency",                        # <-- changed
+        title = glue("{p}: Isotypes across {HH_fol_sample_clean} follicles"),
+        fill = "Cell type"
+      ) + 
+      theme(plot.title = element_text(face = "bold", size = 16))
+  )
+  
+  dev.off()
+  
 })
 
 # ==============================================================================
