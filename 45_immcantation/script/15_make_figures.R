@@ -267,7 +267,7 @@ lapply(patients, function(HH){
 # Visualize top clones
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_top_clones <- top_GC_clones[[HH]]
   n_clones <- length(HH_top_clones)
   
@@ -438,10 +438,10 @@ for (HH in patients){
       nintersects <- 27
       more_than_N_cells <- 10
     } else if (HH == "HH117" & clone_nr == 1){
-      width <- 10
-      height <- 9
-      more_than_N_cells <- 1
-      nintersects <- 27
+      width <- 5.5
+      height <- 5.5
+      more_than_N_cells <- 2
+      nintersects <- 8
     } else {
       width <- 11
       height <- 4
@@ -474,15 +474,15 @@ for (HH in patients){
     grid.text(
       glue("{p}: {clone_definition}"),
       x = 0.50, y = 0.97,          # adjust position as needed
-      gp = gpar(fontsize = 14, fontface = "bold")
+      gp = gpar(fontsize = 12, fontface = "bold")
     )
     
     # Caption 
     grid.text(
       glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}\nCombinations with >= {more_than_N_cells} cells are shown."),
       just = "right", 
-      x = 0.99, y = 0.02,          # adjust position as needed
-      gp = gpar(fontsize = 8)
+      x = 0.99, y = 0.03,          # adjust position as needed
+      gp = gpar(fontsize = 6)
     )
     
     # Legend
