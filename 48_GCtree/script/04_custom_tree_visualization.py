@@ -21,23 +21,25 @@ os.environ["MPLCONFIGDIR"] = "/home/projects/dtu_00062/people/helweg/projects/GC
 
 
 samples = [
-  "HH117_clone_nr_1_clone_578_1",
-  "HH117_clone_nr_2_clone_2587_1",
-  "HH117_clone_nr_3_clone_1282_1",
-  "HH117_clone_nr_4_clone_735_1",
-  "HH117_clone_nr_5_clone_617_1",
-  # "HH119_clone_nr_1_clone_4516_1",
-  "HH119_clone_nr_2_clone_5791_1",
-  "HH119_clone_nr_3_clone_2466_1",
-  "HH119_clone_nr_4_clone_3459_1",
-  "HH119_clone_nr_5_clone_2966_1",
+  
+  # "HH117_clone_nr_1_clone_578_1",
+  # "HH117_clone_nr_2_clone_2587_1",
+  # "HH117_clone_nr_3_clone_1282_1",
+  # "HH117_clone_nr_4_clone_735_1",
+  # "HH117_clone_nr_5_clone_617_1",
+  # # "HH119_clone_nr_1_clone_4516_1",
+  # "HH119_clone_nr_2_clone_5791_1",
+  # "HH119_clone_nr_3_clone_2466_1",
+  # "HH119_clone_nr_4_clone_3459_1",
+  # "HH119_clone_nr_5_clone_2966_1",
 ]
 
 # for sample in samples:
 
 # Define paths 
 # sample = "HH117_clone_nr_5_clone_1856_1"
-sample = "HH117_clone_nr_1_clone_578_1"
+# sample = "HH117_clone_nr_1_clone_578_1"
+sample = "HH119_clone_nr_2_clone_5791_1"
 plot_path = f"./../plot/{sample}"
 p_file = f"{plot_path}/{sample}.inference.1.p"
 # print(p_file)

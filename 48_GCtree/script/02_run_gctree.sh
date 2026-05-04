@@ -8,10 +8,22 @@ OUT_DIR=${WD}/out
 PLOT_DIR=${WD}/plot
 
 # Get samples
-sample_list=$(ls $DATA_DIR | cut -d "." -f1)
+# sample_list=$(ls $DATA_DIR | cut -d "." -f1)
+sample_list=(
+  HH119_clone_nr_1_clone_4516_1
+  # HH117_clone_nr_4_clone_735_1
+  # HH119_clone_nr_8_clone_2062_1
+  # HH117_clone_nr_5_clone_617_1
+  # HH119_clone_nr_9_clone_2388_1
+  # HH117_clone_nr_6_clone_1012_1
+  # HH119_clone_nr_3_clone_2466_1
+  # HH119_clone_nr_2_clone_5791_1
+)
+
 
 # # Run gctree
-for sample in $sample_list; do
+# for sample in $sample_list; do
+for sample in "${sample_list[@]}"; do
 
   echo "Processing $sample..."
 
@@ -22,8 +34,8 @@ for sample in $sample_list; do
   OUT_DIR_SAMPLE=${OUT_DIR}/$sample
   mkdir -p $OUT_DIR_SAMPLE
   cd $OUT_DIR_SAMPLE
-  
-  # Clean up before new run 
+
+  # Clean up before new run
   rm -f outfile outtree
 
   # Deduplication and sequence abundances
@@ -35,13 +47,15 @@ for sample in $sample_list; do
   # Parsimony trees
   mkconfig deduplicated.phylip dnapars > dnapars.cfg
   dnapars < dnapars.cfg > dnapars.log
-  
+
   # Make plotting sepecific outdir
   PLOT_DIR_SAMPLE=${PLOT_DIR}/$sample
   mkdir -p $PLOT_DIR_SAMPLE
 
   # Gctree Ranking
   xvfb-run -a gctree infer outfile abundances.csv --root GL --frame 1 --verbose --outbase $PLOT_DIR_SAMPLE/${sample}
+
+  echo "Processing of $sample is complete!"
 
 done
 
