@@ -418,7 +418,7 @@ for (HH in patients){
       select(where(~ any(. != 0)))
     
     upset_input_final <- full_join(upset_input_c, upset_input_L1, by = "sequence_id") %>% full_join(upset_input_sample, by = "sequence_id")
-    
+
     # Define order
     c_order <- upset_input_c %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
     L1_order <- upset_input_L1 %>% column_to_rownames("sequence_id") %>% colSums() %>% sort() %>% names()
@@ -431,21 +431,30 @@ for (HH in patients){
       rep("darkred", length(c_order)),
       rep("darkgreen", length(sample_order))
     )
-    
+
     if (HH == "HH119" & clone_nr == 1){
-      height = 9
+      width <- 8
+      height <- 10
+      nintersects <- 27
+      more_than_N_cells <- 10
+    } else if (HH == "HH117" & clone_nr == 1){
+      width <- 10
+      height <- 9
+      more_than_N_cells <- 1
+      nintersects <- 27
     } else {
-      height = 5
+      width <- 11
+      height <- 4
     }
     
     # Prep saving plot 
-    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = 11, height = height, units = "in", res = 1000)
+    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = width, height = height, units = "in", res = 1000)
     
     # Plot 
     print(UpSetR::upset(
       upset_input_final,
       sets = set_order,
-      # nintersects = 40,
+      nintersects = nintersects,
       order.by = "freq",
       keep.order = TRUE, 
       sets.bar.color = set_colors,
@@ -462,7 +471,7 @@ for (HH in patients){
     
     # Caption 
     grid.text(
-      glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}"),
+      glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}\nCombinations with >= {more_than_N_cells} cells are shown."),
       just = "right", 
       x = 0.99, y = 0.03,          # adjust position as needed
       gp = gpar(fontsize = 8)
