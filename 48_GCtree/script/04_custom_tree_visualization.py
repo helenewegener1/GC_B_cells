@@ -40,11 +40,11 @@ samples = [
 # Define samples 
 # sample = "HH117_clone_nr_5_clone_1856_1"
 
-# sample = "HH117_clone_nr_1_clone_578_1"
-# sample_name = "Crohn's Diease: Largest clone with GC B cells across samples"
+sample = "HH117_clone_nr_1_clone_578_1"
+sample_name = "Crohn's Diease: Largest clone with GC B cells across samples"
 
-sample = "HH119_clone_nr_2_clone_5791_1"
-sample_name = "Colorectal Cancer: Second largest clone with GC B cells across samples"
+# sample = "HH119_clone_nr_2_clone_5791_1"
+# sample_name = "Colorectal Cancer: Second largest clone with GC B cells across samples"
 
 HH = sample.split("_")[0]
 plot_path = f"./../plot/{sample}"
@@ -375,14 +375,14 @@ color_list = {
         "Unconventional_Bcells": "#8855CC",
     },
     "c_call": {
-        "IGHA1": "#E8608A",
-        "IGHA2": "#D4C420",
-        "IGHM":  "#2AAAC8",
-        "IGHD":  "#E08C20",
-        "IGHG1": "#C42030",
-        "IGHG2": "#8855CC",
-        "IGHG3": "#55CC77",
-        "IGHG4": "#EF19EC"
+        "IGHA1": "#FF7F00",
+        "IGHA2": "#E31A1C",
+        "IGHM":  "#1F78B4",
+        "IGHD":  "#00E5FF",
+        "IGHG1": "#3F007D",
+        "IGHG2": "#54278F",
+        "IGHG3": "#756BB1",
+        "IGHG4": "#9E9AC8"
     },
     "sample_clean_fol": {
     # HH117 samples
