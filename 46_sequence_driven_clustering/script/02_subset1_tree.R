@@ -356,9 +356,9 @@ variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgrou
 for (var in variables){
   
   # var <- "junction_length"
-  # var <- "clone_id_plot"
+  # var <- "patient_id"
   p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_cl + 
-    geom_tippoint(aes(color = !!sym(var)), size=0.5) +
+    geom_tippoint(aes(color = !!sym(var)), size=0.5, alpha = 0.5) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
     labs(
@@ -370,7 +370,7 @@ for (var in variables){
     p <- p + scale_color_manual(values = clone_colors)
   }
   
-  ggsave(glue("{outdir}/trees/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), plot = p, width = 9, height = 6.5, dpi = 1000)
+  ggsave(glue("{outdir}/trees/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), plot = p, width = 15, height = 10, dpi = 1000)
   
 }
 
