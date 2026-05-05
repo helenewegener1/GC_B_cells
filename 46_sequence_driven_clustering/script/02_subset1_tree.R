@@ -353,7 +353,7 @@ variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgrou
 for (var in variables){
   
   # var <- "junction_length"
-  # var <- "patient_id"
+  # var <- "clone_id_plot"
   p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_cl + 
     geom_tippoint(aes(color = !!sym(var)), size=0.5, alpha = 0.5) +
     theme_tree2() + 
@@ -473,8 +473,20 @@ seqs_meta_final <- seqs_meta_jl %>% filter(v_gene_subgroup %in% v_this_gene)
 table(length(seqs_sub_3) == nrow(seqs_meta_final))
 
 # Wrangle metadata
-these_clones <- seqs_meta_final %>% count(clone_id, sort = TRUE) %>% head(10) %>% pull(clone_id)
+these_clones <- seqs_meta_final %>% count(clone_id, sort = TRUE) %>% head(15) %>% pull(clone_id)
 seqs_meta_final <- seqs_meta_final %>% mutate(clone_id_plot = ifelse(clone_id %in% these_clones, clone_id, "other"))
+
+# clone_id_plot colors
+clone_colors <- setNames(
+  c(
+    "#E63946", "#2196F3", "#3DAA55", "#FF9800",
+    "#9C27B0", "#00BCD4", "#F5C518", "#FF4081",
+    "#6D4C41", "#76FF03", "#1565C0","#00897B",  
+    "#558B2F", "#6200EA","#37474F",
+    "grey90"
+  ),
+  c(these_clones, "other")
+) # NAs will be grey
 
 # TREE MAKING
 dist_sub <- as.dist(stringdistmatrix(seqs_sub_3, method = "hamming"))
