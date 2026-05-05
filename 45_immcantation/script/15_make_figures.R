@@ -15,6 +15,21 @@ patients <- names(resolve_LC_list)
 
 ncol(seurat_integrated)
 
+# ------------------------------------------------------------------------------
+# Tests
+# ------------------------------------------------------------------------------
+
+resolve_LC_list$HH117 %>% filter(clone_subgroup_id == "578_1" & locus == "IGH") %>% 
+  count(j_call, v_call, junction_length, sort = TRUE) 
+
+
+resolve_LC_list$HH117 %>% filter(clone_subgroup_id == "578_1" & locus != "IGH") %>% 
+  count(j_call, v_call, junction_length, sort = TRUE)
+
+# Get sequences 
+
+# resolve_LC_list$HH117 %>% filter(clone_subgroup_id == "578_1" & locus == "IGH") %>% pull(sequence)
+
 # ==============================================================================
 # Export BCR meta data to Gina 
 # ==============================================================================
@@ -177,7 +192,7 @@ lapply(patients, function(HH){
         title = glue ("{p}: N B cells across samples"),
         fill = "Cell type"
       ) + 
-      theme(plot.title = element_text(face = "bold", size = 16))
+      theme(plot.title = element_text(face = "bold", size = 26))
     # theme(axis.text.x = element_text(angle = 45, hjust = 1))
   )
   
@@ -212,7 +227,7 @@ lapply(patients, function(HH){
         title = glue ("{p}: N B cells across {HH_fol_sample_clean} follicles"),
         fill = "Cell type"
       ) + 
-      theme(plot.title = element_text(face = "bold", size = 16))
+      theme(plot.title = element_text(face = "bold", size = 26))
   )
   
   dev.off()
@@ -223,7 +238,8 @@ lapply(patients, function(HH){
   
   print(
     plot_df %>% 
-      filter(!is.na(manual_ADT_ID)) %>% 
+      # filter(!is.na(manual_ADT_ID)) %>% 
+      filter(!is.na(manual_ADT_ID) & L1_annotation == "GC_B_cells") %>%
       mutate(
         manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
       ) %>% 
@@ -240,9 +256,9 @@ lapply(patients, function(HH){
         x = "Follicle number", 
         y = "Count", 
         title = glue ("{p}: Isotypes across {HH_fol_sample_clean} follicles"),
-        fill = "Cell type"
+        fill = "Isotype"
       ) + 
-      theme(plot.title = element_text(face = "bold", size = 16))
+      theme(plot.title = element_text(face = "bold", size = 26))
   )
   
   dev.off()
@@ -252,7 +268,8 @@ lapply(patients, function(HH){
   
   print(
     plot_df %>% 
-      filter(!is.na(manual_ADT_ID)) %>% 
+      # filter(!is.na(manual_ADT_ID)) %>%
+      filter(!is.na(manual_ADT_ID) & L1_annotation == "GC_B_cells") %>%
       mutate(
         manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
       ) %>% 
@@ -269,10 +286,10 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency",                        # <-- changed
-        title = glue("{p}: Isotypes across {HH_fol_sample_clean} follicles"),
-        fill = "Cell type"
+        title = glue("{p}: Isotypes across GC B cells in {HH_fol_sample_clean} follicles"),
+        fill = "Isotype"
       ) + 
-      theme(plot.title = element_text(face = "bold", size = 16))
+      theme(plot.title = element_text(face = "bold", size = 26))
   )
   
   dev.off()
@@ -1050,7 +1067,7 @@ lapply(patients, function(HH){
         subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 3 cells in each sample is stated."),
         fill = "Clone"
       ) +
-      theme(plot.title = element_text(face = "bold", size = 16))
+      theme(plot.title = element_text(face = "bold", size = 26))
   )
   
   dev.off()
