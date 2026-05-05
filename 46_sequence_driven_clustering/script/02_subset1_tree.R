@@ -297,7 +297,7 @@ ggsave(glue("{outdir}/{version}_{k}_clusters_junction_length.png"), width = 12.5
 outdir_trees <- glue("{outdir}/trees")
 dir.create(outdir_trees, showWarnings = FALSE, recursive = TRUE)
 
-cl <- c(3)
+cl <- c(1)
 idx <- which(clusters %in% cl)
 seqs_sub <- seqs[idx]
 
@@ -318,22 +318,19 @@ tree$tip.label <- seqs_meta_cl$sequence_id
 # ------------------------------------------------------------------------------
 
 # Wrangle metadata
-these_clones <- seqs_meta_cl %>% count(clone_id, sort = TRUE) %>% head(10) %>% pull(clone_id)
+these_clones <- seqs_meta_cl %>% count(clone_id, sort = TRUE) %>% head(20) %>% pull(clone_id)
 seqs_meta_cl <- seqs_meta_cl %>% mutate(clone_id_plot = ifelse(clone_id %in% these_clones, clone_id, "other"))
 
 # clone_id_plot colors
 clone_colors <- setNames(
-  c("#E63946",
-    "#2196F3",
-    "#4CAF50",
-    "#FF9800",
-    "#9C27B0",
-    "#00BCD4",
-    "#FFEB3B",
-    "#FF4081",
-    "#795548",
-    "#76FF03",
-    "grey90"),
+  c(
+    "#E63946", "#2196F3", "#3DAA55", "#FF9800",
+    "#9C27B0", "#00BCD4", "#F5C518", "#FF4081",
+    "#6D4C41", "#76FF03", "#1565C0", "#FF6D00",
+    "#00897B", "#AD1457", "#558B2F", "#6200EA",
+    "#0097A7", "#E65100", "#37474F", "#C6FF00",
+    "grey90"
+  ),
   c(these_clones, "other")
 ) # NAs will be grey
 
