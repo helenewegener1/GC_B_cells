@@ -50,7 +50,6 @@ subset_clones_vj %>%
 
 # Subset heavy chain and plasma cells and trim sequence 
 subset_heavy <- subset_clones_vj %>% 
-  filter(locus == "IGH" & L1_annotation == "PCs") %>% 
   mutate(
     sequence_trimmed = str_sub(sequence, v_sequence_start, j_sequence_end),
     sequence_trimmed_300 = str_sub(sequence_trimmed, nchar(sequence_trimmed)-299, nchar(sequence_trimmed)),
@@ -93,6 +92,28 @@ dist_mat <- stringdistmatrix(seqs, method = "hamming")
 fit <- hclust(as.dist(dist_mat), method = "complete")
 
 # saveRDS(fit, glue("46_sequence_driven_clustering/out/fit_{version}_{version}.rds"))
+
+
+
+library(pheatmap)
+
+meta <- seqs_meta %>%
+  select(sequence_id, patient_id) %>%
+  column_to_rownames("sequence_id") %>%
+  mutate(
+    # junction_length = as.factor(junction_length),
+    patient_id      = as.factor(patient_id)
+  )
+
+pheatmap(
+  dist_mat,
+  show_rownames = FALSE,
+  show_colnames = FALSE,
+  color = viridis::viridis(100)
+  # annotation_row = meta,
+  # annotation_col = meta
+)
+
 
 # # ------------------------------------------------------------------------------
 # # Visualize clustering as tree
@@ -188,7 +209,7 @@ table(seqs_meta$clusters, seqs_meta$patient_id)
 # Patient
 table(seqs_meta$clusters, seqs_meta$patient_id) %>% 
   as.data.frame() %>% 
-  rename(Cluster = Var1, Count = Freq) %>% 
+  dplyr::rename(Cluster = Var1, Count = Freq) %>% 
   ggplot(aes(x = Var2, y = Cluster, fill = Count)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = Count), size = 3, color = "black") + 
@@ -207,9 +228,31 @@ table(seqs_meta$clusters, seqs_meta$patient_id) %>%
   )
 ggsave(glue("{outdir}/{version}_{k}_clusters_patient_ID.png"))
 
+# L1
+table(seqs_meta$clusters, seqs_meta$L1_annotation) %>% 
+  as.data.frame() %>% 
+  dplyr::rename(Cluster = Var1, Count = Freq) %>% 
+  ggplot(aes(x = Var2, y = Cluster, fill = Count)) +
+  geom_tile(color = "white", linewidth = 0.4) +
+  geom_text(aes(label = Count), size = 3, color = "black") + 
+  scale_fill_gradient(low = "#EEF3FB", high = "#185FA5") +
+  labs(
+    x     = "Patient ID",
+    y     = "Cluster",
+    fill  = "Count",
+    title = glue("{version}: Cluster × Patient ID ({k} clusters)")
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    axis.text.x  = element_text(angle = 45, hjust = 1),
+    panel.grid   = element_blank(),
+    legend.position = "none"
+  )
+ggsave(glue("{outdir}/{version}_{k}_clusters_L1_annotation.png"))
+
 table(seqs_meta$clusters, seqs_meta$v_gene_subgroup) %>% 
   as.data.frame() %>% 
-  rename(Cluster = Var1, Count = Freq) %>% 
+  dplyr::rename(Cluster = Var1, Count = Freq) %>% 
   ggplot(aes(x = Var2, y = Cluster, fill = Count)) +
   geom_tile(color = "white", linewidth = 0.4) +
   geom_text(aes(label = Count), size = 3, color = "black") + 
@@ -313,6 +356,7 @@ length(tree$tip.label)
 length(seqs_meta_cl$sequence_id)
 tree$tip.label <- seqs_meta_cl$sequence_id
 
+
 # ------------------------------------------------------------------------------
 # Define clone colors 
 # ------------------------------------------------------------------------------
@@ -349,7 +393,7 @@ clusters_string <- paste(cl, collapse = ", ")
 clusters_string_path <- paste0(cl, collapse = "_")
 
 variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgroup", "j_call_subgroup", 
-               "junction_length", "patient_id", "clone_id_plot")
+               "junction_length", "patient_id", "clone_id_plot", "L1_annotation")
 for (var in variables){
   
   # var <- "junction_length"
@@ -420,7 +464,7 @@ outdir_trees_zoom_this_cl_jl <- glue("{outdir_trees_zoom}/{clusters_string_path}
 dir.create(outdir_trees_zoom_this_cl_jl, showWarnings = FALSE, recursive = TRUE)
 
 variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgroup", "j_call_subgroup", 
-               "junction_length", "patient_id", "clone_id_plot")
+               "junction_length", "patient_id", "clone_id_plot", "L1_annotation")
 for (var in variables){
   
   # var <- "v_gene_subgroup"
@@ -508,7 +552,7 @@ outdir_trees_zoom_this_cl_jl_v <- glue("{outdir_trees_zoom}/{clusters_string_pat
 dir.create(outdir_trees_zoom_this_cl_jl_v, showWarnings = FALSE, recursive = TRUE)
 
 variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgroup", "j_call_subgroup", 
-               "junction_length", "patient_id", "clone_id_plot")
+               "junction_length", "patient_id", "clone_id_plot", "L1_annotation")
 for (var in variables){
   
   # var <- "j_call"
@@ -532,32 +576,86 @@ for (var in variables){
 }
 
 
-# # clone_id_plot colors
-# clone_colors <- setNames(
-#   c("#E63946",
-#     "#2196F3",
-#     "#4CAF50",
-#     "#FF9800",
-#     "#9C27B0",
-#     "#00BCD4",
-#     "#FFEB3B",
-#     "#FF4081",
-#     "#795548",
-#     "#76FF03",
-#     "grey90"),
-#   c(these_clones, "other")
-# ) # NAs will be grey
-# 
-# var <- "clone_id_plot"
-# ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
-#   geom_tippoint(aes(color = !!sym(var)), size=1.5) +
-#   theme_tree2() + 
-#   guides(color = guide_legend(override.aes = list(size = 4))) + 
-#   scale_color_manual(values = clone_colors) + 
-#   labs(
-#     title = glue("{version} colored by {var} - N clusters: {k}"),
-#     subtitle = glue("Clusters: {clusters_string}")
-#   )
-# 
-# ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), width = 9, height = 6.5, dpi = 1000)
+# ------------------------------------------------------------------------------
+# Cut the tree to get a clone
+# ------------------------------------------------------------------------------
 
+k <- 19
+
+# outdir <- glue("46_sequence_driven_clustering/plot/{version}/{k}_clusters")
+# dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+
+# Cut tree
+clusters <- cutree(fit_sub, k = k)
+table(clusters)
+
+# Add to metadata
+seqs_meta_final$clusters <- clusters %>% as.character()
+
+
+# See patient split
+table(seqs_meta_final$clusters, seqs_meta_final$clone_id == 401)
+
+
+# 4 cluster
+cl_zoom <- c(6)
+idx <- which(clusters %in% cl_zoom)
+seqs_sub_4 <- seqs_sub_3[idx]
+
+# Define metadata
+seqs_meta_final_sub_4 <- seqs_meta_final %>% filter(clusters %in% cl_zoom)
+
+# TREE MAKING
+dist_sub_4 <- as.dist(stringdistmatrix(seqs_sub_4, method = "hamming"))
+fit_sub_4  <- hclust(dist_sub_4, method = "complete")
+
+# Convert to phylo for nicer plotting
+tree <- as.phylo(fit_sub_4)
+
+length(tree$tip.label)
+length(seqs_meta_final_sub_4$sequence_id)
+
+tree$tip.label <- seqs_meta_final_sub_4$sequence_id
+
+# Plotting
+clusters_string <- paste("Cluster: ", cl, "\nJunction length: ", jl, "\nV gene subgroup: ", v_this_gene,
+                         "\ncluster: ", cl_zoom)
+clusters_string_path <- paste0("cluster", cl, "_", "jl", jl, "_", v_this_gene, "_", cl_zoom)
+
+outdir_trees_zoom_this_cl_jl_v <- glue("{outdir_trees_zoom}/{clusters_string_path}")
+dir.create(outdir_trees_zoom_this_cl_jl_v, showWarnings = FALSE, recursive = TRUE)
+
+variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgroup", "j_call_subgroup", 
+               "junction_length", "patient_id", "clone_id_plot", "L1_annotation")
+for (var in variables){
+  
+  # var <- "j_call"
+  # var <- "clone_id_plot"
+  # var <- "patient_id"
+  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+    geom_tippoint(aes(color = !!sym(var)), size=1.5) +
+    theme_tree2() + 
+    guides(color = guide_legend(override.aes = list(size = 4))) + 
+    labs(
+      title = glue("{version} colored by {var} - N clusters: {k}"),
+      subtitle = glue("Clusters: {clusters_string}")
+    )
+  
+  if (var == "clone_id_plot"){
+    p <- p + scale_color_manual(values = clone_colors)
+  }
+  
+  ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), plot = p, width = 9, height = 6.5, dpi = 1000)
+  
+}
+
+seqs_sub_4
+dist_sub_4 
+
+nchar(seqs_sub_4)
+
+library(pheatmap)
+pheatmap(as.matrix(dist_sub_4),
+         show_rownames = FALSE,
+         show_colnames = FALSE,
+         color = viridis::viridis(100))
