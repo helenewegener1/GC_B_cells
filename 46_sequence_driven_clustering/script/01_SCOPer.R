@@ -46,6 +46,35 @@ subset_clones_vj <- spectralClones(
   
 )
 
+# ------------------------------------------------------------------------------
+# Clones VS patient
+# ------------------------------------------------------------------------------
+
+# N clones total 
+subset_clones_vj$clone_id %>% unique() %>% length()
+
+# N clones (> 20 cells )
+min_cells <- 12
+mask <- table(subset_clones_vj$clone_id) > min_cells
+table(mask)
+these_clones <- names(which(mask))
+
+subset_clones_vj_mask <- subset_clones_vj %>% filter(clone_id %in% these_clones)
+
+subset_clones_vj_mask %>%
+  count(clone_id, patient_id) %>%
+  ggplot(aes(x = patient_id, y = clone_id, fill = n)) +
+  geom_tile() +
+  geom_text(aes(label = n), color = "white", size = 3) +
+  # scale_fill_viridis_c() +
+  theme_minimal() +
+  labs(x = "Patient", y = "Clone", fill = "Count",
+       title = "SCOPer clones across patients",
+       subtitle = glue("min N cells in clone: {min_cells}"))
+
+ggsave("46_sequence_driven_clustering/plot/subset_1/clones_vs_patients.png", width = 8, height = 8.5)
+  
+
 
 # ------------------------------------------------------------------------------
 # Define top clones vj
@@ -122,3 +151,7 @@ for (clone_nr in 1:length(top_clones)){
   ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}_clone_nr_{clone_nr}.png"), width = 15, height = 8.5)
   
 }
+
+
+
+

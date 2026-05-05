@@ -297,7 +297,7 @@ ggsave(glue("{outdir}/{version}_{k}_clusters_junction_length.png"), width = 12.5
 outdir_trees <- glue("{outdir}/trees")
 dir.create(outdir_trees, showWarnings = FALSE, recursive = TRUE)
 
-cl <- c(1)
+cl <- c(3)
 idx <- which(clusters %in% cl)
 seqs_sub <- seqs[idx]
 
@@ -388,11 +388,11 @@ dir.create(outdir_trees_zoom, showWarnings = FALSE, recursive = TRUE)
 # ------------------------------------------------------------------------------
 
 # 1 cluster
-# cl <- c(1)
-idx <- which(clusters %in% cl)
-seqs_sub <- seqs[idx]
-
-seqs_meta_cl <- seqs_meta %>% filter(clusters %in% cl)
+# # cl <- c(1)
+# idx <- which(clusters %in% cl)
+# seqs_sub <- seqs[idx]
+# 
+# seqs_meta_cl <- seqs_meta %>% filter(clusters %in% cl)
 
 # 1 junction length
 jl <- c(48)
@@ -400,8 +400,8 @@ idx <- which(seqs_meta_cl$junction_length %in% jl)
 seqs_sub_2 <- seqs_sub[idx]
 
 # Update metadata
-seqs_meta_final <- seqs_meta_cl %>% filter(junction_length %in% jl)
-table(length(seqs_sub_2) == nrow(seqs_meta_final))
+seqs_meta_jl <- seqs_meta_cl %>% filter(junction_length %in% jl)
+table(length(seqs_sub_2) == nrow(seqs_meta_jl))
 
 # TREE MAKING
 dist_sub <- as.dist(stringdistmatrix(seqs_sub_2, method = "hamming"))
@@ -411,9 +411,9 @@ fit_sub  <- hclust(dist_sub, method = "complete")
 tree <- as.phylo(fit_sub)
 
 length(tree$tip.label)
-length(seqs_meta_final$sequence_id)
+length(seqs_meta_jl$sequence_id)
 
-tree$tip.label <- seqs_meta_final$sequence_id
+tree$tip.label <- seqs_meta_jl$sequence_id
 
 # Plotting
 clusters_string <- paste("Cluster: ", cl, "\nJunction length: ", jl)
@@ -427,9 +427,10 @@ variables <- c("clusters", "v_gene_subgroup", "j_gene_subgroup", "v_call_subgrou
 for (var in variables){
   
   # var <- "v_gene_subgroup"
-  # var <- "j_gene_subgroup"
+  # var <- "junction_length"
+  # var <- "patient_id"
   # var <- "clone_id_plot"
-  ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_jl +
     geom_tippoint(aes(color = !!sym(var)), size=0.5, alpha=0.8) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
@@ -453,17 +454,17 @@ for (var in variables){
 
 # 1 cluster
 # cl <- c(6)
-idx <- which(clusters %in% cl)
-seqs_sub <- seqs[idx]
-
-seqs_meta_cl <- seqs_meta %>% filter(clusters %in% cl)
+# idx <- which(clusters %in% cl)
+# seqs_sub <- seqs[idx]
+# 
+# seqs_meta_cl <- seqs_meta %>% filter(clusters %in% cl)
 
 # 1 junction length
 # jl <- c(60)
-idx <- which(seqs_meta_cl$junction_length %in% jl)
-seqs_sub_2 <- seqs_sub[idx]
-
-seqs_meta_jl <- seqs_meta_cl %>% filter(junction_length %in% jl)
+# idx <- which(seqs_meta_cl$junction_length %in% jl)
+# seqs_sub_2 <- seqs_sub[idx]
+# 
+# seqs_meta_jl <- seqs_meta_cl %>% filter(junction_length %in% jl)
 
 # 1 V gene
 v_this_gene <- c("IGHV3")
@@ -503,7 +504,8 @@ for (var in variables){
   
   # var <- "j_call"
   # var <- "clone_id_plot"
-  ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+  # var <- "patient_id"
+  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
     geom_tippoint(aes(color = !!sym(var)), size=1.5) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
