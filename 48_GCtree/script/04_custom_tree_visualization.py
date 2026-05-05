@@ -582,7 +582,7 @@ def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_d
     ax.imshow(img)
     ax.axis("off")
     ax.legend(handles=patches, loc="upper left", title=var_translate[var], fontsize=14, title_fontsize=16)
-    ax.set_title(sample_name, fontsize=20, fontweight="bold")
+    ax.set_title(sample_name, fontsize=26, fontweight="bold")
     plt.savefig(png_path, bbox_inches="tight", dpi=150)
     plt.close()
 
