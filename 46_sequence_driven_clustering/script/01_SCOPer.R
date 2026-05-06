@@ -77,8 +77,7 @@ threshold_output <- shazam::findThreshold(
 )
 
 threshold_density <- threshold_output@threshold
-threshold_density # 0.2232464
-# HH_thresholds["density"] <- threshold
+threshold_density 
 
 plot(threshold_output, binwidth = 0.02, silent = TRUE) +
   theme(axis.title = element_text(size = 12)) + 
@@ -105,8 +104,7 @@ threshold_output <- shazam::findThreshold(
 )
 
 threshold_gmm <- threshold_output@threshold
-threshold_gmm # 0.2096244
-# HH_thresholds["gmm"] <- threshold
+threshold_gmm
 
 plot(threshold_output, binwidth = 0.02, silent = TRUE) +
   theme(axis.title = element_text(size = 12)) +
@@ -126,7 +124,7 @@ subset_clones_vj <- spectralClones(
   
   subset,
   method="vj",
-  # threshold = threshold_gmm,
+  threshold = threshold_gmm,
   # threshold = threshold_density,
   germline = "germline_alignment_d_mask",
   cell_id = "cell_id",
@@ -136,23 +134,6 @@ subset_clones_vj <- spectralClones(
   
 )
 
-# # list_thresholds <- readRDS("45_immcantation/out/rds/list_thresholds.rds")
-# subset_clones_novj <- spectralClones(
-#   
-#   subset,
-#   method="novj",
-#   # threshold = list_thresholds[[HH]]$density,
-#   # germline = "germline_alignment_d_mask",
-#   cell_id = "cell_id",
-#   junction = "junction",
-#   first = FALSE,
-#   threshold = 0.15
-#   # targeting_model = HH_S5F
-#   
-# )
-
-# WED HW: WE NEED THRESHOLD.- Done, looks much better
-# READ PARTIS PAPER
 
 # ------------------------------------------------------------------------------
 # Clones VS patient 
@@ -160,16 +141,16 @@ subset_clones_vj <- spectralClones(
 
 # data <- subset_clones_novj
 data <- subset_clones_vj
-version <- "scoper_vj_density_threshold"
-# version <- "scoper_vj_gmm_threshold"
-version <- "scoper_vj_no_threshold"
+# version <- "scoper_vj_density_threshold"
+version <- "scoper_vj_gmm_threshold"
+# version <- "scoper_vj_no_threshold"
 
 # N clones total 
 data$clone_id %>% unique() %>% length()
 
 # N clones (> 20 cells )
-min_cells <- 5
-mask <- table(data$clone_id) > min_cells
+min_cells <- 8
+mask <- table(data$clone_id) >= min_cells
 table(mask)
 these_clones <- names(which(mask))
 
@@ -219,10 +200,6 @@ subset_clones_vj <- subset_clones_vj %>%
     j_call_subgroup_clone = paste(unique(unlist(strsplit(j_call_subgroup, ","))), collapse = ",")
   ) %>% 
   ungroup()
-
-# Save 
-saveRDS(subset_clones_vj, glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
-
 
 # ------------------------------------------------------------------------------
 # Visualize top clones vj
@@ -296,8 +273,8 @@ subset_clones_vj <- subset_clones_vj %>%
   )
 
 # N clones (> 20 cells )
-min_cells <- 2
-mask <- table(subset_clones_vj$clone_id_junction) > min_cells
+min_cells <- 5
+mask <- table(subset_clones_vj$clone_id_junction) >= min_cells
 table(mask)
 these_clones <- names(which(mask))
 
@@ -312,7 +289,7 @@ subset_clones_vj_mask %>%
   theme_minimal() +
   labs(x = "Patient", y = "Clone", fill = "Count",
        title = glue("SCOPer clones across patients - subset {subset_nr} - {clone_version}"),
-       subtitle = glue("min N cells in clone: {min_cells+1}"))
+       caption = glue("min N cells in clone: {min_cells}"))
 
 ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/{clone_version}_vs_patients.png"), width = 8, height = 10)
 
@@ -333,8 +310,8 @@ subset_clones_vj <- subset_clones_vj %>%
   )
 
 # N clones (> 20 cells )
-min_cells <- 2
-mask <- table(subset_clones_vj$clone_id_vj_junction) > min_cells
+min_cells <- 5
+mask <- table(subset_clones_vj$clone_id_vj_junction) >= min_cells
 table(mask)
 these_clones <- names(which(mask))
 
@@ -405,8 +382,8 @@ for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
   subset_clones_vj$clone_id_vj_junction_95[clone_assignments$row] <- clone_assignments$clone_id_vj_junction_95
   
   # Filter to clones with > min_cells
-  min_cells <- 4
-  mask <- table(subset_clones_vj$clone_id_vj_junction_95) > min_cells
+  min_cells <- 15
+  mask <- table(subset_clones_vj$clone_id_vj_junction_95) >= min_cells
   these_clones <- names(which(mask))
   subset_clones_vj_mask <- subset_clones_vj %>% 
     filter(clone_id_vj_junction_95 %in% these_clones)
@@ -421,7 +398,7 @@ for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
       x = "Patient", y = "Clone", fill = "Count",
       title = glue("SCOPer clones across patients - subset {subset_nr}"),
       subtitle = glue("{clone_version}"),
-      caption = glue("min N cells in clone: {min_cells+1}")
+      caption = glue("min N cells in clone: {min_cells}")
     )
   
   ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/{clone_version}_vs_patients.png"), 
@@ -430,4 +407,6 @@ for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
   
 }
 
+# Save 
+saveRDS(subset_clones_vj, glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
 

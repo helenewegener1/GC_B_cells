@@ -57,10 +57,12 @@ subset_1 <- lapply(patients, function(HH){
 saveRDS(subset_1, glue("46_sequence_driven_clustering/out/{version}.rds"))
 
 # ------------------------------------------------------------------------------
-# Setsub 2: 2000 PCs per sample 
+# Setsub 2: 5000 PCs per sample 
 # ------------------------------------------------------------------------------
 
 version <- "subset_2"
+
+n <- 5000
 
 subset_2 <- lapply(patients, function(HH){
   
@@ -73,9 +75,9 @@ subset_2 <- lapply(patients, function(HH){
   PC_cell_id <- bcr_data[[HH]] %>% filter(L1_annotation == "PCs") %>% pull(cell_id)
   N_PCs <- length(PC_cell_id)
   
-  ## Sample 2000 random PCs
-  if (N_PCs > 2000){
-    PC_cell_id_sample <- sample(PC_cell_id, 2000)
+  # Sample 2000 random PCs
+  if (N_PCs > n){
+    PC_cell_id_sample <- sample(PC_cell_id, n)
   } else {
     PC_cell_id_sample <- PC_cell_id
   }
