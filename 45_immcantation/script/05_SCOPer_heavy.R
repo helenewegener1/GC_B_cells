@@ -254,6 +254,8 @@ bcr_data <- lapply(patients, function(HH){
 # vj method: Groups clones based on junction sequences and SHM in V and J sequences
 # ------------------------------------------------------------------------------
 
+list_thresholds <- readRDS("46_sequence_driven_clustering/")
+
 spec_clones_vj <- lapply(patients, function(HH){
 
   # HH <- "HH119"
