@@ -274,7 +274,7 @@ subset_clones_vj <- subset_clones_vj %>%
 for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
   
   # For each VJ group, cluster junctions at 95% similarity
-  threshold <- 0.40  # 5% distance = 95% similarity
+  # threshold <- 0.40  # 5% distance = 95% similarity
   similarity <- (1 - threshold) * 100
   clone_version <- glue("clone_id_vj_junction_{similarity}")
   
