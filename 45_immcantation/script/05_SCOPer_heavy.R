@@ -59,98 +59,99 @@ bcr_data <- lapply(patients, function(HH){
 # }) %>% setNames(patients)
 # 
 # saveRDS(seq_clones, "45_immcantation/out/rds/seq_clones.rds")
-
-
-
-# ------------------------------------------------------------------------------
-# novj method: Groups clones based on junction sequences and SHM in V and J sequences
-# ------------------------------------------------------------------------------
-
-spec_clones_novj_no_threshold <- lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  spectralClones(
-    bcr_data[[HH]],
-    method="novj",
-    # threshold = list_thresholds[[HH]]$density,
-    germline = "germline_alignment_d_mask",
-    cell_id = "cell_id",
-    junction = "junction",
-    first = FALSE,
-    targeting_model = HH_S5F, 
-    summarize_clones = TRUE
-  )
-  
-}) %>% setNames(patients)
-
-saveRDS(spec_clones_novj_no_threshold, "45_immcantation/out/rds/05_spec_clones_novj_no_threshold.rds")
-
-spec_clones_novj_density_threshold <- lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  spectralClones(
-    bcr_data[[HH]],
-    method="novj",
-    threshold = list_thresholds[[HH]]$density,
-    germline = "germline_alignment_d_mask",
-    cell_id = "cell_id",
-    junction = "junction",
-    first = FALSE,
-    targeting_model = HH_S5F, 
-    summarize_clones = TRUE
-  )
-  
-}) %>% setNames(patients)
-
-saveRDS(spec_clones_novj_density_threshold, "45_immcantation/out/rds/05_spec_clones_novj_density_threshold.rds")
-
-spec_clones_novj_gmm_threshold <- lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  spectralClones(
-    bcr_data[[HH]],
-    method="novj",
-    threshold = list_thresholds[[HH]]$gmm,
-    germline = "germline_alignment_d_mask",
-    cell_id = "cell_id",
-    junction = "junction",
-    first = FALSE,
-    targeting_model = HH_S5F, 
-    summarize_clones = TRUE
-  )
-  
-}) %>% setNames(patients)
-
-saveRDS(spec_clones_novj_gmm_threshold, "45_immcantation/out/rds/05_spec_clones_novj_gmm_threshold.rds")
-
-# -------------------
-# Plot distributions
-# -------------------
-
-lapply(patients, function(HH){
-  
-  # HH <- "HH117"
-  
-  # No threshold
-  res <- spec_clones_vj_no_threshold[[HH]]
-  # Plot a histogram of inter and intra clonal distances
-  plot(res, binwidth=0.02) 
-  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_no_threshold.png"))
-  
-  # density threshold
-  res <- spec_clones_vj_density_threshold[[HH]]
-  # Plot a histogram of inter and intra clonal distances
-  plot(res, binwidth=0.02) + labs(subtitle = glue("Density threshold by findThreshold: {list_thresholds[[HH]]$density}"))
-  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_density_threshold.png"))
-  
-  # GMM threshold
-  res <- spec_clones_vj_gmm_threshold[[HH]]
-  # Plot a histogram of inter and intra clonal distances
-  plot(res, binwidth=0.02) + labs(subtitle = glue("GMM threshold by findThreshold: {list_thresholds[[HH]]$gmm}"))
-  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_gmm_threshold.png"))
-  
-  
-})
+# 
+# 
+# 
+# # ------------------------------------------------------------------------------
+# # novj method: Groups clones based on junction sequences and SHM in V and J sequences
+# # ------------------------------------------------------------------------------
+# 
+# spec_clones_novj_no_threshold <- lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   spectralClones(
+#     bcr_data[[HH]],
+#     method="novj",
+#     # threshold = list_thresholds[[HH]]$density,
+#     germline = "germline_alignment_d_mask",
+#     cell_id = "cell_id",
+#     junction = "junction",
+#     first = FALSE,
+#     targeting_model = HH_S5F, 
+#     summarize_clones = TRUE
+#   )
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(spec_clones_novj_no_threshold, "45_immcantation/out/rds/05_spec_clones_novj_no_threshold.rds")
+# 
+# spec_clones_novj_density_threshold <- lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   spectralClones(
+#     bcr_data[[HH]],
+#     method="novj",
+#     threshold = list_thresholds[[HH]]$density,
+#     germline = "germline_alignment_d_mask",
+#     cell_id = "cell_id",
+#     junction = "junction",
+#     first = FALSE,
+#     targeting_model = HH_S5F, 
+#     summarize_clones = TRUE
+#   )
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(spec_clones_novj_density_threshold, "45_immcantation/out/rds/05_spec_clones_novj_density_threshold.rds")
+# 
+# spec_clones_novj_gmm_threshold <- lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   spectralClones(
+#     bcr_data[[HH]],
+#     method="novj",
+#     threshold = list_thresholds[[HH]]$gmm,
+#     germline = "germline_alignment_d_mask",
+#     cell_id = "cell_id",
+#     junction = "junction",
+#     first = FALSE,
+#     targeting_model = HH_S5F, 
+#     summarize_clones = TRUE
+#   )
+#   
+# }) %>% setNames(patients)
+# 
+# saveRDS(spec_clones_novj_gmm_threshold, "45_immcantation/out/rds/05_spec_clones_novj_gmm_threshold.rds")
+# 
+# # -------------------
+# # Plot distributions
+# # -------------------
+# 
+# 
+# lapply(patients, function(HH){
+#   
+#   # HH <- "HH117"
+#   
+#   # No threshold
+#   res <- spec_clones_vj_no_threshold[[HH]]
+#   # Plot a histogram of inter and intra clonal distances
+#   plot(res, binwidth=0.02) 
+#   ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_no_threshold.png"))
+#   
+#   # density threshold
+#   res <- spec_clones_vj_density_threshold[[HH]]
+#   # Plot a histogram of inter and intra clonal distances
+#   plot(res, binwidth=0.02) + labs(subtitle = glue("Density threshold by findThreshold: {list_thresholds[[HH]]$density}"))
+#   ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_density_threshold.png"))
+#   
+#   # GMM threshold
+#   res <- spec_clones_vj_gmm_threshold[[HH]]
+#   # Plot a histogram of inter and intra clonal distances
+#   plot(res, binwidth=0.02) + labs(subtitle = glue("GMM threshold by findThreshold: {list_thresholds[[HH]]$gmm}"))
+#   ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_gmm_threshold.png"))
+#   
+#   
+# })
 
 # ------------------------------------------------------------------------------
 # vj method: Groups clones based on junction sequences and SHM in V and J sequences
@@ -216,6 +217,13 @@ saveRDS(spec_clones_vj_gmm_threshold, "45_immcantation/out/rds/05_spec_clones_vj
 # -------------------
 # Plot distributions
 # -------------------
+
+
+spec_clones_vj_no_threshold <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_no_threshold.rds")
+spec_clones_vj_density_threshold <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_density_threshold.rds")
+spec_clones_vj_gmm_threshold <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_gmm_threshold.rds")
+
+
 
 lapply(patients, function(HH){
   
