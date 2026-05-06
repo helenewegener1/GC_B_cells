@@ -1,5 +1,5 @@
 library(Biostrings) # writing fasta files 
-library(msa) # mulitple sequence alignment 
+# library(msa) # mulitple sequence alignment 
 library(tidyverse)
 library(glue)
 
@@ -7,7 +7,10 @@ library(glue)
 # Load data
 # ------------------------------------------------------------------------------
 
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
+# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
+
+version <- "gmm_threshold_GC_clones"
 
 patients <- names(resolve_LC_list_germlined)
 
@@ -34,7 +37,7 @@ patients <- names(resolve_LC_list_germlined)
 # FASTA file writing
 # ------------------------------------------------------------------------------
 
-clone_nrs <- 1:10
+clone_nrs <- 1:5
 
 for (HH in patients){
   
@@ -44,7 +47,7 @@ for (HH in patients){
   for (clone_nr in clone_nrs){
     
     # Get top "clone_nr" clone from given sample
-    # clone_nr <- 5
+    # clone_nr <- 1
     # clone <- HH_spec_clones_vj %>%
     #   count(clone_subgroup_id, sort = TRUE) %>% 
     #   dplyr::slice(clone_nr) %>% 
@@ -101,7 +104,9 @@ for (HH in patients){
     # alignment_dna <- as(alignment, "DNAStringSet")
     
     # Export as FASTA file
-    writeXStringSet(final_fasta, filepath = glue("48_GCtree/fasta/GC_clones/{HH}_clone_nr_{clone_nr}_clone_{clone}.fasta"))
+    outdir <- glue("48_GCtree/fasta/{version}")
+    dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+    writeXStringSet(final_fasta, filepath = glue("{outdir}/{HH}_clone_nr_{clone_nr}_clone_{clone}.fasta"))
     
   }
   

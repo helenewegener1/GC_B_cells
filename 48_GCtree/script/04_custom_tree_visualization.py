@@ -38,16 +38,20 @@ samples = [
 # for sample in samples:
 
 # Define samples 
-# sample = "HH117_clone_nr_5_clone_1856_1"
+sample = "HH117_clone_nr_1_clone_1849_1"
+sample_name = "Crohn's Diease: Largest clone with GC B cells across samples"
 
-sample = "HH117_clone_nr_1_clone_578_1"
+# sample = "HH117_clone_nr_1_clone_578_1"
 sample_name = "Crohn's Diease: Largest clone with GC B cells across samples"
 
 # sample = "HH119_clone_nr_2_clone_5791_1"
 # sample_name = "Colorectal Cancer: Second largest clone with GC B cells across samples"
 
+# version = ""
+version = "gmm_threshold"
+
 HH = sample.split("_")[0]
-plot_path = f"./../plot/{sample}"
+plot_path = f"./../plot_{version}/{sample}"
 p_file = f"{plot_path}/{sample}.inference.1.p"
 # print(p_file)
 
@@ -88,7 +92,7 @@ tree.render(f"{custom_plot_path}/{sample}_default.png")
 ########################################################################################
 
 # Read meta data
-df_meta = pd.read_csv(f"../gctree_meta/{sample}_gctree_meta.txt",     
+df_meta = pd.read_csv(f"../gctree_meta_{version}/{sample}_gctree_meta.txt",     
                  sep=",",          
                  header=0)
 
@@ -589,10 +593,10 @@ def plot_tree(tree, df_meta, var, sample, custom_plot_path, color_list, counts_d
     print(f"Saved: {png_path}")
 
 # Color by L1_annotation
-plot_tree(tree, df_meta, "L1_annotation", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")
+plot_tree(tree, df_meta, "L1_annotation", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta_{version}")
 
 # Color by c_call (with counts for correct pie charts)
-plot_tree(tree, df_meta, "c_call", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")
+plot_tree(tree, df_meta, "c_call", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta_{version}")
 
 # Color by sample_clean_fol (with counts for correct pie charts)
-plot_tree(tree, df_meta, "sample_clean_fol", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")
+plot_tree(tree, df_meta, "sample_clean_fol", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta_{version}")
