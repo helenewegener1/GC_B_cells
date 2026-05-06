@@ -95,24 +95,24 @@ fit <- hclust(as.dist(dist_mat), method = "complete")
 
 
 
-library(pheatmap)
-
-meta <- seqs_meta %>%
-  select(sequence_id, patient_id) %>%
-  column_to_rownames("sequence_id") %>%
-  mutate(
-    # junction_length = as.factor(junction_length),
-    patient_id      = as.factor(patient_id)
-  )
-
-pheatmap(
-  dist_mat,
-  show_rownames = FALSE,
-  show_colnames = FALSE,
-  color = viridis::viridis(100)
-  # annotation_row = meta,
-  # annotation_col = meta
-)
+# library(pheatmap)
+# 
+# meta <- seqs_meta %>%
+#   select(sequence_id, patient_id) %>%
+#   column_to_rownames("sequence_id") %>%
+#   mutate(
+#     # junction_length = as.factor(junction_length),
+#     patient_id      = as.factor(patient_id)
+#   )
+# 
+# pheatmap(
+#   dist_mat,
+#   show_rownames = FALSE,
+#   show_colnames = FALSE,
+#   color = viridis::viridis(100)
+#   # annotation_row = meta,
+#   # annotation_col = meta
+# )
 
 
 # # ------------------------------------------------------------------------------
@@ -577,7 +577,7 @@ for (var in variables){
 
 
 # ------------------------------------------------------------------------------
-# Cut the tree to get a clone
+# Cut the tree to get a clone (401)
 # ------------------------------------------------------------------------------
 
 k <- 19
@@ -597,7 +597,8 @@ seqs_meta_final$clusters <- clusters %>% as.character()
 table(seqs_meta_final$clusters, seqs_meta_final$clone_id == 401)
 
 
-# 4 cluster
+
+# cluster zoom
 cl_zoom <- c(6)
 idx <- which(clusters %in% cl_zoom)
 seqs_sub_4 <- seqs_sub_3[idx]
@@ -632,7 +633,7 @@ for (var in variables){
   # var <- "j_call"
   # var <- "clone_id_plot"
   # var <- "patient_id"
-  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final_sub_4 +
     geom_tippoint(aes(color = !!sym(var)), size=1.5) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
@@ -654,8 +655,77 @@ dist_sub_4
 
 nchar(seqs_sub_4)
 
+seqs_meta_final_sub_4$clone_id
+
 library(pheatmap)
 pheatmap(as.matrix(dist_sub_4),
          show_rownames = FALSE,
          show_colnames = FALSE,
          color = viridis::viridis(100))
+
+
+
+# plot
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+library(patchwork)
+
+# Your sequences vector (named for labeling)
+seqs <- seqs_sub_4
+names(seqs) <- paste0("Seq", seq_along(seqs))
+
+# Split each sequence into individual characters
+seq_matrix <- do.call(rbind, strsplit(seqs, ""))
+
+# Find conserved positions (all sequences identical at that position)
+is_conserved <- apply(seq_matrix, 2, function(col) length(unique(col)) == 1)
+
+# Build long-format data frame for ggplot
+df <- as.data.frame(seq_matrix) %>%
+  mutate(seq_id = factor(names(seqs), levels = rev(names(seqs)))) %>%
+  pivot_longer(-seq_id, names_to = "position", values_to = "base") %>%
+  mutate(
+    position = as.integer(sub("V", "", position)),
+    conservation = ifelse(is_conserved[position], "conserved", "variable")
+  ) %>% 
+  mutate(fill_val = ifelse(conservation == "conserved", "conserved", base))
+
+# --- alignment plot ---
+p_align <- ggplot(df, aes(x = position, y = seq_id, fill = fill_val)) +
+  geom_tile() +
+  scale_fill_manual(values = c(
+    conserved = "#378ADD",
+    A = "#4CAF50", T = "#FF9800", G = "#E63946", C = "#9C27B0"
+  )) +
+  labs(x = "Position", y = NULL, fill = NULL) +
+  theme_minimal(base_size = 9) +
+  theme(axis.text.y = element_text(size = 6), panel.grid = element_blank(), legend.position = "top")
+
+p_align
+
+# Example metadata — replace with your actual values
+metadata <- data.frame(
+  seq_id = factor(paste0("Seq", 1:84), levels = rev(paste0("Seq", 1:84))),
+  group   = seqs_meta_final_sub_4$clone_id_plot
+)
+
+# --- metadata strip plot ---
+p_meta <- ggplot(metadata, aes(x = 1, y = seq_id, fill = group)) +
+  geom_tile() +
+  scale_fill_manual(values = clone_colors) + 
+  scale_x_continuous(expand = c(0, 0)) +
+  labs(x = "group", y = NULL, fill = "Group") +
+  theme_minimal(base_size = 9) +
+  theme(
+    axis.text.y  = element_text(size = 6),
+    axis.text.x  = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.grid   = element_blank(),
+    legend.position = "bottom"
+  )
+
+p_meta + p_align + plot_layout(widths = c(1, 20))
+
+
+
