@@ -90,7 +90,7 @@ subset_clones_vj_mask %>%
   theme_minimal() +
   labs(x = "Patient", y = "Clone", fill = "Count",
        title = glue("SCOPer clones across patients - subset {subset_nr}"),
-       subtitle = glue("min N cells in clone: {min_cells}"))
+       caption = glue("min N cells in clone: {min_cells}"))
 
 ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/clones_vs_patients.png"), width = 8, height = 8.5)
   
@@ -322,9 +322,12 @@ for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
     geom_tile() +
     geom_text(aes(label = n), color = "white", size = 3) +
     theme_minimal() +
-    labs(x = "Patient", y = "Clone", fill = "Count",
-         title = glue("SCOPer clones across patients - subset {subset_nr} - {clone_version}"),
-         subtitle = glue("min N cells in clone: {min_cells+1}"))
+    labs(
+      x = "Patient", y = "Clone", fill = "Count",
+      title = glue("SCOPer clones across patients - subset {subset_nr}"),
+      subtitle = glue("{clone_version}"),
+      caption = glue("min N cells in clone: {min_cells+1}")
+    )
   
   ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/{clone_version}_vs_patients.png"), 
          width = 8, height = 10)
