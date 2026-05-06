@@ -29,6 +29,95 @@ subset <- subset %>%
     sample_clean_fol = ifelse(!is.na(manual_ADT_ID), paste(sample_clean, manual_ADT_ID, sep = "_"), sample_clean)
   )
 
+
+# ------------------------------------------------------------------------------
+# Distiance to nearest plot
+# ------------------------------------------------------------------------------
+
+
+# Calculate nearest-neighbor Hamming distance distribution
+# Per sequence, what is the Hamming distance to the nearest-neighbor (1 distance per sequence)
+dist_nearest <- distToNearest(
+  subset,
+  sequenceColumn = "junction",
+  cellIdColumn="cell_id" # Important for invoking in run in single-cell mode
+)
+
+# Check how many NAs
+dist_nearest$dist_nearest %>% is.na() %>% table()
+
+
+# -------------------
+# Manual
+# -------------------
+
+# Nearest-neighbor Hamming distance distribution/histogram
+dist_nearest %>% 
+  filter(!is.na(dist_nearest)) %>% 
+  ggplot(aes(x = dist_nearest)) + 
+  geom_histogram(color = "white", binwidth = 0.02) +
+  labs(
+    title = glue("Subset {subset_nr}: Nearest-neighbor Hamming distance distribution"), 
+    x = "Hamming distance", 
+    y = "Count"
+  ) +
+  scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+  theme_bw()
+
+ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/nearest_neighbor_distance_histogram.png"), width = 11, height = 6.5)
+
+# -------------------
+# Automatic - Density
+# -------------------
+# find threshold for cloning automatically using density 
+# density finds the valley between the two modes directly
+threshold_output <- shazam::findThreshold(
+  dist_nearest$dist_nearest,
+  method = "density" 
+)
+
+threshold_density <- threshold_output@threshold
+threshold_density # 0.2232464
+# HH_thresholds["density"] <- threshold
+
+plot(threshold_output, binwidth = 0.02, silent = TRUE) +
+  theme(axis.title = element_text(size = 12)) + 
+  plot_annotation(
+    title = glue("Subset {subset_nr}: Nearest-neighbor Hamming distance distribution"), 
+    subtitle = glue("Automatic density threshold: {threshold_density}")
+  )
+
+ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/nearest_neighbor_distance_histogram_automatic_density_threshold.png"), width = 12, height = 6.5)
+
+
+# -------------------
+# Automatic - GMM 
+# -------------------
+
+# find threshold for cloning automatically
+threshold_output <- shazam::findThreshold(
+  dist_nearest$dist_nearest,
+  method = "gmm",
+  model = "gamma-norm",
+  cutoff = "user",
+  spc = 0.995  # specificity
+  # spc = 0.99 # slight improve # HH119 - 0.04334775
+)
+
+threshold_gmm <- threshold_output@threshold
+threshold_gmm # 0.2096244
+# HH_thresholds["gmm"] <- threshold
+
+plot(threshold_output, binwidth = 0.02, silent = TRUE) +
+  theme(axis.title = element_text(size = 12)) +
+  plot_annotation(
+    title = glue("Subset {subset_nr}: Nearest-neighbor Hamming distance distribution"),
+    subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold_gmm}")
+  )
+
+ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/nearest_neighbor_distance_histogram_automatic_gmm_threshold.png"), width = 12, height = 6.5)
+
+
 # ------------------------------------------------------------------------------
 # vj method: Groups clones based on junction sequences and SHM in V and J sequences
 # ------------------------------------------------------------------------------
@@ -37,7 +126,8 @@ subset_clones_vj <- spectralClones(
   
   subset,
   method="vj",
-  # threshold = list_thresholds[[HH]]$density,
+  # threshold = threshold_gmm,
+  # threshold = threshold_density,
   germline = "germline_alignment_d_mask",
   cell_id = "cell_id",
   junction = "junction",
@@ -46,35 +136,39 @@ subset_clones_vj <- spectralClones(
   
 )
 
-# list_thresholds <- readRDS("45_immcantation/out/rds/list_thresholds.rds")
-subset_clones_novj <- spectralClones(
-  
-  subset,
-  method="novj",
-  # threshold = list_thresholds[[HH]]$density,
-  # germline = "germline_alignment_d_mask",
-  cell_id = "cell_id",
-  junction = "junction",
-  first = FALSE,
-  threshold = 0.15
-  # targeting_model = HH_S5F
-  
-)
+# # list_thresholds <- readRDS("45_immcantation/out/rds/list_thresholds.rds")
+# subset_clones_novj <- spectralClones(
+#   
+#   subset,
+#   method="novj",
+#   # threshold = list_thresholds[[HH]]$density,
+#   # germline = "germline_alignment_d_mask",
+#   cell_id = "cell_id",
+#   junction = "junction",
+#   first = FALSE,
+#   threshold = 0.15
+#   # targeting_model = HH_S5F
+#   
+# )
 
-# WED HW: WE NEED THRESHOLD.
+# WED HW: WE NEED THRESHOLD.- Done, looks much better
 # READ PARTIS PAPER
 
 # ------------------------------------------------------------------------------
 # Clones VS patient 
 # ------------------------------------------------------------------------------
 
-data <- subset_clones_novj
+# data <- subset_clones_novj
+data <- subset_clones_vj
+version <- "scoper_vj_density_threshold"
+# version <- "scoper_vj_gmm_threshold"
+version <- "scoper_vj_no_threshold"
 
 # N clones total 
 data$clone_id %>% unique() %>% length()
 
 # N clones (> 20 cells )
-min_cells <- 2
+min_cells <- 5
 mask <- table(data$clone_id) > min_cells
 table(mask)
 these_clones <- names(which(mask))
@@ -90,9 +184,10 @@ subset_clones_vj_mask %>%
   theme_minimal() +
   labs(x = "Patient", y = "Clone", fill = "Count",
        title = glue("SCOPer clones across patients - subset {subset_nr}"),
+       subtitle = version,
        caption = glue("min N cells in clone: {min_cells}"))
 
-ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/clones_vs_patients.png"), width = 8, height = 8.5)
+ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/clones_vs_patients_{version}.png"), width = 8, height = 8.5)
   
 
 # ------------------------------------------------------------------------------
