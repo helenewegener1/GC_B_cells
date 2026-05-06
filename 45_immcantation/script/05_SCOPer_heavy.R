@@ -254,7 +254,7 @@ bcr_data <- lapply(patients, function(HH){
 # vj method: Groups clones based on junction sequences and SHM in V and J sequences
 # ------------------------------------------------------------------------------
 
-list_thresholds <- readRDS("46_sequence_driven_clustering/")
+list_thresholds <- readRDS("45_immcantation/out/rds/04_list_thresholds.rds")
 
 spec_clones_vj <- lapply(patients, function(HH){
 
@@ -267,10 +267,32 @@ spec_clones_vj <- lapply(patients, function(HH){
     cell_id = "cell_id",
     junction = "junction",
     first = FALSE,
-    targeting_model = HH_S5F
+    targeting_model = HH_S5F, 
+    summarize_clones = TRUE
   )
 
 }) %>% setNames(patients)
+
+# -------------------
+# Plot distributions
+# -------------------
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH117"
+  res <- spec_clones_vj[[HH]]
+  
+  # Plot a histogram of inter and intra clonal distances
+  plot(res, binwidth=0.02)
+  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_scoper_vj_threshold.png"))
+  
+})
+
+# -------------------
+# Plot distributions
+# -------------------
+
+spec_clones_vj$HH117@db
 
 # -------------------
 # Detect main V and J gene for each clone

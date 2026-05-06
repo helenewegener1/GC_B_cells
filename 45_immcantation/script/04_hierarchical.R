@@ -103,13 +103,13 @@ list_thresholds <- lapply(patients, function(HH){
     dist_nearest$dist_nearest,
     method = "gmm",
     model = "gamma-norm",
-    cutoff = "user",
-    spc = 0.995  # specificity
+    cutoff = "intersect",
+    # spc = 0.995  # specificity
     # spc = 0.99 # slight improve # HH119 - 0.04334775
   )
 
   threshold <- threshold_output@threshold
-  threshold # HH119 - 0.02838713
+  threshold 
   HH_thresholds["gmm"] <- threshold
 
   plot(threshold_output, binwidth = 0.02, silent = TRUE) +
@@ -145,61 +145,61 @@ list_thresholds <- lapply(patients, function(HH){
   
   ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold.png"), width = 12, height = 6.5)
   
-  # -------------------
-  # GMM - cross patient 
-  # -------------------
-  
-  # find threshold for cloning automatically and initialize the Gaussian fit
-  # parameters of the nearest-neighbor
-
-  # distance of inter (between) clones using cross subjects distribution of distance to nearest
-  threshold_output <- shazam::findThreshold(
-    dist_nearest$dist_nearest,
-    method = "gmm",
-    model = "gamma-norm",
-    cross = dist_crossSubj$cross_dist_nearest,
-    cutoff = "user",
-    spc = 0.995
-  )
-
-  threshold_withcross <- threshold_output@threshold
-  threshold_withcross
-  HH_thresholds["gmm_cross"] <- threshold
-
-  plot(threshold_output, binwidth = 0.02, silent = TRUE) +
-    theme(axis.title = element_text(size = 12)) +
-    plot_annotation(
-      title = glue("{HH} cross patient: Nearest-neighbor Hamming distance distribution"),
-      subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold}")
-    )
-
-  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_gmm_threshold_cross_patient.png"), width = 12, height = 6.5)
-
-  # -------------------
-  # Density - cross patient 
-  # -------------------
-  
-  # find threshold for cloning automatically using density 
-  # density finds the valley between the two modes directly
-  threshold_output <- shazam::findThreshold(
-    dist_nearest$dist_nearest,
-    method = "density",
-    cross = dist_crossSubj$cross_dist_nearest
-  )
-  
-  threshold_withcross <- threshold_output@threshold
-  threshold_withcross # 0.1601825
-  HH_thresholds["density_cross"] <- threshold
-  
-  # plot the threshold along the density plot
-  plot(threshold_output, binwidth = 0.02, silent = TRUE) +
-    theme(axis.title = element_text(size = 12)) + 
-    plot_annotation(
-      title = glue("{HH} cross patient: Nearest-neighbor Hamming distance distribution"), 
-      subtitle = glue("Automatic density threshold: {threshold}")
-    )
-  
-  ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold_cross_patient.png"), width = 12, height = 6.5)
+  # # -------------------
+  # # GMM - cross patient 
+  # # -------------------
+  # 
+  # # find threshold for cloning automatically and initialize the Gaussian fit
+  # # parameters of the nearest-neighbor
+  # 
+  # # distance of inter (between) clones using cross subjects distribution of distance to nearest
+  # threshold_output <- shazam::findThreshold(
+  #   dist_nearest$dist_nearest,
+  #   method = "gmm",
+  #   model = "gamma-norm",
+  #   cross = dist_crossSubj$cross_dist_nearest,
+  #   cutoff = "user",
+  #   spc = 0.995
+  # )
+  # 
+  # threshold_withcross <- threshold_output@threshold
+  # threshold_withcross
+  # HH_thresholds["gmm_cross"] <- threshold
+  # 
+  # plot(threshold_output, binwidth = 0.02, silent = TRUE) +
+  #   theme(axis.title = element_text(size = 12)) +
+  #   plot_annotation(
+  #     title = glue("{HH} cross patient: Nearest-neighbor Hamming distance distribution"),
+  #     subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold}")
+  #   )
+  # 
+  # ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_gmm_threshold_cross_patient.png"), width = 12, height = 6.5)
+  # 
+  # # -------------------
+  # # Density - cross patient 
+  # # -------------------
+  # 
+  # # find threshold for cloning automatically using density 
+  # # density finds the valley between the two modes directly
+  # threshold_output <- shazam::findThreshold(
+  #   dist_nearest$dist_nearest,
+  #   method = "density",
+  #   cross = dist_crossSubj$cross_dist_nearest
+  # )
+  # 
+  # threshold_withcross <- threshold_output@threshold
+  # threshold_withcross # 0.1601825
+  # HH_thresholds["density_cross"] <- threshold
+  # 
+  # # plot the threshold along the density plot
+  # plot(threshold_output, binwidth = 0.02, silent = TRUE) +
+  #   theme(axis.title = element_text(size = 12)) + 
+  #   plot_annotation(
+  #     title = glue("{HH} cross patient: Nearest-neighbor Hamming distance distribution"), 
+  #     subtitle = glue("Automatic density threshold: {threshold}")
+  #   )
+  # 
+  # ggsave(glue("45_immcantation/plot/hier_distance_distributions/{HH}_nearest_neighbor_Hamming_distance_histogram_automatic_density_threshold_cross_patient.png"), width = 12, height = 6.5)
   
   return(HH_thresholds)
   
