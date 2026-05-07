@@ -215,76 +215,75 @@ lapply(patients, function(HH){
   
 })
 
-
-
-
-# Facet wrap
-
-# Define LP samples
-LP_samples <- grep("LP", seurat_integrated[[]]$sample_clean, value = TRUE) %>% unique()
-
-# How many Tfh cells with BCR?
-seurat_integrated[[]] %>% filter((!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells")) 
-
-# Clean meta data and prep for plotting 
-seurat_meta_clean <- seurat_integrated[[]] %>%  
-  mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
-  filter(
-    (str_detect(L1_annotation, "Contamination", negate = TRUE)), # Remove contamination
-    !(!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells"), # Remove Tfh cells with BCR
-    !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), # Remove GC B cells in LP samples
-  ) %>% mutate(
-    sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-")),
-    sample_clean_plot = fct_infreq(sample_clean_plot) #%>% fct_rev()
-  ) %>% 
-  add_count(sample_clean_plot, name = "Count") 
-
-# Across follicles 
-HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
-
-# Count
-if (HH == "HH117"){
-  width <- 12 
-} else if (HH == "HH119"){
-  width <- 15
-}
-png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
-
-print(
-  seurat_meta_clean %>% 
-    filter(!is.na(manual_ADT_ID)) %>% 
-    mutate(
-      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-    ) %>% 
-    ggplot(aes(x = manual_ADT_ID_plot, fill = L1_annotation)) +
-    geom_bar() + 
-    scale_fill_manual(
-      values = L1_colors, 
-      labels = cell_type_names
-    ) + 
-    scale_x_continuous(
-      breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-      limits = c(0.5, NA),
-      expand = c(0, 0.5)
-    ) + 
-    facet_wrap(vars(patient), drop = TRUE) +
-    theme_classic() +
-    labs(
-      x = "Follicle number", 
-      y = "Count", 
-      title = glue ("Cell types across {HH_fol_sample_clean} follicles"),
-      fill = "Cell type"
-    ) + 
-    theme(
-      plot.title = element_text(face = "bold", size = 26),
-      axis.title = element_text(size = 20),
-      axis.text = element_text(size = 16),
-      legend.title = element_text(size = 20),
-      legend.text = element_text(size = 16)
-    )
-)
-
-dev.off()
+#   
+# 
+# # Facet wrap
+# 
+# # Define LP samples
+# LP_samples <- grep("LP", seurat_integrated[[]]$sample_clean, value = TRUE) %>% unique()
+# 
+# # How many Tfh cells with BCR?
+# seurat_integrated[[]] %>% filter((!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells")) 
+# 
+# # Clean meta data and prep for plotting 
+# seurat_meta_clean <- seurat_integrated[[]] %>%  
+#   mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
+#   filter(
+#     (str_detect(L1_annotation, "Contamination", negate = TRUE)), # Remove contamination
+#     !(!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells"), # Remove Tfh cells with BCR
+#     !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), # Remove GC B cells in LP samples
+#   ) %>% mutate(
+#     sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-")),
+#     sample_clean_plot = fct_infreq(sample_clean_plot) #%>% fct_rev()
+#   ) %>% 
+#   add_count(sample_clean_plot, name = "Count") 
+# 
+# # Across follicles 
+# HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+# 
+# # Count
+# if (HH == "HH117"){
+#   width <- 12 
+# } else if (HH == "HH119"){
+#   width <- 15
+# }
+# png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
+# 
+# print(
+#   seurat_meta_clean %>% 
+#     filter(!is.na(manual_ADT_ID)) %>% 
+#     mutate(
+#       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+#     ) %>% 
+#     ggplot(aes(x = manual_ADT_ID_plot, fill = L1_annotation)) +
+#     geom_bar() + 
+#     scale_fill_manual(
+#       values = L1_colors, 
+#       labels = cell_type_names
+#     ) + 
+#     scale_x_continuous(
+#       breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+#       limits = c(0.5, NA),
+#       expand = c(0, 0.5)
+#     ) + 
+#     facet_wrap(vars(patient), drop = TRUE) +
+#     theme_classic() +
+#     labs(
+#       x = "Follicle number", 
+#       y = "Count", 
+#       title = glue ("Cell types across {HH_fol_sample_clean} follicles"),
+#       fill = "Cell type"
+#     ) + 
+#     theme(
+#       plot.title = element_text(face = "bold", size = 26),
+#       axis.title = element_text(size = 20),
+#       axis.text = element_text(size = 16),
+#       legend.title = element_text(size = 20),
+#       legend.text = element_text(size = 16)
+#     )
+# )
+# 
+# dev.off()
 
 # ==============================================================================
 # G B cells: Summary of follicles and isotypes
@@ -607,7 +606,7 @@ n_clones <- 10
 
 lapply(patients, function(HH){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   p <- patient_names[[HH]]
   
   # Subset clones
@@ -630,10 +629,14 @@ lapply(patients, function(HH){
   HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
   
   # Define clone colors 
-  clone_colors <- list("#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
-                       "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
-                       "grey80") %>% setNames(c(top_GC_clones_subset, "other"))
-  
+  clone_colors <- list(
+    "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
+    "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+    # "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
+    # "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
+    "grey85"
+  ) %>% setNames(c(top_GC_clones_subset, "other"))
+
   # Define clone names
   clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
   
@@ -662,7 +665,7 @@ lapply(patients, function(HH){
   #   x = 0.50, y = 0.97,          # adjust position as needed
   #   gp = gpar(fontsize = 20, fontface = "bold")
   # )
-  ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000)
+  ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
   
   # N clones 
 
