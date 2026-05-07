@@ -203,11 +203,11 @@ lapply(patients, function(HH){
         fill = "Cell type"
       ) + 
       theme(
-        plot.title = element_text(face = "bold", size = 26),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 16),
-        legend.title = element_text(size = 20),
-        legend.text = element_text(size = 16)
+        plot.title = element_text(face = "bold", size = 30),
+        axis.title = element_text(size = 24),
+        axis.text = element_text(size = 20),
+        legend.title = element_text(size = 24),
+        legend.text = element_text(size = 20)
       )
   )
   
@@ -536,7 +536,7 @@ n_clones <- 10
 
 lapply(patients, function(HH){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   p <- patient_names[[HH]]
   
   # Subset clones
@@ -561,21 +561,22 @@ lapply(patients, function(HH){
   # Define clone colors 
   clone_colors <- list("#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
                        "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
-                       "grey") %>% setNames(c(top_GC_clones_subset, "other"))
+                       "grey80") %>% setNames(c(top_GC_clones_subset, "other"))
   
   # Define clone names
   clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
   
-  # N clones with >= 3 cells
+  # N clones 
   N_clones_per_fol <- plot_df %>%
-    filter(!is.na(manual_ADT_ID)) %>%
+    filter(
+      !is.na(manual_ADT_ID)
+    ) %>%
     mutate(
       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
     ) %>% 
     group_by(manual_ADT_ID_plot) %>% 
-    count(clone_subgroup_id) %>% 
-    filter(n >= 3) %>% 
-    count(manual_ADT_ID_plot) %>% 
+    count(clone_subgroup_id) %>%
+    count(manual_ADT_ID_plot) %>%
     ungroup() %>%
     complete(
       manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
@@ -616,8 +617,8 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
-        subtitle = glue("Top {n_clones} clones highlighted and number of clones with >= 3 cells in each follicle is stated on top of the bars"),
+        title = glue("{p}: Top 10 clones in GC B cells in {HH_fol_sample_clean} follicles"),
+        subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
         fill = "Clone"
       ) + 
       theme(
