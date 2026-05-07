@@ -407,11 +407,11 @@ for (HH in patients){
     
     # Title
     if (clone_nr == 1){
-      clone_definition <- "Largest clone with GC B cells across samples"
+      clone_definition <- "Largest GC B cell clone"
     } else if (clone_nr == 2) {
-      clone_definition <- "Second largest clone with GC B cells across samples"
+      clone_definition <- "Second largest GC B cell clone"
     } else {
-      clone_definition <- glue("{clone_nr}. largest clone with GC B cells across samples")
+      clone_definition <- glue("{clone_nr}. largest GC B cell clone")
     }
     
     plot_df <- resolve_LC_list[[HH]] %>% 
@@ -530,32 +530,19 @@ for (HH in patients){
     
     # Prep saving plot 
     png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_upsetplot.png"), width = width, height = height, units = "in", res = 1000)
-    
+
     # Plot 
     print(UpSetR::upset(
       upset_input_final,
       sets = set_order,
       nintersects = nintersects,
       order.by = "freq",
-      keep.order = TRUE, 
+      keep.order = TRUE,
       sets.bar.color = set_colors,
       mb.ratio = c(0.4, 0.6),
-      line.size = 0.3
+      line.size = 0.3,
+      text.scale = 1.75
     ))
-    
-    # White background rectangle behind title
-    grid.rect(
-      x = 0.50, y = 0.98,
-      width = 0.7, height = 0.05,   # adjust size to fit your text
-      gp = gpar(fill = "white", col = NA)  # col = NA removes border
-    )
-    
-    # Title
-    grid.text(
-      glue("{p}: {clone_definition}"),
-      x = 0.50, y = 0.97,          # adjust position as needed
-      gp = gpar(fontsize = 20, fontface = "bold")
-    )
     
     # Caption 
     grid.text(
@@ -592,6 +579,27 @@ for (HH in patients){
 
     
   }
+  
+  # Title
+  grid.newpage()
+  grid.text(
+    glue("{p}: {clone_definition}"),
+    x = 0.50, y = 0.97,          # adjust position as needed
+    gp = gpar(fontsize = 20, fontface = "bold")
+  )
+  
+  png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_title.png"), width = width, height = height, units = "in", res = 1000, bg = "white")
+  grid.newpage()
+  grid.text(
+    glue("{p}: {clone_definition}"),
+    # x = 0.5, y = 0.5,
+    gp = gpar(fontsize = 26, fontface = "bold")
+  )
+  dev.off()
+
+  
+  
+  
 }
 
 # ==============================================================================
