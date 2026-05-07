@@ -123,7 +123,7 @@ dir.create(outdir_1, recursive = TRUE)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   p <- patient_names[[HH]]
   
   seurat_obj <- subset(seurat_integrated, patient == HH)
@@ -151,7 +151,12 @@ lapply(patients, function(HH){
   HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
 
   # Count
-  png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = 12, height = 7, res = 1000, units = "in")
+  if (patient == "HH117"){
+    width <- 12 
+  } else if (patient == "HH119"){
+    width <- 14
+  }
+  png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
   
   print(
     seurat_meta_clean %>% 
