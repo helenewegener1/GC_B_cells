@@ -179,7 +179,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Count", 
-        title = glue ("{p}: N B cells across {HH_fol_sample_clean} follicles"),
+        title = glue ("{p}: Cell types across {HH_fol_sample_clean} follicles"),
         fill = "Cell type"
       ) + 
       theme(
@@ -274,7 +274,7 @@ lapply(patients, function(HH){
 # Plot data - GC clones in at least two samples
 # ------------------------------------------------------------------------------
 
-outdir_3 <- glue("45_immcantation/{plot_version}/15_poster_figures/bar_plots_top_GC_clones")
+outdir_3 <- glue("45_immcantation/{plot_version}/15_poster_figures/Follicle_GC_B_cells_top_GC_clones")
 dir.create(outdir_3, recursive = TRUE)
 
 # Define top GC clone
