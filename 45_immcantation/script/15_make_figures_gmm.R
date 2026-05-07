@@ -700,7 +700,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}: Top 10 clones in GC B cells in {HH_fol_sample_clean} follicles"),
+        title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
         # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
         fill = "Clone"
       ) + 
