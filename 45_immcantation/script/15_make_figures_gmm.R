@@ -174,7 +174,7 @@ lapply(patients, function(HH){
   if (HH == "HH117"){
     width <- 12 
   } else if (HH == "HH119"){
-    width <- 15
+    width <- 15.5
   }
   png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
   
@@ -300,10 +300,9 @@ lapply(patients, function(HH){
   plot_df <- resolve_LC_list[[HH]] %>% 
     filter(locus == "IGH") %>% 
     mutate(
-      sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-")),
-      sample_clean_plot = fct_infreq(sample_clean_plot) #%>% fct_rev()
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
     ) %>%
-    add_count(sample_clean_plot, name = "Count") 
+    add_count(manual_ADT_ID_plot, name = "Count") 
   
 
   # Isotype
@@ -312,7 +311,7 @@ lapply(patients, function(HH){
   if (HH == "HH117"){
     width <- 12 
   } else if (HH == "HH119"){
-    width <- 15
+    width <- 15.5
   }
   
   png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
@@ -323,14 +322,14 @@ lapply(patients, function(HH){
         !is.na(manual_ADT_ID), 
         L1_annotation == "GC_B_cells",
         !is.na(c_call)
-      ) %>%
-      mutate(
-        manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
       ) %>% 
       ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) + 
-      geom_bar(position = "fill") +            # <-- changed
+      geom_bar(position = "fill") + 
+      geom_text(
+        aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+      ) + 
       scale_fill_manual(values = isotype_colors_custom) +
-      scale_y_continuous(labels = scales::percent) +   # <-- optional: show % instead of 0-1
+      scale_y_continuous(labels = scales::percent) +
       scale_x_continuous(
         breaks = function(x) seq(1, ceiling(max(x)), by = 1),
         limits = c(0.5, NA),
@@ -640,7 +639,7 @@ lapply(patients, function(HH){
   # Define clone names
   clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
   
-  # # N clones 
+  # N clones 
   N_clones_per_fol <- plot_df %>%
     filter(
       !is.na(manual_ADT_ID)
@@ -657,22 +656,22 @@ lapply(patients, function(HH){
       fill = list(n = 0)
     ) 
   
-  colnames(N_clones_per_fol) <- c("Follicle", "N clones")
-
-  ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
-  # grid.text(
-  #   glue("{p}: N clones per follicle"),
-  #   x = 0.50, y = 0.97,          # adjust position as needed
-  #   gp = gpar(fontsize = 20, fontface = "bold")
-  # )
-  ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
-  
+  # colnames(N_clones_per_fol) <- c("Follicle", "N clones")
+  # 
+  # ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
+  # # grid.text(
+  # #   glue("{p}: N clones per follicle"),
+  # #   x = 0.50, y = 0.97,          # adjust position as needed
+  # #   gp = gpar(fontsize = 20, fontface = "bold")
+  # # )
+  # ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
+  # 
   # N clones 
 
   if (HH == "HH117"){
     width <- 12 
   } else if (HH == "HH119"){
-    width <- 15
+    width <- 15.5
   }
   
   png(glue("{outdir_6}/{HH}_N_{n_clones}.png"), width = width, height = 7, units = "in", res = 1000)
@@ -682,9 +681,13 @@ lapply(patients, function(HH){
       filter(!is.na(manual_ADT_ID)) %>%
       ggplot(aes(x = manual_ADT_ID_plot)) + 
       geom_bar(aes(fill = clone_subgroup_id_plot), position = "fill") + 
+      # geom_text(
+      #   # data = N_clones_per_fol, 
+      #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+      # ) +
       geom_text(
-        # data = N_clones_per_fol, 
-        aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+        data = N_clones_per_fol,
+        aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
       ) +
       scale_fill_manual(
         values = clone_colors, 
