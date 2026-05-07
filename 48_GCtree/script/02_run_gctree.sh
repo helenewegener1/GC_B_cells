@@ -26,9 +26,29 @@ PLOT_DIR=${WD}/plot_gmm_threshold
 
 # sample_list=$(ls $DATA_DIR | cut -d "." -f1)
 sample_list=(
-  HH117_clone_nr_1_clone_1849_1
-  HH117_clone_nr_2_clone_4221_1
-  HH117_clone_nr_3_clone_2628_1
+  
+  HH117_clone_nr_10_clone_2169_1
+  HH117_clone_nr_9_clone_1910_1
+  HH117_clone_nr_8_clone_6115_1
+  HH117_clone_nr_7_clone_5941_1
+  HH117_clone_nr_6_clone_1320_1
+  HH117_clone_nr_5_clone_2301_1
+  HH117_clone_nr_4_clone_3709_1
+  HH117_clone_nr_3_clone_1849_1
+  HH117_clone_nr_2_clone_2628_1
+  HH117_clone_nr_1_clone_4221_1
+  
+  HH119_clone_nr_10_clone_7913_1
+  HH119_clone_nr_9_clone_25158_1
+  HH119_clone_nr_8_clone_3869_1
+  HH119_clone_nr_7_clone_8372_1
+  HH119_clone_nr_6_clone_23124_1
+  HH119_clone_nr_5_clone_15287_1
+  HH119_clone_nr_4_clone_12120_1
+  HH119_clone_nr_3_clone_28075_1
+  HH119_clone_nr_2_clone_22387_1
+  # HH119_clone_nr_1_clone_22355_1
+  
 )
 
 # # Run gctree

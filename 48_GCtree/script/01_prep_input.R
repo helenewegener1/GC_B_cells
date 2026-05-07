@@ -37,38 +37,33 @@ patients <- names(resolve_LC_list_germlined)
 # FASTA file writing
 # ------------------------------------------------------------------------------
 
-clone_nrs <- 1:5
+# Define top GC clone
+top_GC_clones <- lapply(patients, function(HH) {
+  
+  # find clones that have GC cells in at least 2 different sample_ids
+  GC_clones <- resolve_LC_list[[HH]] %>%
+    filter(locus == "IGH") %>% 
+    filter(L1_annotation == "GC_B_cells") %>%
+    count(clone_subgroup_id, sort = TRUE) %>% 
+    head(10) %>% 
+    pull(clone_subgroup_id)
+  
+}) %>% setNames(patients)
+
+clone_nrs <- 1:10
 
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
   
   for (clone_nr in clone_nrs){
     
     # Get top "clone_nr" clone from given sample
     # clone_nr <- 1
-    # clone <- HH_spec_clones_vj %>%
-    #   count(clone_subgroup_id, sort = TRUE) %>% 
-    #   dplyr::slice(clone_nr) %>% 
-    #   pull(clone_subgroup_id)
-    
-    # find clones that have GC cells in at least 2 different sample_ids
-    GC_clones <- HH_spec_clones_vj %>%
-      filter(locus == "IGH") %>% 
-      filter(L1_annotation == "GC_B_cells") %>%
-      group_by(clone_subgroup_id) %>%
-      summarise(n_samples = n_distinct(sample_clean_fol)) %>%
-      filter(n_samples >= 2) %>%
-      pull(clone_subgroup_id)
-    
+
     # rank those clones by total size (all cell types) and take top 10
-    clone <- HH_spec_clones_vj %>%
-      filter(locus == "IGH") %>% 
-      filter(clone_subgroup_id %in% GC_clones) %>%
-      count(clone_subgroup_id, sort = TRUE) %>%
-      dplyr::slice(clone_nr) %>% 
-      pull(clone_subgroup_id)
+    clone <- top_GC_clones[[HH]][[clone_nr]]
     
     # Extract sequences of clone, each's abundance and the germline sequence (GL)
     seqs <- HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% pull(sequence_alignment)
