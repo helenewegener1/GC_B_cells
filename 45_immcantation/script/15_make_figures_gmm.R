@@ -203,11 +203,11 @@ lapply(patients, function(HH){
         fill = "Cell type"
       ) + 
       theme(
-        plot.title = element_text(face = "bold", size = 30),
-        axis.title = element_text(size = 24),
-        axis.text = element_text(size = 20),
-        legend.title = element_text(size = 24),
-        legend.text = element_text(size = 20)
+        plot.title = element_text(face = "bold", size = 26),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 16)
       )
   )
   
