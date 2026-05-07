@@ -518,7 +518,7 @@ for (HH in patients){
       nintersects <- 27
       more_than_N_cells <- 10
     } else if (HH == "HH117" & clone_nr == 1){
-      width <- 5.5
+      width <- 6.5
       height <- 5.5
       more_than_N_cells <- 2
       nintersects <- 7
@@ -541,22 +541,24 @@ for (HH in patients){
       sets.bar.color = set_colors,
       mb.ratio = c(0.4, 0.6),
       line.size = 0.3,
-      text.scale = 1.75
+      text.scale = 1.5,
+      mainbar.y.label = NULL,
+      sets.x.label = NULL
     ))
     
     # Caption 
     grid.text(
       glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}\nCombinations with >= {more_than_N_cells} cells are shown."),
       just = "right", 
-      x = 0.99, y = 0.03,          # adjust position as needed
-      gp = gpar(fontsize = 10)
+      x = 0.99, y = 0.02,          # adjust position as needed
+      gp = gpar(fontsize = 8)
     )
     
     # Legend
     legend_labels <- c("Sample", "Isotype", "Cell type")
     legend_colors <- c("darkgreen", "darkred", "blue")
     
-    x_start <- 0.07
+    x_start <- 0.1
     y_start <- 0.80
     gap     <- 0.05
     
@@ -571,31 +573,26 @@ for (HH in patients){
         legend_labels[i],
         x = x_start + 0.03, y = y_start - (i - 1) * gap,
         just = "left",
-        gp = gpar(fontsize = 14)
+        gp = gpar(fontsize = 12)
       )
     }
     
+    dev.off()
+    
+    # Title
+    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_title.png"), width = width, height = height, units = "in", res = 1000, bg = "white")
+    grid.newpage()
+    grid.text(
+      glue("{p}: {clone_definition}"),
+      # x = 0.5, y = 0.5,
+      gp = gpar(fontsize = 26, fontface = "bold")
+    )
     dev.off()
 
     
   }
   
-  # Title
-  grid.newpage()
-  grid.text(
-    glue("{p}: {clone_definition}"),
-    x = 0.50, y = 0.97,          # adjust position as needed
-    gp = gpar(fontsize = 20, fontface = "bold")
-  )
   
-  png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_title.png"), width = width, height = height, units = "in", res = 1000, bg = "white")
-  grid.newpage()
-  grid.text(
-    glue("{p}: {clone_definition}"),
-    # x = 0.5, y = 0.5,
-    gp = gpar(fontsize = 26, fontface = "bold")
-  )
-  dev.off()
 
   
   
