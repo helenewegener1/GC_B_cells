@@ -151,10 +151,10 @@ lapply(patients, function(HH){
   HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
 
   # Count
-  if (patient == "HH117"){
+  if (HH == "HH117"){
     width <- 12 
-  } else if (patient == "HH119"){
-    width <- 14
+  } else if (HH == "HH119"){
+    width <- 15
   }
   png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
   
@@ -196,10 +196,10 @@ lapply(patients, function(HH){
 })
 
 # ==============================================================================
-# B cells: Summary of follicles and cell types
+# G B cells: Summary of follicles and isotypes
 # ==============================================================================
 
-outdir_2 <- glue("45_immcantation/{plot_version}/15_poster_figures/B_cell_summary_follicle_cell_types")
+outdir_2 <- glue("45_immcantation/{plot_version}/15_poster_figures/Follicle_GC_B_cells_isotypes")
 dir.create(outdir_2, recursive = TRUE)
 
 lapply(patients, function(HH){
@@ -215,107 +215,25 @@ lapply(patients, function(HH){
     ) %>%
     add_count(sample_clean_plot, name = "Count") 
   
-  # Across sample_clean
-  
-  png(glue("{outdir_2}/{HH}_N_cells_across_samples.png"), width = 12, height = 7, res = 1000, units = "in")
-  
-  print(
-    plot_df %>% 
-      ggplot(aes(x = sample_clean_plot, fill = L1_annotation)) +
-      geom_bar() + 
-      geom_text(aes(y = Count, label = Count),
-                hjust = 0.5, vjust = -0.2, color = "black",
-                stat = "unique") +
-      scale_fill_manual(
-        values = L1_colors, 
-        labels = cell_type_names
-      ) + 
-      # theme_bw() +
-      theme_classic() +
-      labs(
-        x = "Samples", 
-        y = "Count", 
-        title = glue ("{p}: N B cells across samples"),
-        fill = "Cell type"
-      ) + 
-      theme(plot.title = element_text(face = "bold", size = 26))
-    # theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  )
-  
-  dev.off()
-  
-  # Across follicles 
-  HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
-  
-  png(glue("{outdir_2}/{HH}_N_cells_across_follicles.png"), width = 14, height = 7, res = 1000, units = "in")
-  
-  print(
-    plot_df %>% 
-      filter(!is.na(manual_ADT_ID)) %>% 
-      mutate(
-        manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-      ) %>% 
-      ggplot(aes(x = manual_ADT_ID_plot, fill = L1_annotation)) + 
-      geom_bar() + 
-      scale_fill_manual(
-        values = L1_colors, 
-        labels = cell_type_names
-      ) + 
-      scale_x_continuous(
-        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-        limits = c(0.5, NA),
-        expand = c(0, 0.5)
-      ) + 
-      theme_classic() +
-      labs(
-        x = "Follicle number", 
-        y = "Count", 
-        title = glue ("{p}: N B cells across {HH_fol_sample_clean} follicles"),
-        fill = "Cell type"
-      ) + 
-      theme(plot.title = element_text(face = "bold", size = 26))
-  )
-  
-  dev.off()
-  
+
   # Isotype
-  ## Count
-  png(glue("{outdir_2}/{HH}_Isotype_count_across_follicles.png"), width = 14, height = 7, res = 1000, units = "in")
-  
-  print(
-    plot_df %>% 
-      # filter(!is.na(manual_ADT_ID)) %>% 
-      filter(!is.na(manual_ADT_ID) & L1_annotation == "GC_B_cells") %>%
-      mutate(
-        manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-      ) %>% 
-      ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) + 
-      geom_bar() + 
-      scale_fill_manual(values = isotype_colors_custom) +
-      scale_x_continuous(
-        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-        limits = c(0.5, NA),
-        expand = c(0, 0.5)
-      ) + 
-      theme_classic() +
-      labs(
-        x = "Follicle number", 
-        y = "Count", 
-        title = glue ("{p}: Isotypes across {HH_fol_sample_clean} follicles"),
-        fill = "Isotype"
-      ) + 
-      theme(plot.title = element_text(face = "bold", size = 26))
-  )
-  
-  dev.off()
   
   ## Freq
-  png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles.png"), width = 14, height = 7, res = 1000, units = "in")
+  if (HH == "HH117"){
+    width <- 12 
+  } else if (HH == "HH119"){
+    width <- 15
+  }
+  
+  png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
   
   print(
     plot_df %>% 
-      # filter(!is.na(manual_ADT_ID)) %>%
-      filter(!is.na(manual_ADT_ID) & L1_annotation == "GC_B_cells") %>%
+      filter(
+        !is.na(manual_ADT_ID), 
+        L1_annotation == "GC_B_cells",
+        !is.na(c_call)
+      ) %>%
       mutate(
         manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
       ) %>% 
@@ -331,11 +249,17 @@ lapply(patients, function(HH){
       theme_classic() +
       labs(
         x = "Follicle number", 
-        y = "Frequency",                        # <-- changed
+        y = "Frequency", 
         title = glue("{p}: Isotypes across GC B cells in {HH_fol_sample_clean} follicles"),
         fill = "Isotype"
       ) + 
-      theme(plot.title = element_text(face = "bold", size = 26))
+      theme(
+        plot.title = element_text(face = "bold", size = 26),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 16)
+      )
   )
   
   dev.off()
