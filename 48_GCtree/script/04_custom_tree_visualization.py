@@ -555,8 +555,8 @@ for sample, sample_name in samples_dict.items():
       # Render tree
       svg_path = f"{custom_plot_path}/{sample}_{var}.svg"
       png_path = f"{custom_plot_path}/{sample}_{var}.png"
-      tree.render(svg_path, colormap=colormap, scale=15, branch_margin=15)
-      cairosvg.svg2png(url=svg_path, write_to=png_path, dpi=500)
+      tree.render(svg_path, colormap=colormap, scale=15, branch_margin=20)
+      cairosvg.svg2png(url=svg_path, write_to=png_path, dpi=150)
   
       # Build legend
       # present_labels = set(
