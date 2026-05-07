@@ -518,7 +518,7 @@ for (HH in patients){
       nintersects <- 27
       more_than_N_cells <- 10
     } else if (HH == "HH117" & clone_nr == 1){
-      width <- 6.5
+      width <- 5.5
       height <- 5.5
       more_than_N_cells <- 2
       nintersects <- 7
@@ -550,7 +550,7 @@ for (HH in patients){
     grid.text(
       glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}\nCombinations with >= {more_than_N_cells} cells are shown."),
       just = "right", 
-      x = 0.99, y = 0.02,          # adjust position as needed
+      x = 0.99, y = 0.025,          # adjust position as needed
       gp = gpar(fontsize = 8)
     )
     
@@ -585,7 +585,7 @@ for (HH in patients){
     grid.text(
       glue("{p}: {clone_definition}"),
       # x = 0.5, y = 0.5,
-      gp = gpar(fontsize = 26, fontface = "bold")
+      gp = gpar(fontsize = 20, fontface = "bold")
     )
     dev.off()
 
