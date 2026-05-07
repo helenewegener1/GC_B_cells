@@ -402,7 +402,7 @@ for (HH in patients){
   
   for (clone_nr in 1:length(HH_top_clones)){
     
-    # clone_nr <- 5
+    # clone_nr <- 2
     clone <- HH_top_clones[clone_nr]
     
     # Title
@@ -519,14 +519,14 @@ for (HH in patients){
         "2" = list(width = 5.5, height = 5.5,  nintersects = 8,  more_than_N_cells = 2),
         "3" = list(width = 5.5, height = 5.5,  nintersects = 9,  more_than_N_cells = 2),
         "4" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
-        "5" = list(width = 5.5, height = 5.5,  nintersects = 4,  more_than_N_cells = 2)
+        "5" = list(width = 4.5, height = 5.5,  nintersects = 4,  more_than_N_cells = 2)
       ),
       "HH117" = list(
         "1" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
-        "2" = list(width = 5.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
+        "2" = list(width = 4, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
         "3" = list(width = 5.5, height = 5.5,  nintersects = 6,  more_than_N_cells = 2),
-        "4" = list(width = 5.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
-        "5" = list(width = 5.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2)
+        "4" = list(width = 4.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
+        "5" = list(width = 4.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2)
       )
     )
     
