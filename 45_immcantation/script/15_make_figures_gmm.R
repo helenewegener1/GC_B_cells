@@ -575,7 +575,7 @@ for (HH in patients){
     dev.off()
     
     # Title
-    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_title.png"), width = width, height = height, units = "in", res = 1000, bg = "white")
+    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_title.png"), width = width, height = 0.5, units = "in", res = 1000, bg = "white")
     grid.newpage()
     grid.text(
       glue("{p}: {clone_definition}"),
