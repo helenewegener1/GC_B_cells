@@ -47,66 +47,65 @@ ncol(seurat_integrated)
 # Export BCR meta data to Gina 
 # ==============================================================================
 
-meta_4_Gina_list <- lapply(patients, function(HH){
-
-  # HH <- "HH119"
-
-  seurat_obj <- subset(seurat_integrated, patient == HH)
-  resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
-
-  # Check IDs
-  seurat_obj %>% colnames() %>% head()
-  resolve_LC_HH$cell_id %>% head()
-
-  seurat_obj %>% colnames() %>% length()
-  resolve_LC_HH$cell_id %>% length()
-
-  (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
-  (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
-
-
-  # # Wrangle IDs
-  # seurat_ids <- seurat_obj %>% colnames()
-  # LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
-  # 
-  # # IDs test 
-  # seurat_ids_sub <- seurat_ids %>% str_split_i("_", 2)
-  # table(seurat_ids_sub, seurat_obj$sample_clean)
-  # 
-  # LC_ids_sub <- LC_ids %>% str_split_i("_", 2)
-  # table(LC_ids_sub, resolve_LC_HH$sample_clean)
-  # 
-  # 
-  # # End
-
-  (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
-  (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
-
-  table(LC_ids %in% seurat_ids)
-
-  # Prep for merge
-  resolve_LC_HH_meta <- resolve_LC_HH %>%
-    mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) #%>%
-    select(cell_id_seurat_clean, c_call, clone_subgroup_id)
-
-  # Merge and create final meta data for Gina
-  meta_4_Gina <- seurat_obj[[]] %>%
-    select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample) %>%
-    rownames_to_column("cell_id_seurat_clean") %>%
-    left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
-    column_to_rownames("cell_id_seurat_clean")
-  
-  
-  table(meta_4_Gina$L1_annotation, meta_4_Gina$c_call, useNA = "always")
-
-  # Check
-  meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
-
-  return(meta_4_Gina)
-
-}) %>% setNames(patients)
-
-saveRDS(meta_4_Gina_list %>% bind_rows(), "45_immcantation/out/rds/meta_4_Gina_list.rds")
+# meta_4_Gina_list <- lapply(patients, function(HH){
+# 
+#   # HH <- "HH119"
+# 
+#   seurat_obj <- subset(seurat_integrated, patient == HH)
+#   resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
+# 
+#   # Check IDs
+#   seurat_obj %>% colnames() %>% head()
+#   resolve_LC_HH$cell_id %>% head()
+# 
+#   seurat_obj %>% colnames() %>% length()
+#   resolve_LC_HH$cell_id %>% length()
+# 
+#   (seurat_obj %>% colnames() %>% length()) == (seurat_obj %>% colnames() %>% unique() %>% length())
+#   (resolve_LC_HH$cell_id %>% length()) == (resolve_LC_HH$cell_id %>% unique() %>% length())
+# 
+# 
+#   # Wrangle IDs
+#   seurat_ids <- seurat_obj %>% colnames()
+#   LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
+# 
+#   # # IDs test 
+#   # seurat_ids_sub <- seurat_ids %>% str_split_i("_", 2)
+#   # table(seurat_ids_sub, seurat_obj$sample_clean)
+#   # 
+#   # LC_ids_sub <- LC_ids %>% str_split_i("_", 2)
+#   # table(LC_ids_sub, resolve_LC_HH$sample_clean)
+#   # # End
+# 
+#   (seurat_ids %>% length()) == (seurat_ids %>% unique() %>% length())
+#   (LC_ids %>% length()) == (LC_ids %>% unique() %>% length())
+# 
+#   table(LC_ids %in% seurat_ids)
+# 
+#   # Prep for merge
+#   resolve_LC_HH_meta <- resolve_LC_HH %>%
+#     mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>%
+#     select(cell_id_seurat_clean, c_call, clone_subgroup_id)
+# 
+#   # Merge and create final meta data for Gina
+#   meta_4_Gina <- seurat_obj[[]] %>%
+#     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample) %>%
+#     rownames_to_column("cell_id_seurat_clean") %>%
+#     left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
+#     column_to_rownames("cell_id_seurat_clean")
+#   
+#   
+#   # table(meta_4_Gina$L1_annotation, meta_4_Gina$c_call, useNA = "always")
+# 
+#   # Check
+#   meta_4_Gina %>% count(clone_subgroup_id, sort = TRUE)  %>% head()
+# 
+#   return(meta_4_Gina)
+# 
+# }) %>% setNames(patients)
+# 
+# 
+# saveRDS(meta_4_Gina_list %>% bind_rows(), "45_immcantation/out/rds/meta_4_Gina_list.rds")
 
 # meta <- readRDS("45_immcantation/out/rds/meta_4_Gina_list.rds")
 # 
@@ -116,10 +115,10 @@ saveRDS(meta_4_Gina_list %>% bind_rows(), "45_immcantation/out/rds/meta_4_Gina_l
 
 
 # ==============================================================================
-# All cells: Summary of cell types
+# All cells: Summary of cell types in follicles.
 # ==============================================================================
 
-outdir_1 <- glue("45_immcantation/{plot_version}/15_poster_figures/All_cell_summary_follicle_cell_types")
+outdir_1 <- glue("45_immcantation/{plot_version}/15_poster_figures/Follicle_cell_types")
 dir.create(outdir_1, recursive = TRUE)
 
 lapply(patients, function(HH){
@@ -150,15 +149,16 @@ lapply(patients, function(HH){
   
   # Across sample_clean
   # Count
-  png(glue("{outdir_1}/{HH}_N_cells_across_samples.png"), width = 12, height = 7, res = 1000, units = "in")
+  png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = 12, height = 7, res = 1000, units = "in")
   
   print(
     seurat_meta_clean %>% 
-      ggplot(aes(x = sample_clean_plot, fill = L1_annotation)) +
+      filter(!is.na(manual_ADT_ID)) %>% 
+      mutate(
+        manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+      ) %>% 
+      ggplot(aes(x = manual_ADT_ID_plot, fill = L1_annotation)) +
       geom_bar() + 
-      geom_text(aes(y = Count, label = Count),
-                hjust = 0.5, vjust = -0.2, color = "black",
-                stat = "unique") +
       scale_fill_manual(
         values = L1_colors, 
         labels = cell_type_names
@@ -171,34 +171,40 @@ lapply(patients, function(HH){
         title = glue ("{p}: N cells across samples"),
         fill = "Cell type"
       ) + 
-      theme(plot.title = element_text(face = "bold", size = 16))
+      theme(
+        plot.title = element_text(face = "bold", size = 16),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 12)
+      )
   )
   
   dev.off()
   
-  # Freq
-  print(
-    seurat_meta_clean %>% 
-      ggplot(aes(x = sample_clean_plot, fill = L1_annotation)) +
-      geom_bar(position = "fill") + 
-      geom_text(aes(y = 1, label = glue("N: {Count}")),
-                hjust = 0.5, vjust = -0.2, color = "black",
-                stat = "unique") +
-      scale_fill_manual(
-        values = L1_colors, 
-        labels = cell_type_names
-      ) + 
-      scale_y_continuous(labels = scales::percent) +
-      # theme_bw() +
-      theme_classic() +
-      labs(
-        x = "Samples", 
-        y = "Count", 
-        title = glue ("{p}: N cells across samples"),
-        fill = "Cell type"
-      ) + 
-      theme(plot.title = element_text(face = "bold", size = 16))
-  )
+  # # Freq
+  # print(
+  #   seurat_meta_clean %>% 
+  #     ggplot(aes(x = sample_clean_plot, fill = L1_annotation)) +
+  #     geom_bar(position = "fill") + 
+  #     geom_text(aes(y = 1, label = glue("N: {Count}")),
+  #               hjust = 0.5, vjust = -0.2, color = "black",
+  #               stat = "unique") +
+  #     scale_fill_manual(
+  #       values = L1_colors, 
+  #       labels = cell_type_names
+  #     ) + 
+  #     scale_y_continuous(labels = scales::percent) +
+  #     # theme_bw() +
+  #     theme_classic() +
+  #     labs(
+  #       x = "Samples", 
+  #       y = "Count", 
+  #       title = glue ("{p}: N cells across samples"),
+  #       fill = "Cell type"
+  #     ) + 
+  #     theme(plot.title = element_text(face = "bold", size = 16))
+  # )
   
 })
 

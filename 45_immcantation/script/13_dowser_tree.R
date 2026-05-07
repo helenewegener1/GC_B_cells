@@ -5,8 +5,12 @@ library(tidyverse)
 library(shazam)
 library(glue)
 
-spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
-resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+# spec_clones_vj <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
+# resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list.rds")
+
+data <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_gmm_threshold.rds")
+spec_clones_vj <- list("HH117" = data$HH117@db, "HH119" = data$HH119@db)
+resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold.rds")
 
 spec_clones_vj$HH117 %>% nrow()
 resolve_LC_list$HH117 %>% filter(locus == "IGH") %>% nrow()
@@ -228,38 +232,39 @@ top_GC_subclones_vj <- lapply(patients, function(HH) {
 # cd immcantation/scripts
 # fetch_imgtdb.sh -o germlines # Run script to obtain IMGT gapped sequences
 
-# # Read in IMGT-gapped sequences
-# references <- readIMGT(dir = "../packages/immcantation/scripts/germlines/human/vdj")
-# 
-# resolve_LC_list_germlined <- list()
-# 
-# for (HH in patients){
-# 
-#   HH_spec_clones_vj <- resolve_LC_list[[HH]]
-# 
-#   HH_spec_clones_vj <- HH_spec_clones_vj %>%
-#     mutate(
-#       v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
-#     ) %>%
-#     mutate(
-#       j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
-#     )
-# 
-#   # remove germline alignment columns for this example
-#   db <- select(HH_spec_clones_vj, -"germline_alignment", -"germline_alignment_d_mask")
-# 
-#   # Reconstruct germline sequences
-#   HH_spec_clones_vj <- createGermlines(db, references, nproc=1, clone = "clone_subgroup_id")
-# 
-#   # Check germline of first row
-#   HH_spec_clones_vj$germline_alignment_d_mask[1]
-# 
-#   resolve_LC_list_germlined[[HH]] <- HH_spec_clones_vj
-# 
-# }
-# 
+# Read in IMGT-gapped sequences
+references <- readIMGT(dir = "../packages/immcantation/scripts/germlines/human/vdj")
+
+resolve_LC_list_germlined <- list()
+
+for (HH in patients){
+
+  HH_spec_clones_vj <- resolve_LC_list[[HH]]
+
+  HH_spec_clones_vj <- HH_spec_clones_vj %>%
+    mutate(
+      v_gene = v_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = v_call
+    ) %>%
+    mutate(
+      j_gene = j_call %>% str_split_i("\\*", 1) %>% unique() %>% paste0(collapse = ", "), .by = j_call
+    )
+
+  # remove germline alignment columns for this example
+  db <- select(HH_spec_clones_vj, -"germline_alignment", -"germline_alignment_d_mask")
+
+  # Reconstruct germline sequences
+  HH_spec_clones_vj <- createGermlines(db, references, nproc=1, clone = "clone_subgroup_id")
+
+  # Check germline of first row
+  HH_spec_clones_vj$germline_alignment_d_mask[1]
+
+  resolve_LC_list_germlined[[HH]] <- HH_spec_clones_vj
+
+}
+
 # saveRDS(resolve_LC_list_germlined, "45_immcantation/out/rds/resolve_LC_list_germlined.rds")
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
+saveRDS(resolve_LC_list_germlined, "45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
+# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
 
 # ------------------------------------------------------------------------------
 # Build Lineage Trees per subclone

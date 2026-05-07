@@ -52,6 +52,8 @@ bcr_data <- list(
 cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
 cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
 
+
+
 # ------------------------------------------------------------------------------
 # Check V/D/J gene call consistency
 # ------------------------------------------------------------------------------
@@ -215,6 +217,7 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   # -------------------
   
   df <- df %>% filter(!(manual_ADT_class %in% c("Negative", "Doublet")))
+  # df <- df %>% mutate(ifelse(manual_ADT_class %in% c("Negative", "Doublet"), NA, manual_ADT_class)) # We want this 
   
   # -------------------
   # Combine pools of HH119-SI-PP

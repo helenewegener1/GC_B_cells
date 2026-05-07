@@ -168,11 +168,13 @@ spec_clones_vj_no_threshold <- lapply(patients, function(HH){
     cell_id = "cell_id",
     junction = "junction",
     first = FALSE,
-    targeting_model = HH_S5F, 
+    targeting_model = HH_S5F,
     summarize_clones = TRUE
   )
 
 }) %>% setNames(patients)
+
+# spec_clones_vj_no_threshold$HH117 %>% count(clone_id)
 
 saveRDS(spec_clones_vj_no_threshold, "45_immcantation/out/rds/05_spec_clones_vj_no_threshold.rds")
 
@@ -224,7 +226,6 @@ spec_clones_vj_density_threshold <- readRDS("45_immcantation/out/rds/05_spec_clo
 spec_clones_vj_gmm_threshold <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_gmm_threshold.rds")
 
 
-
 lapply(patients, function(HH){
   
   # HH <- "HH117"
@@ -251,10 +252,28 @@ lapply(patients, function(HH){
 })
 
 # -------------------
-# Plot distributions
+# look at top clones
 # -------------------
 
-spec_clones_vj$HH117@db
+HH <- "HH117"
+
+# Clones, no threshold 
+spec_clones_vj_no_threshold[[HH]]@db %>% 
+  count(clone_id, sort = TRUE)
+
+# Clones, density threshold 
+spec_clones_vj_density_threshold[[HH]]@db %>%
+  count(clone_id, sort = TRUE)
+
+# Clones, gmm threshold 
+spec_clones_vj_gmm_threshold[[HH]]@db %>%
+  count(clone_id, sort = TRUE)
+
+
+
+
+
+
 
 # -------------------
 # Detect main V and J gene for each clone
@@ -270,7 +289,7 @@ get_majority <- function(calls) {
 spec_clones_vj <- lapply(patients, function(HH){
   
   # HH <- "HH119"
-  spec_clones_vj[[HH]] %>%
+  spec_clones_vj_no_threshold[[HH]]@db %>%
     group_by(clone_id) %>%
     mutate(
       v_call_majority = get_majority(v_call),
@@ -279,6 +298,10 @@ spec_clones_vj <- lapply(patients, function(HH){
     ungroup()
   
 }) %>% setNames(patients)
+
+
+
+# spec_clones_vj[[HH]] %>% count(clone_id, sort = TRUE)
 
 saveRDS(spec_clones_vj, "45_immcantation/out/rds/05_spec_clones_vj_heavy.rds")
 
@@ -337,7 +360,7 @@ top_GC_clones_vj <- lapply(patients, function(HH) {
   #   unique()
   
   # find clones that have GC cells in at least 2 different sample_ids
-  GC_clones <- spec_clones_vj[[HH]] %>%
+  GC_clones <- spec_clones_vj_no_threshold[[HH]] %>%
     filter(celltype_broad == "GC_B_cells") %>%
     group_by(clone_id) %>%
     summarise(n_samples = n_distinct(sample_clean_fol)) %>%

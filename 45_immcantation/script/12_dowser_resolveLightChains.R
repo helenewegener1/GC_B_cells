@@ -34,7 +34,13 @@ sample_names <- files[1:length(files)-1]
 # }) %>% setNames(sample_names)
 # clone_10x_combined <- bind_rows(clone_10x_list)
 
-clone_10x_combined <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds") %>% bind_rows()
+# clone_10x_combined <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_heavy.rds") %>% bind_rows()
+# version <- ""
+
+
+data <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_gmm_threshold.rds") 
+clone_10x_combined <- list(data$HH117@db, data$HH119@db) %>% bind_rows()
+version <- "gmm_threshold"
 
 # HH <- "HH117"
 # clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
@@ -164,7 +170,7 @@ resolve_LC_list <- lapply(patients, function(HH){
 
 }) %>% setNames(patients)
 
-saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
+saveRDS(resolve_LC_list, glue("45_immcantation/out/rds/resolve_LC_list_{version}.rds"))
 
 ## Test
 HH <- "HH117"
