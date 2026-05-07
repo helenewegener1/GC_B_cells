@@ -402,7 +402,7 @@ for (HH in patients){
   
   for (clone_nr in 1:length(HH_top_clones)){
     
-    # clone_nr <- 1
+    # clone_nr <- 5
     clone <- HH_top_clones[clone_nr]
     
     # Title
@@ -431,33 +431,33 @@ for (HH in patients){
     v_gene <- plot_df$v_call_majority %>% unique() %>% str_split_i(",", 1)
     j_gene <- plot_df$j_call_majority %>% unique() %>% str_split_i(",", 1)
     
-    png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, res = 1000, units = "in")
-    
-    # Color by cell type
-    print(
-      plot_df %>%
-        ggplot(aes(y = sample_clean_fol_plot, fill = L1_annotation)) +
-        geom_bar() +
-        scale_fill_manual(
-          values = L1_colors,
-          labels = cell_type_names
-        ) +
-        geom_text(aes(x = Count, label = Count),
-                  hjust = -0.2, color = "black",
-                  stat = "unique") +
-        labs(
-          title = glue("{p}: {clone_definition}"),
-          # subtitle = glue("Clone ID: {clone}"),
-          caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
-          y = "Samples",
-          fill = "Cell type"
-        ) +
-        # theme_minimal()
-        theme_classic() + 
-        theme(plot.title = element_text(face = "bold", size = 16))
-    )
-
-    dev.off()
+    # png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, res = 1000, units = "in")
+    # 
+    # # Color by cell type
+    # print(
+    #   plot_df %>%
+    #     ggplot(aes(y = sample_clean_fol_plot, fill = L1_annotation)) +
+    #     geom_bar() +
+    #     scale_fill_manual(
+    #       values = L1_colors,
+    #       labels = cell_type_names
+    #     ) +
+    #     geom_text(aes(x = Count, label = Count),
+    #               hjust = -0.2, color = "black",
+    #               stat = "unique") +
+    #     labs(
+    #       title = glue("{p}: {clone_definition}"),
+    #       # subtitle = glue("Clone ID: {clone}"),
+    #       caption = glue("N cells: {n_cells}\nV gene: {v_gene}\n J gene: {j_gene}"),
+    #       y = "Samples",
+    #       fill = "Cell type"
+    #     ) +
+    #     # theme_minimal()
+    #     theme_classic() + 
+    #     theme(plot.title = element_text(face = "bold", size = 16))
+    # )
+    # 
+    # dev.off()
     
     # Upset plot 
     plot_df_upset <- plot_df %>%
@@ -511,21 +511,39 @@ for (HH in patients){
       rep("darkred", length(c_order)),
       rep("darkgreen", length(sample_order))
     )
-
-    if (HH == "HH119" & clone_nr == 1){
-      width <- 8
-      height <- 9.5
-      nintersects <- 27
-      more_than_N_cells <- 10
-    } else if (HH == "HH117" & clone_nr == 1){
-      width <- 5.5
-      height <- 5.5
-      more_than_N_cells <- 2
-      nintersects <- 7
+    
+    # Define plotvalues 
+    plot_values <- list(
+      "HH119" = list(
+        "1" = list(width = 9.5, height = 10.5, nintersects = 23, more_than_N_cells = 10),
+        "2" = list(width = 5.5, height = 5.5,  nintersects = 8,  more_than_N_cells = 2),
+        "3" = list(width = 5.5, height = 5.5,  nintersects = 9,  more_than_N_cells = 2),
+        "4" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
+        "5" = list(width = 5.5, height = 5.5,  nintersects = 4,  more_than_N_cells = 2)
+      ),
+      "HH117" = list(
+        "1" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
+        "2" = list(width = 5.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
+        "3" = list(width = 5.5, height = 5.5,  nintersects = 6,  more_than_N_cells = 2),
+        "4" = list(width = 5.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
+        "5" = list(width = 5.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2)
+      )
+    )
+    
+    # access like this:
+    vals <- plot_values[[HH]][[as.character(clone_nr)]]
+    
+    # with default fallback:
+    if (!is.null(vals)) {
+      width            <- vals$width
+      height           <- vals$height
+      nintersects      <- vals$nintersects
+      more_than_N_cells <- vals$more_than_N_cells
     } else {
-      width <- 11
-      height <- 4
+      width            <- 11
+      height           <- 4
       more_than_N_cells <- 1
+      nintersects      <- NA  # set your default
     }
     
     # Prep saving plot 
@@ -541,9 +559,9 @@ for (HH in patients){
       sets.bar.color = set_colors,
       mb.ratio = c(0.4, 0.6),
       line.size = 0.3,
-      text.scale = 1.5,
-      mainbar.y.label = NULL,
-      sets.x.label = NULL
+      text.scale = 1.5
+      # mainbar.y.label = NULL,
+      # sets.x.label = NULL
     ))
     
     # Caption 
@@ -553,29 +571,6 @@ for (HH in patients){
       x = 0.99, y = 0.025,          # adjust position as needed
       gp = gpar(fontsize = 8)
     )
-    
-    # Legend
-    legend_labels <- c("Sample", "Isotype", "Cell type")
-    legend_colors <- c("darkgreen", "darkred", "blue")
-    
-    x_start <- 0.1
-    y_start <- 0.80
-    gap     <- 0.05
-    
-    for (i in seq_along(legend_labels)) {
-      grid.rect(
-        x = x_start, y = y_start - (i - 1) * gap,
-        width = 0.02, height = 0.030,
-        just = "left",
-        gp = gpar(fill = legend_colors[i], col = NA)
-      )
-      grid.text(
-        legend_labels[i],
-        x = x_start + 0.03, y = y_start - (i - 1) * gap,
-        just = "left",
-        gp = gpar(fontsize = 12)
-      )
-    }
     
     dev.off()
     
@@ -589,15 +584,35 @@ for (HH in patients){
     )
     dev.off()
 
-    
   }
   
-  
-
-  
-  
-  
 }
+
+# Legend
+png(glue("{outdir_3}/Upset_legend.png"), width = 5.5, height = 5.5, units = "in", res = 1000, bg = "white")
+grid.newpage()
+legend_labels <- c("Sample", "Isotype", "Cell type")
+legend_colors <- c("darkgreen", "darkred", "blue")
+
+x_start <- 0.1
+y_start <- 0.85
+gap     <- 0.05
+
+for (i in seq_along(legend_labels)) {
+  grid.rect(
+    x = x_start, y = y_start - (i - 1) * gap,
+    width = 0.02, height = 0.020,
+    just = "left",
+    gp = gpar(fill = legend_colors[i], col = NA)
+  )
+  grid.text(
+    legend_labels[i],
+    x = x_start + 0.03, y = y_start - (i - 1) * gap,
+    just = "left",
+    gp = gpar(fontsize = 12)
+  )
+}
+dev.off()
 
 # ==============================================================================
 # Frequency of top clone per follicle 
