@@ -147,7 +147,9 @@ lapply(patients, function(HH){
     ) %>% 
     add_count(sample_clean_plot, name = "Count") 
   
-  # Across sample_clean
+  # Across follicles 
+  HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+
   # Count
   png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = 12, height = 7, res = 1000, units = "in")
   
@@ -163,48 +165,28 @@ lapply(patients, function(HH){
         values = L1_colors, 
         labels = cell_type_names
       ) + 
-      # theme_bw() +
+      scale_x_continuous(
+        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+        limits = c(0.5, NA),
+        expand = c(0, 0.5)
+      ) + 
       theme_classic() +
       labs(
-        x = "Samples", 
+        x = "Follicle number", 
         y = "Count", 
-        title = glue ("{p}: N cells across samples"),
+        title = glue ("{p}: N B cells across {HH_fol_sample_clean} follicles"),
         fill = "Cell type"
       ) + 
       theme(
-        plot.title = element_text(face = "bold", size = 16),
-        axis.title = element_text(size = 14),
-        axis.text = element_text(size = 12),
-        legend.title = element_text(size = 14),
-        legend.text = element_text(size = 12)
+        plot.title = element_text(face = "bold", size = 26),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 16)
       )
   )
   
   dev.off()
-  
-  # # Freq
-  # print(
-  #   seurat_meta_clean %>% 
-  #     ggplot(aes(x = sample_clean_plot, fill = L1_annotation)) +
-  #     geom_bar(position = "fill") + 
-  #     geom_text(aes(y = 1, label = glue("N: {Count}")),
-  #               hjust = 0.5, vjust = -0.2, color = "black",
-  #               stat = "unique") +
-  #     scale_fill_manual(
-  #       values = L1_colors, 
-  #       labels = cell_type_names
-  #     ) + 
-  #     scale_y_continuous(labels = scales::percent) +
-  #     # theme_bw() +
-  #     theme_classic() +
-  #     labs(
-  #       x = "Samples", 
-  #       y = "Count", 
-  #       title = glue ("{p}: N cells across samples"),
-  #       fill = "Cell type"
-  #     ) + 
-  #     theme(plot.title = element_text(face = "bold", size = 16))
-  # )
   
 })
 
