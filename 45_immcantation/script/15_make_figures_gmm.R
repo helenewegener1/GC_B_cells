@@ -394,7 +394,7 @@ lapply(patients, function(HH){
 # Visualize top clones
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_top_clones <- top_GC_clones[[HH]]
   n_clones <- length(HH_top_clones)
   
@@ -402,7 +402,7 @@ for (HH in patients){
   
   for (clone_nr in 1:length(HH_top_clones)){
     
-    # clone_nr <- 2
+    # clone_nr <- 1
     clone <- HH_top_clones[clone_nr]
     
     # Title
@@ -515,7 +515,7 @@ for (HH in patients){
     # Define plotvalues 
     plot_values <- list(
       "HH119" = list(
-        "1" = list(width = 9.5, height = 10.5, nintersects = 23, more_than_N_cells = 10),
+        "1" = list(width = 9.5, height = 12, nintersects = 23, more_than_N_cells = 10),
         "2" = list(width = 5.5, height = 5.5,  nintersects = 8,  more_than_N_cells = 2),
         "3" = list(width = 5.5, height = 5.5,  nintersects = 9,  more_than_N_cells = 2),
         "4" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
