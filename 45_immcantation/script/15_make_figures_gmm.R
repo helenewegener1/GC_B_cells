@@ -617,7 +617,7 @@ for (HH in patients){
     print(UpSetR::upset(
       upset_input_final,
       sets = set_order,
-      # nintersects = nintersects,
+      nintersects = nintersects,
       order.by = "freq",
       keep.order = TRUE,
       sets.bar.color = set_colors,
