@@ -294,7 +294,7 @@ dir.create(outdir_2, recursive = TRUE)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   p <- patient_names[[HH]]
   
   plot_df <- resolve_LC_list[[HH]] %>% 
@@ -304,6 +304,8 @@ lapply(patients, function(HH){
     ) %>%
     add_count(manual_ADT_ID_plot, name = "Count") 
   
+  # Across follicles 
+  HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
 
   # Isotype
   
@@ -354,6 +356,68 @@ lapply(patients, function(HH){
   dev.off()
   
 })
+
+# ==============================================================================
+# G B cells: Summary of follicles and isotypes - CRC without the big clone
+# ==============================================================================
+
+
+HH <- "HH119"
+p <- patient_names[[HH]]
+large_clone <- top_GC_clones[[HH]][[1]]
+# large_clone <- top_GC_clones[[HH]][c(1,2)]
+
+plot_df <- resolve_LC_list[[HH]] %>% 
+  filter(
+    locus == "IGH",
+    !(clone_subgroup_id %in% large_clone)
+  ) %>% 
+  mutate(
+    manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+  ) %>%
+  add_count(manual_ADT_ID_plot, name = "Count") 
+
+
+# Isotype
+## Freq
+png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone.png"), width = 15.5, height = 7, res = 1000, units = "in")
+
+print(
+  plot_df %>% 
+    filter(
+      !is.na(manual_ADT_ID), 
+      L1_annotation == "GC_B_cells",
+      !is.na(c_call)
+    ) %>% 
+    ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) + 
+    geom_bar(position = "fill") + 
+    geom_text(
+      aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+    ) + 
+    scale_fill_manual(values = isotype_colors_custom) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_x_continuous(
+      breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+      limits = c(0.5, NA),
+      expand = c(0, 0.5)
+    ) + 
+    theme_classic() +
+    labs(
+      x = "Follicle number", 
+      y = "Frequency", 
+      title = glue("{p}: Isotypes across GC B cells in {HH_fol_sample_clean} follicles - Largest clone removed"),
+      fill = "Isotype"
+    ) + 
+    theme(
+      plot.title = element_text(face = "bold", size = 26),
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 16),
+      legend.title = element_text(size = 20),
+      legend.text = element_text(size = 16)
+    )
+)
+
+dev.off()
 
 # ==============================================================================
 # CLONE BAR PLOTS
