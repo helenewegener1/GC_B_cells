@@ -39,7 +39,7 @@ resolve_LC_list <- lapply(patients, function(HH){
   
   # HH <- "HH119"
   resolve_LC_list[[HH]] %>%
-    group_by(clone_subgroup_id) %>%
+    group_by(clone_subgroup_id, locus) %>%
     mutate(
       v_call_majority = get_majority(v_call),
       j_call_majority = get_majority(j_call)
@@ -617,7 +617,7 @@ for (HH in patients){
     print(UpSetR::upset(
       upset_input_final,
       sets = set_order,
-      nintersects = nintersects,
+      # nintersects = nintersects,
       order.by = "freq",
       keep.order = TRUE,
       sets.bar.color = set_colors,
