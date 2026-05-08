@@ -557,7 +557,7 @@ for (var in variables){
   
   # var <- "j_call"
   # var <- "clone_id_plot"
-  # var <- "patient_id"
+  # var <- "clone_id_junction"
   p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
     geom_tippoint(aes(color = !!sym(var)), size=0.5) +
     theme_tree2() + 
@@ -574,6 +574,48 @@ for (var in variables){
   ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{var}.png"), plot = p, width = 9, height = 6.5, dpi = 1000)
   
 }
+
+
+# Plot the different clone definitions 
+
+clone_definitions <- c("clone_id", "clone_id_junction", "clone_id_vj_junction", "clone_id_vj_junction_95") 
+
+lapply(clone_definitions, function(clone_def){
+  
+  # clone_def <- "clone_id_vj_junction_95"
+  
+  # Wrangle metadata
+  these_clones <- seqs_meta_final %>% count(!!sym(clone_def), sort = TRUE) %>% head(15) %>% pull(!!sym(clone_def))
+  seqs_meta_final <- seqs_meta_final %>% mutate(clone_id_plot = ifelse(!!sym(clone_def) %in% these_clones, !!sym(clone_def), "other"))
+  
+  # clone_id_plot colors
+  clone_colors <- setNames(
+    c(
+      "#E63946", "#2196F3", "#3DAA55", "#FF9800",
+      "#9C27B0", "#00BCD4", "#F5C518", "#FF4081",
+      "#6D4C41", "#76FF03", "#1565C0","#00897B",  
+      "#558B2F", "#6200EA","#37474F",
+      "grey90"
+    ),
+    c(these_clones, "other")
+  ) # NAs will be grey
+  
+  
+  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+    geom_tippoint(aes(color = clone_id_plot), size=0.5) +
+    theme_tree2() + 
+    guides(color = guide_legend(override.aes = list(size = 4))) + 
+    labs(
+      title = glue("{version} colored by {clone_def} - N clusters: {k}"),
+      subtitle = glue("Clusters: {clusters_string}")
+    ) + 
+    scale_color_manual(values = clone_colors)
+  
+  
+  ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{clone_def}.png"), plot = p, width = 9, height = 6.5, dpi = 1000)
+
+  
+})
 
 
 # ------------------------------------------------------------------------------

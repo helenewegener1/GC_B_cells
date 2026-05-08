@@ -5,6 +5,7 @@ library(shazam)
 library(dowser)
 library(tidyverse)
 library(glue)
+library(patchwork)
 
 # Newest versions
 packageVersion("scoper")
@@ -98,8 +99,8 @@ threshold_output <- shazam::findThreshold(
   dist_nearest$dist_nearest,
   method = "gmm",
   model = "gamma-norm",
-  cutoff = "user",
-  spc = 0.995  # specificity
+  cutoff = "intersect",
+  # spc = 0.995  # specificity
   # spc = 0.99 # slight improve # HH119 - 0.04334775
 )
 
@@ -110,7 +111,8 @@ plot(threshold_output, binwidth = 0.02, silent = TRUE) +
   theme(axis.title = element_text(size = 12)) +
   plot_annotation(
     title = glue("Subset {subset_nr}: Nearest-neighbor Hamming distance distribution"),
-    subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold_gmm}")
+    # subtitle = glue("GMM, gamma-norm model, specificity = 0.995 threshold: {threshold_gmm}")
+    subtitle = glue("GMM, gamma-norm model: {threshold_gmm}")
   )
 
 ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/nearest_neighbor_distance_histogram_automatic_gmm_threshold.png"), width = 12, height = 6.5)
@@ -130,17 +132,20 @@ subset_clones_vj <- spectralClones(
   cell_id = "cell_id",
   junction = "junction",
   first = FALSE,
-  targeting_model = HH_S5F
+  targeting_model = HH_S5F,
+  summarize_clones = TRUE
   
 )
 
+
+plot(subset_clones_vj)
 
 # ------------------------------------------------------------------------------
 # Clones VS patient 
 # ------------------------------------------------------------------------------
 
 # data <- subset_clones_novj
-data <- subset_clones_vj
+data <- subset_clones_vj@db
 # version <- "scoper_vj_density_threshold"
 version <- "scoper_vj_gmm_threshold"
 # version <- "scoper_vj_no_threshold"
@@ -149,7 +154,7 @@ version <- "scoper_vj_gmm_threshold"
 data$clone_id %>% unique() %>% length()
 
 # N clones (> 20 cells )
-min_cells <- 8
+min_cells <- 10
 mask <- table(data$clone_id) >= min_cells
 table(mask)
 these_clones <- names(which(mask))
@@ -174,6 +179,8 @@ ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/clones_vs_pat
 # ------------------------------------------------------------------------------
 # Define top clones vj
 # ------------------------------------------------------------------------------
+
+subset_clones_vj <- subset_clones_vj@db
 
 top_clones <- subset_clones_vj %>%
   count(clone_id, sort = TRUE) %>%
