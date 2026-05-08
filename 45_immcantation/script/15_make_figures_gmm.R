@@ -199,7 +199,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Count", 
-        title = glue ("{p}: Cell types across {HH_fol_sample_clean} follicles"),
+        title = glue ("{p}: {HH_fol_sample_clean} follicles"),
         fill = "Cell type"
       ) + 
       theme(
@@ -341,7 +341,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}: Isotypes across GC B cells in {HH_fol_sample_clean} follicles"),
+        title = glue("{p}: GC B cells in {HH_fol_sample_clean} follicles"),
         fill = "Isotype"
       ) + 
       theme(
@@ -405,7 +405,7 @@ print(
     labs(
       x = "Follicle number", 
       y = "Frequency", 
-      title = glue("{p}: Isotypes across GC B cells in {HH_fol_sample_clean} follicles - Largest clone removed"),
+      title = glue("{p}: GC B cells in {HH_fol_sample_clean} follicles - Largest clone removed"),
       fill = "Isotype"
     ) + 
     theme(
