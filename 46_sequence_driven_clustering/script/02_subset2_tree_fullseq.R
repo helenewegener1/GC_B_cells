@@ -577,8 +577,8 @@ for (var in variables){
 
 
 # Plot the different clone definitions 
-
-clone_definitions <- c("clone_id", "clone_id_junction", "clone_id_vj_junction", "clone_id_vj_junction_95") 
+# clone_definitions <- c("clone_id", "clone_id_junction", "clone_id_vj_junction", "clone_id_vj_junction_95") 
+clone_definitions <- colnames(seqs_meta_final)[str_detect(colnames(seqs_meta_final), "clone")]
 
 lapply(clone_definitions, function(clone_def){
   
@@ -622,7 +622,7 @@ lapply(clone_definitions, function(clone_def){
 # Cut the tree to get a clone (401)
 # ------------------------------------------------------------------------------
 
-k <- 19
+k <- 2
 
 # outdir <- glue("46_sequence_driven_clustering/plot/{version}/{k}_clusters")
 # dir.create(outdir, showWarnings = FALSE, recursive = TRUE)

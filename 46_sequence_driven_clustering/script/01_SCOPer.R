@@ -343,12 +343,13 @@ ggsave(glue("46_sequence_driven_clustering/plot/subset_{subset_nr}/{clone_versio
 library(stringdist)
 library(igraph)
 
-
 # Group by V, J, and junction length first (required before similarity comparison)
 subset_clones_vj <- subset_clones_vj %>%
   mutate(
     vj_group = paste0(v_call_subgroup, "_", j_call_subgroup, "_", junction_length)
   )
+
+# subset_clones_vj <- readRDS(glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
 
 for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
   
@@ -385,19 +386,19 @@ for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
   }) %>% bind_rows()
   
   # Assign back to dataframe
-  subset_clones_vj$clone_id_vj_junction_95 <- NA
-  subset_clones_vj$clone_id_vj_junction_95[clone_assignments$row] <- clone_assignments$clone_id_vj_junction_95
+  subset_clones_vj$clone_id_vj_junction_95 <- NULL
+  subset_clones_vj[[clone_version]][clone_assignments$row] <- clone_assignments$clone_id_vj_junction_95
   
   # Filter to clones with > min_cells
   min_cells <- 15
-  mask <- table(subset_clones_vj$clone_id_vj_junction_95) >= min_cells
+  mask <- table(subset_clones_vj[[clone_version]]) >= min_cells
   these_clones <- names(which(mask))
   subset_clones_vj_mask <- subset_clones_vj %>% 
-    filter(clone_id_vj_junction_95 %in% these_clones)
+    filter(!!sym(clone_version) %in% these_clones)
   
   subset_clones_vj_mask %>%
-    count(clone_id_vj_junction_95, patient_id) %>%
-    ggplot(aes(x = patient_id, y = clone_id_vj_junction_95, fill = n)) +
+    count(!!sym(clone_version), patient_id) %>%
+    ggplot(aes(x = patient_id, y = !!sym(clone_version), fill = n)) +
     geom_tile() +
     geom_text(aes(label = n), color = "white", size = 3) +
     theme_minimal() +
