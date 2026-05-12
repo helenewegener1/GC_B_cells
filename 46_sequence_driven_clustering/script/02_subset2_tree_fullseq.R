@@ -677,7 +677,7 @@ for (var in variables){
   # var <- "clone_id_plot"
   # var <- "patient_id"
   p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final_sub_4 +
-    geom_tippoint(aes(color = !!sym(var)), size=1) +
+    geom_tippoint(aes(color = !!sym(var)), size=0.5) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
     labs(
@@ -734,6 +734,9 @@ lapply(clone_definitions, function(clone_def){
   
 })
 
+
+
+# Compare sequences 
 seqs_sub_4
 dist_sub_4 
 
