@@ -736,7 +736,7 @@ lapply(clone_definitions, function(clone_def){
 
 
 
-# Compare sequences 
+# Compare sequences
 seqs_sub_4
 dist_sub_4 
 
