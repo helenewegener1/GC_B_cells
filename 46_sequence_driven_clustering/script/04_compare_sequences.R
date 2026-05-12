@@ -90,6 +90,6 @@ p_meta <- meta_data_clone %>%
 
 p_meta + p_align + plot_layout(widths = c(1, 20))
 
-ggsave(glue("46_sequence_driven_clustering/plot/{version}/compare_seqs_clone_{clone}_{var}.png"), width = 18, height = 8)
+ggsave(glue("46_sequence_driven_clustering/plot/{version}/compare_seqs/compare_seqs_clone_{clone}_{var}.png"), width = 18, height = 8)
 
 
