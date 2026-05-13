@@ -521,7 +521,10 @@ lapply(clone_definitions, function(clone_def){
   p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
     geom_tippoint(aes(color = clone_id_plot, shape = clone_subgroup), size=0.5) +
     theme_tree2() + 
-    guides(color = guide_legend(override.aes = list(size = 4))) + 
+    guides(
+      # color = guide_legend(override.aes = list(size = 4)), 
+      shape = guide_legend(override.aes = list(size = 4))
+    ) + 
     labs(
       title = glue("{version} colored by {clone_def} - N clusters: {k}"),
       subtitle = glue("Clusters: {clusters_string}")
