@@ -13,7 +13,11 @@ version <- "subset_2"
 # Load data
 # ------------------------------------------------------------------------------
 
-subset_clones_vj <- readRDS(glue("46_sequence_driven_clustering/out/{version}_clones_vj.rds"))
+subset_clones_vj_all <- readRDS(glue("46_sequence_driven_clustering/out/{version}_clones_vj.rds"))
+
+table(subset_clones_vj_all$locus)
+
+subset_clones_vj <- subset_clones_vj_all %>% filter(locus == "IGH")
 
 v_gene_clans <- c(
   "IGHV1" = "H_clan_1", "IGHV5" = "H_clan_1", "IGHV7" = "H_clan_1",
@@ -72,7 +76,8 @@ seq_names <- subset_heavy$sequence_id
 seqs_meta <- subset_heavy %>% 
   mutate(
     label = sequence_id, 
-    junction_length = as.character(junction_length)
+    junction_length = as.character(junction_length),
+    clone_subgroup = as.character(clone_subgroup)
   ) %>% 
   select(label, everything()) %>% # Move label to front
   as.data.frame()
@@ -206,131 +211,37 @@ table(seqs_meta$clusters, seqs_meta$patient_id)
 # Investigate clusters
 # ------------------------------------------------------------------------------
 
-# Patient
-table(seqs_meta$clusters, seqs_meta$patient_id) %>% 
-  as.data.frame() %>% 
-  dplyr::rename(Cluster = Var1, Count = Freq) %>% 
-  ggplot(aes(x = Var2, y = Cluster, fill = Count)) +
-  geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = Count), size = 3, color = "black") + 
-  scale_fill_gradient(low = "white", high = "#185FA5") +
-  labs(
-    x     = "Patient ID",
-    y     = "Cluster",
-    fill  = "Count",
-    title = glue("{version}: Cluster × Patient ID ({k} clusters)")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid   = element_blank(),
-    legend.position = "none"
-  )
-ggsave(glue("{outdir}/{version}_{k}_clusters_patient_ID.png"))
+vars <- c("patient_id", "L1_annotation", "c_call", "v_gene_subgroup", "j_gene_subgroup", "junction_length")
 
-# L1
-table(seqs_meta$clusters, seqs_meta$L1_annotation) %>% 
-  as.data.frame() %>% 
-  dplyr::rename(Cluster = Var1, Count = Freq) %>% 
-  ggplot(aes(x = Var2, y = Cluster, fill = Count)) +
-  geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = Count), size = 3, color = "black") + 
-  scale_fill_gradient(low = "white", high = "#185FA5") +
-  labs(
-    x     = "Patient ID",
-    y     = "Cluster",
-    fill  = "Count",
-    title = glue("{version}: Cluster × Patient ID ({k} clusters)")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid   = element_blank(),
-    legend.position = "none"
-  )
-ggsave(glue("{outdir}/{version}_{k}_clusters_L1_annotation.png"))
-
-table(seqs_meta$clusters, seqs_meta$v_gene_subgroup) %>% 
-  as.data.frame() %>% 
-  dplyr::rename(Cluster = Var1, Count = Freq) %>% 
-  ggplot(aes(x = Var2, y = Cluster, fill = Count)) +
-  geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = Count), size = 3, color = "black") + 
-  scale_fill_gradient(low = "white", high = "#185FA5") +
-  labs(
-    x     = "V gene subgroup",
-    y     = "Cluster",
-    fill  = "Count",
-    title = glue("{version}: Cluster × V gene subgroup ({k} clusters)")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid   = element_blank(),
-    legend.position = "none"
-  )
-ggsave(glue("{outdir}/{version}_{k}_clusters_V_gene.png"))
+for (var in vars){
   
-table(seqs_meta$clusters, seqs_meta$j_gene_subgroup) %>% 
-  as.data.frame() %>% 
-  ggplot(aes(x = Var2, y = Var1, fill = Freq)) +
-  geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = Freq), size = 3, color = "black") + 
-  scale_fill_gradient(low = "white", high = "#185FA5") +
-  labs(
-    x     = "J gene subgroup",
-    y     = "Cluster",
-    fill  = "Count",
-    title = glue("{version}: Cluster × J gene subgroup ({k} clusters)")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid   = element_blank(),
-    legend.position = "none"
-  )
-ggsave(glue("{outdir}/{version}_{k}_clusters_J_gene.png"))
-
-table(seqs_meta$clusters, seqs_meta$c_call) %>% 
-  as.data.frame() %>% 
-  ggplot(aes(x = Var2, y = Var1, fill = Freq)) +
-  geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = Freq), size = 3, color = "black") + 
-  scale_fill_gradient(low = "white", high = "#185FA5") +
-  labs(
-    x     = "Isotype subgroup",
-    y     = "Cluster",
-    fill  = "Count",
-    title = glue("{version}: Cluster × Isotype ({k} clusters)")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid   = element_blank(),
-    legend.position = "none"
-  )
-ggsave(glue("{outdir}/{version}_{k}_clusters_Isotypes.png"))
-
-table(seqs_meta$clusters, seqs_meta$junction_length) %>% 
-  as.data.frame() %>% 
-  ggplot(aes(x = Var2, y = Var1, fill = Freq)) +
-  geom_tile(color = "white", linewidth = 0.4) +
-  geom_text(aes(label = Freq), size = 3, color = "black") + 
-  scale_fill_gradient(low = "white", high = "#185FA5") +
-  labs(
-    x     = "Junction length",
-    y     = "Cluster",
-    fill  = "Count",
-    title = glue("{version}: Cluster × Junciton length ({k} clusters)")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text.x  = element_text(angle = 45, hjust = 1),
-    panel.grid   = element_blank(),
-    legend.position = "none"
-  )
-ggsave(glue("{outdir}/{version}_{k}_clusters_junction_length.png"), width = 12.5, height = 8)
-
+  # var <- "junction_length"
+  
+  table(seqs_meta$clusters, seqs_meta[[var]]) %>% 
+    as.data.frame() %>% 
+    dplyr::rename(Cluster = Var1, Count = Freq) %>% 
+    group_by(Var2) %>% 
+    mutate(Pct = Count / sum(Count) * 100) %>% 
+    ungroup() %>% 
+    ggplot(aes(x = Var2, y = Cluster, fill = Pct)) +
+    geom_tile(color = "white", linewidth = 0.4) +
+    geom_text(aes(label = glue("{round(Pct, 2)}%")), size = 3, color = "black") + 
+    scale_fill_gradient(low = "white", high = "#185FA5") +
+    labs(
+      x     = var,
+      y     = "Cluster",
+      fill  = "Percentage per group",
+      title = glue("{version}: Cluster × {var} ({k} clusters)")
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      axis.text.x  = element_text(angle = 45, hjust = 1),
+      panel.grid   = element_blank(),
+      legend.position = "none"
+    )
+  ggsave(glue("{outdir}/{version}_{k}_clusters_{var}.png"), width = 16, height = 8)
+  
+}
 
 
 # ------------------------------------------------------------------------------
@@ -582,10 +493,10 @@ clone_definitions <- colnames(seqs_meta_final)[str_detect(colnames(seqs_meta_fin
 
 lapply(clone_definitions, function(clone_def){
   
-  # clone_def <- "clone_id_vj_junction_95"
+  # clone_def <- "clone_id"
   
   # Wrangle metadata
-  these_clones <- seqs_meta_final %>% count(!!sym(clone_def), sort = TRUE) %>% head(15) %>% pull(!!sym(clone_def))
+  these_clones <- seqs_meta_final %>% count(!!sym(clone_def), sort = TRUE) %>% head(40) %>% pull(!!sym(clone_def))
   seqs_meta_final <- seqs_meta_final %>% mutate(clone_id_plot = ifelse(!!sym(clone_def) %in% these_clones, !!sym(clone_def), "other"))
   
   # clone_id_plot colors
@@ -593,8 +504,14 @@ lapply(clone_definitions, function(clone_def){
     c(
       "#E63946", "#2196F3", "#3DAA55", "#FF9800",
       "#9C27B0", "#00BCD4", "#F5C518", "#FF4081",
-      "#6D4C41", "#76FF03", "#1565C0","#00897B",  
-      "#558B2F", "#6200EA","#37474F",
+      "#6D4C41", "#76FF03", "#1565C0", "#00897B",
+      "#558B2F", "#6200EA", "#37474F", "#FF6F00",
+      "#00E5FF", "#D500F9", "#AEEA00", "#BF360C",
+      "#1DE9B6", "#FF1744", "#AA00FF", "#FFD600",
+      "#0091EA", "#F06292", "#43A047", "#E040FB",
+      "#FF6D00", "#26C6DA", "#8D6E63", "#C6FF00",
+      "#283593", "#FF3D00", "#00BFA5", "#827717",
+      "#4A148C", "#33691E", "#B71C1C", "#006064",
       "grey90"
     ),
     c(these_clones, "other")
@@ -602,7 +519,7 @@ lapply(clone_definitions, function(clone_def){
   
   
   p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
-    geom_tippoint(aes(color = clone_id_plot), size=0.5) +
+    geom_tippoint(aes(color = clone_id_plot, shape = clone_subgroup), size=0.5) +
     theme_tree2() + 
     guides(color = guide_legend(override.aes = list(size = 4))) + 
     labs(
@@ -616,6 +533,24 @@ lapply(clone_definitions, function(clone_def){
 
   
 })
+
+
+# Color by light chain 
+
+# ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+#   geom_tippoint(aes(color = clone_sub), size=0.5) +
+#   theme_tree2() + 
+#   guides(color = guide_legend(override.aes = list(size = 4))) + 
+#   labs(
+#     title = glue("{version} colored by {clone_def} - N clusters: {k}"),
+#     subtitle = glue("Clusters: {clusters_string}")
+#   ) + 
+#   scale_color_manual(values = clone_colors)
+# 
+# 
+# ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{clone_def}.png"), plot = p, width = 9, height = 6.5, dpi = 1000)
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -718,10 +653,13 @@ lapply(clone_definitions, function(clone_def){
   ) # NAs will be grey
   
   
-  p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
-    geom_tippoint(aes(color = clone_id_plot), size=0.5) +
+  ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta_final +
+    geom_tippoint(aes(color = clone_id_plot, shape = clone_subgroup), size=0.5) +
     theme_tree2() + 
-    guides(color = guide_legend(override.aes = list(size = 4))) + 
+    guides(
+      color = guide_legend(override.aes = list(size = 4)),
+      shape = guide_legend(override.aes = list(size = 4))
+    ) + 
     labs(
       title = glue("{version} colored by {clone_def} - N clusters: {k}"),
       subtitle = glue("Clusters: {clusters_string}")
@@ -729,7 +667,7 @@ lapply(clone_definitions, function(clone_def){
     scale_color_manual(values = clone_colors)
   
   
-  ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{clone_def}.png"), plot = p, width = 9, height = 6.5, dpi = 1000)
+  ggsave(glue("{outdir_trees_zoom_this_cl_jl_v}/{version}_{k}_clusters_TREE_clusters_{clusters_string_path}_{clone_def}.png"), width = 9, height = 6.5, dpi = 1000)
   
   
 })

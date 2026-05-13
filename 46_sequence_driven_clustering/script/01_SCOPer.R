@@ -349,9 +349,7 @@ subset_clones_vj <- subset_clones_vj %>%
     vj_group = paste0(v_call_subgroup, "_", j_call_subgroup, "_", junction_length)
   )
 
-# subset_clones_vj <- readRDS(glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
-
-for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
+for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1, 0.05)){
   
   # For each VJ group, cluster junctions at 95% similarity
   # threshold <- 0.40  # 5% distance = 95% similarity
@@ -415,6 +413,34 @@ for (threshold in c(0.5, 0.4, 0.35, 0.3, 0.2, 0.1)){
   
 }
 
+# subset_clones_vj <- readRDS(glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
+
+# Read in light chain information 
+resolve_LC_list_gmm_threshold <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold.rds")
+
+# Filter for light chains
+resolve_LC_list_light <- lapply(resolve_LC_list_gmm_threshold, function(df) df %>% filter(locus != "IGH")) %>% 
+  bind_rows() %>% 
+  filter(cell_id %in% subset_clones_vj$cell_id)
+
+# Filter for heavy chains 
+resolve_LC_list_heavy <- lapply(resolve_LC_list_gmm_threshold, function(df) df %>% filter(locus == "IGH")) %>% 
+  bind_rows() %>% 
+  filter(cell_id %in% subset_clones_vj$cell_id) %>% 
+  select(cell_id, clone_subgroup, clone_subgroup_id)
+
+# Add light chain information 
+# table(subset_clones_vj$cell_id %in% resolve_LC_list_gmm_threshold$HH119$cell_id)
+
+tmp <- subset_clones_vj %>% left_join(resolve_LC_list_heavy, by = "cell_id")
+final <- tmp %>% bind_rows(resolve_LC_list_light)
+
+final$cell_id %>% length()
+final$cell_id %>% unique() %>% length()
+
+final$locus %>% table()
+
+
 # Save 
-saveRDS(subset_clones_vj, glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
+saveRDS(final, glue("46_sequence_driven_clustering/out/subset_{subset_nr}_clones_vj.rds"))
 
