@@ -401,7 +401,7 @@ lapply(patients, function(HH){
 # Visualize top clones
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_top_clones <- top_GC_clones[[HH]]
   n_clones <- length(HH_top_clones)
   
@@ -430,7 +430,7 @@ for (HH in patients){
                                        str_split_i(sample_clean_fol_plot, "_", 2) %>% str_replace("Fol", "Follicle"),
                                        sample_clean_fol_plot),
         sample_clean_fol_plot = fct_infreq(sample_clean_fol_plot) %>% fct_rev(), 
-        sample_clean_fol_plot = if_else(sample_clean_fol_plot == "SILP", "SI-LP", sample_clean_fol_plot)
+        sample_clean_fol_plot = str_replace_all(sample_clean_fol_plot, "SILP", "SI-LP")
       ) %>%
       add_count(sample_clean_fol_plot, name = "Count")
     
