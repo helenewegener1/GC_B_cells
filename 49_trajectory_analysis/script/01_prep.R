@@ -165,6 +165,25 @@ legend("topright",
 
 dev.off()
 
+# sample
+colors <- sample_clean_plot_colors
+plotcol <- colors[sce$sample_clean_plot]
+
+png(glue("49_trajectory_analysis/plot/{HH}_{clone}_sample.png"), res = 1000, width = 9000, height = 6000)
+
+plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
+lines(SlingshotDataSet(sce), lwd=2, col='black')
+
+present <- unique(sce$sample_clean_plot)
+legend("topright",
+       legend = names(colors[present]),
+       col = colors[present],
+       pch = 16,
+       bty = "n",
+       cex = 0.8)
+
+dev.off()
+
 
 
 
