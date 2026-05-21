@@ -121,7 +121,7 @@ summary(sce$slingPseudotime_1)
 colors <- colorRampPalette(brewer.pal(11,'Spectral')[-6])(100)
 plotcol <- colors[cut(sce$slingPseudotime_1, breaks=100)]
 
-png(glue("49_trajectory_analysis/plot/{HH}_{clone}_slingshot.png"), res = 1000, width = 4000, height = 3000)
+png(glue("49_trajectory_analysis/plot/{HH}_{clone}_slingshot.png"), res = 1000, width = 9000, height = 6000)
 
 plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
 lines(SlingshotDataSet(sce), lwd=2, col='black')
@@ -132,7 +132,7 @@ dev.off()
 colors <- isotype_colors_custom
 plotcol <- colors[sce$c_call]
 
-png(glue("49_trajectory_analysis/plot/{HH}_{clone}_isotype.png"), res = 1000, width = 4000, height = 3000)
+png(glue("49_trajectory_analysis/plot/{HH}_{clone}_isotype.png"), res = 1000, width = 9000, height = 6000)
 plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
 lines(SlingshotDataSet(sce), lwd=2, col='black')
 
@@ -150,7 +150,7 @@ dev.off()
 colors <- L1_colors
 plotcol <- colors[sce$L1_annotation]
 
-png(glue("49_trajectory_analysis/plot/{HH}_{clone}_L1.png"), res = 1000, width = 4000, height = 3000)
+png(glue("49_trajectory_analysis/plot/{HH}_{clone}_L1.png"), res = 1000, width = 9000, height = 6000)
 
 plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
 lines(SlingshotDataSet(sce), lwd=2, col='black')
