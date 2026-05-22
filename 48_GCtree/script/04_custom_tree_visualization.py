@@ -358,7 +358,7 @@ for sample, sample_name in samples_dict.items():
       fig, ax = plt.subplots(figsize=(img.width/200, img.height/200))
       ax.imshow(img)
       ax.axis("off")
-      ax.legend(handles=patches, loc="upper left", title=var_translate[var], fontsize=18, title_fontsize=20)
+      ax.legend(handles=patches, loc="upper left", title=var_translate[var], fontsize=22, title_fontsize=24)
       ax.set_title(sample_name, fontsize=26, fontweight="bold")
       plt.savefig(png_path, bbox_inches="tight", dpi=150)
       plt.close()
