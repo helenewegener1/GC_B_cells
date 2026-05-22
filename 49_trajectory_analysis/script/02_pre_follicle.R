@@ -42,39 +42,27 @@ DimPlot(seurat_integrated, group.by = "L1_annotation", split.by = "patient", red
 # Investigate largest CRC clone
 # ------------------------------------------------------------------------------
 
-# HH <- "HH117"
-# clone <- "1849_1" # 3rd clone
-
-# HH <- "HH119"
-# clone <- "28075_1" # 3rd clone
-
-all_clones <- list(
-  "HH117" = c(
-    "4221_1", "2628_1", "1849_1", "3709_1"#, "2301_1",
-    # "1320_1", "5941_1", "6115_1", "1910_1", "2169_1"
-  ),
-  
-  "HH119" = c(
-    "28075_1", "12120_1", "15287_1", "23124_1",
-    "8372_1", "3869_1", "25158_1", "7913_1"
-  )
-)
-
 for (HH in names(all_clones)){
   
-  HH_clones <- all_clones[[HH]]
+  # HH <- "HH117"
   
-  for (clone in HH_clones){
+  fols <- seurat_integrated[[]] %>% filter(patient == HH) %>% pull(manual_ADT_ID) %>% unique()
+  fols <- fols %>% na.omit()
+  fols <- fols[!(fols %in% c("Negative", "Doublet"))]
+  
+  for (fol in fols){
     
+    # fol <- "Fol-1"
     # Subset seurat object 
-    sub <- subset(seurat_integrated, patient == HH & clone_subgroup_id == clone)
+    # sub <- subset(seurat_integrated, patient == HH & manual_ADT_ID == fol & L1_annotation != "Tfh_cells")
+    sub <- subset(seurat_integrated, patient == HH & manual_ADT_ID == fol & L1_annotation %in% c("GC_B_cells", "Naive_Bcells"))
     ncol(sub)
     
     # Re-normalize 
     sub <- NormalizeData(sub)
     sub <- FindVariableFeatures(sub)
     sub <- ScaleData(sub)
-    sub <- RunPCA(sub, npcs = 10)
+    sub <- RunPCA(sub, npcs = 30)
     
     # Re-integrate 
     # No need to integrate since we are working with 1 patient 
@@ -84,12 +72,15 @@ for (HH in names(all_clones)){
     # Re-cluster on new embedding
     sub <- FindNeighbors(sub, reduction = "pca")
     sub <- FindClusters(sub, res = 0.3)
-    sub <- RunUMAP(sub, reduction = "pca", dims = 1:10)
+    sub <- RunUMAP(sub, reduction = "pca", dims = 1:30)
     
     # Plot
-    DimPlot(sub, group.by = "sample_clean_plot", reduction = "umap")
+    DimPlot(sub, group.by = "clone_subgroup_id", reduction = "umap") + NoLegend()
     
     DimPlot(sub, group.by = "L1_annotation", reduction = "umap") + 
+      scale_color_manual(values = L1_colors)
+    
+    DimPlot(sub, group.by = "L1_annotation", reduction = "pca") + 
       scale_color_manual(values = L1_colors)
     
     DimPlot(sub, group.by = "c_call", reduction = "umap") + 
@@ -117,16 +108,8 @@ for (HH in names(all_clones)){
     # N cells 
     ncol(sce)
     
-    # N unique clones 
-    sce$junction %>% unique() %>% length()
-    
-    # Define clusterLabel 
-    counts <- table(sce$junction)
-    clusterLabel <- ifelse(counts[sce$junction] == 1, -1, sce$junction)
-    table(clusterLabel)
-    
     # prep outdir 
-    outdir <- glue("49_trajectory_analysis/plot/{HH}_{clone}/")
+    outdir <- glue("49_trajectory_analysis/plot/{HH}_{fol}/")
     dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
     
     # ------------------------------------------------------------------------------
@@ -135,17 +118,18 @@ for (HH in names(all_clones)){
     
     # Run slingshot
     # sce <- slingshot(sce, clusterLabels = clusterLabel, reducedDim = 'PCA')
-    sce <- slingshot(sce, clusterLabels = 'seurat_clusters', reducedDim = 'PCA')
+    # sce <- slingshot(sce, clusterLabels = 'L1_annotation', reducedDim = 'PCA', start.clus = "Naive_Bcells")
+    sce <- slingshot(sce, clusterLabels = 'seurat_clusters', reducedDim = 'PCA', start.clus = "3")
     
     # Plot
     summary(sce$slingPseudotime_1)
     
     # Trajectory
-    png(glue("{outdir}/{HH}_{clone}_slingshot.png"), res = 1000, width = 9000, height = 6000)
+    png(glue("{outdir}/{HH}_{fol}_slingshot.png"), res = 1000, width = 9000, height = 6000)
     
     colors <- colorRampPalette(brewer.pal(11,'Spectral')[-6])(100)
     plotcol <- colors[cut(sce$slingPseudotime_1, breaks=100)]
-    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
+    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: {fol}"))
     lines(SlingshotDataSet(sce), lwd=2, col='black')
     
     dev.off()
@@ -157,11 +141,11 @@ for (HH in names(all_clones)){
     # lines(SlingshotDataSet(sce), lwd=2, col='black')
     
     # Isotype
-    png(glue("{outdir}/{HH}_{clone}_isotype.png"), res = 1000, width = 9000, height = 6000)
+    png(glue("{outdir}/{HH}_{fol}_isotype.png"), res = 1000, width = 9000, height = 6000)
     
     colors <- isotype_colors_custom
     plotcol <- colors[sce$c_call]
-    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
+    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: {fol}"))
     lines(SlingshotDataSet(sce), lwd=2, col='black')
     
     present <- unique(sce$c_call)
@@ -175,12 +159,11 @@ for (HH in names(all_clones)){
     dev.off()
     
     # Cell type
-    
-    png(glue("{outdir}/{HH}_{clone}_L1.png"), res = 1000, width = 9000, height = 6000)
+    png(glue("{outdir}/{HH}_{fol}_L1.png"), res = 1000, width = 9000, height = 6000)
     
     colors <- L1_colors
     plotcol <- colors[sce$L1_annotation]
-    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
+    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: {fol}"))
     lines(SlingshotDataSet(sce), lwd=2, col='black')
     
     present <- unique(sce$L1_annotation)
@@ -193,18 +176,29 @@ for (HH in names(all_clones)){
     
     dev.off()
     
-    # sample
-    png(glue("{outdir}/{HH}_{clone}_sample.png"), res = 1000, width = 9000, height = 6000)
+    # Clone
+    png(glue("{outdir}/{HH}_{fol}_clone.png"), res = 1000, width = 9000, height = 6000)
     
-    colors <- sample_clean_plot_colors
-    plotcol <- colors[sce$sample_clean_plot]
-    plot(reducedDims(sce)$PCA, col = plotcol, pch=16, asp = 1, main = glue("{HH}: clone {clone}"))
-    lines(SlingshotDataSet(sce), lwd=2, col='black')
+    present <- unique(sce$clone_subgroup_id)
     
-    present <- unique(sce$sample_clean_plot)
+    # Count cells per clone and get top 20
+    clone_counts <- sort(table(sce$clone_subgroup_id), decreasing = TRUE)
+    top20 <- names(clone_counts)[1:min(20, length(clone_counts))]
+    
+    # Make colors: distinct colors for top 20, grey for the rest
+    top20_colors <- setNames(colorRampPalette(brewer.pal(12, "Paired"))(length(top20)), top20)
+    all_colors <- setNames(rep("grey80", length(present)), present)
+    all_colors[top20] <- top20_colors[top20]
+    
+    colors <- all_colors
+    plotcol <- colors[sce$clone_subgroup_id]
+    plot(reducedDims(sce)$PCA, col = plotcol, pch = 16, asp = 1, main = glue("{HH}: {fol}"))
+    lines(SlingshotDataSet(sce), lwd = 2, col = 'black')
+    
+    # Only show top 20 in legend (grey would be too many entries)
     legend("topright",
-           legend = names(colors[present]),
-           col = colors[present],
+           legend = c(names(top20_colors), "Other"),
+           col = c(top20_colors, "grey80"),
            pch = 16,
            bty = "n",
            cex = 0.8)
