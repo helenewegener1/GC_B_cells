@@ -184,7 +184,18 @@ label_translate = {
         "Unconventional_Bcells": "Unconventional B cells",
     },
     "c_call": {},        # no translation needed
-    "sample_clean_fol": {}  # handled by format_label
+    "sample_clean_fol": {
+      "SI-PP": "PP",
+      "SILP": "Ileum LP",
+      "COLP": "Colon LP",
+      "SI-MILF": "M-ILF",
+      "CO-SMILF": "SM-ILF",
+      "SILP-nonINF": "Ileum LP (non-INF)",
+      "SILP-INF": "Ileum LP (INF)",
+      "SI-MILF-nonINF": "M-ILF (non-INF)",
+      "SI-MILF-INF": "M-ILF (INF)",
+      "SI-PP-nonINF": "PP (non-INF)",
+    }  
 }
 
 # sample_clean_fol translator

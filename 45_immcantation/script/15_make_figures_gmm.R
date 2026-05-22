@@ -143,7 +143,7 @@ dir.create(outdir_1, recursive = TRUE)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   p <- patient_names[[HH]]
   
   seurat_obj <- subset(seurat_integrated, patient == HH)
@@ -168,7 +168,7 @@ lapply(patients, function(HH){
     add_count(sample_clean_plot, name = "Count") 
   
   # Across follicles 
-  HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+  # HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
 
   # Count
   if (HH == "HH117"){
@@ -199,11 +199,12 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Count", 
-        title = glue ("{p}: {HH_fol_sample_clean} follicles"),
+        # title = glue ("{p}: {HH_fol_sample_clean} follicles"),
+        title = glue ("{p}\nPeyer's patch follicles"),
         fill = "Cell type"
       ) + 
       theme(
-        plot.title = element_text(face = "bold", size = 26),
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
         axis.title = element_text(size = 20),
         axis.text = element_text(size = 16),
         legend.title = element_text(size = 20),
@@ -310,7 +311,7 @@ lapply(patients, function(HH){
     add_count(manual_ADT_ID_plot, name = "Count") 
   
   # Across follicles 
-  HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+  # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
 
   # Isotype
   
@@ -346,11 +347,11 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}: GC B cells in {HH_fol_sample_clean} follicles"),
+        title = glue("{p}\nGerminal center B cells from Peyer's patch follicles"),
         fill = "Isotype"
       ) + 
       theme(
-        plot.title = element_text(face = "bold", size = 26),
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
         axis.title = element_text(size = 20),
         axis.text = element_text(size = 16),
         legend.title = element_text(size = 20),
@@ -401,7 +402,7 @@ lapply(patients, function(HH){
 # Visualize top clones
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_top_clones <- top_GC_clones[[HH]]
   n_clones <- length(HH_top_clones)
   
@@ -426,18 +427,27 @@ for (HH in patients){
       filter(clone_subgroup_id == clone) %>%
       mutate(
         sample_clean_fol_plot = sample_clean_fol %>% str_remove_all(glue("{HH}-")),
+        sample_clean_fol_plot = recode(sample_clean_fol_plot, !!!sample_names),
         sample_clean_fol_plot = ifelse(str_detect(sample_clean_fol_plot, "Fol"), 
                                        str_split_i(sample_clean_fol_plot, "_", 2) %>% str_replace("Fol", "Follicle"),
                                        sample_clean_fol_plot),
-        sample_clean_fol_plot = fct_infreq(sample_clean_fol_plot) %>% fct_rev(), 
-        sample_clean_fol_plot = str_replace_all(sample_clean_fol_plot, "SILP", "SI-LP")
+        sample_clean_fol_plot = fct_infreq(sample_clean_fol_plot) %>% fct_rev(),
+        # sample_clean_fol_plot = str_replace_all(sample_clean_fol_plot, "SILP", "SI-LP")
+        L1_annotation = recode(L1_annotation, !!!cell_type_names)
       ) %>%
       add_count(sample_clean_fol_plot, name = "Count")
     
     # Meta data
     n_cells <- plot_df %>% nrow()
-    v_gene <- plot_df$v_call_majority %>% unique() %>% str_split_i(",", 1)
-    j_gene <- plot_df$j_call_majority %>% unique() %>% str_split_i(",", 1)
+    
+    ## Heavy chain
+    v_gene_heavy <- plot_df$v_call_majority %>% unique() %>% str_split_i(",", 1)
+    j_gene_heavy <- plot_df$j_call_majority %>% unique() %>% str_split_i(",", 1)
+    
+    ## Light chain
+    df_light <- resolve_LC_list[[HH]] %>% filter(locus != "IGH", clone_subgroup_id == clone)
+    v_gene_light <- df_light$v_call_majority %>% unique() %>% str_split_i(",", 1)
+    j_gene_light <- df_light$j_call_majority %>% unique() %>% str_split_i(",", 1)
     
     # png(glue("{outdir_3}/{HH}_clone_nr_{clone_nr}_across_samples_and_cell_types.png"), width = 15, height = 8.5, res = 1000, units = "in")
     # 
@@ -523,18 +533,18 @@ for (HH in patients){
     # Define plotvalues 
     plot_values <- list(
       "HH119" = list(
-        "1" = list(width = 9.5, height = 12, nintersects = 23, more_than_N_cells = 10),
-        "2" = list(width = 5.5, height = 5.5,  nintersects = 8,  more_than_N_cells = 2),
-        "3" = list(width = 5.5, height = 5.5,  nintersects = 9,  more_than_N_cells = 2),
-        "4" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
-        "5" = list(width = 4.5, height = 5.5,  nintersects = 4,  more_than_N_cells = 2)
+        "1" = list(width = 9.5, height = 12, nintersects = 23, more_than_N_cells = 10, grid.text_y = 0.025),
+        "2" = list(width = 5.5, height = 5.5,  nintersects = 8,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "3" = list(width = 5.5, height = 5.5,  nintersects = 9,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "4" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "5" = list(width = 4.5, height = 5.5,  nintersects = 4,  more_than_N_cells = 2, grid.text_y = 0.04)
       ),
       "HH117" = list(
-        "1" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2),
-        "2" = list(width = 4, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
-        "3" = list(width = 5.5, height = 5.5,  nintersects = 6,  more_than_N_cells = 2),
-        "4" = list(width = 4.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2),
-        "5" = list(width = 4.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2)
+        "1" = list(width = 5.5, height = 5.5,  nintersects = 7,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "2" = list(width = 4, height = 5.5,  nintersects = 3,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "3" = list(width = 5.5, height = 5.5,  nintersects = 6,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "4" = list(width = 4.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2, grid.text_y = 0.04),
+        "5" = list(width = 4.5, height = 5.5,  nintersects = 3,  more_than_N_cells = 2, grid.text_y = 0.04)
       )
     )
     
@@ -547,6 +557,7 @@ for (HH in patients){
       height           <- vals$height
       nintersects      <- vals$nintersects
       more_than_N_cells <- vals$more_than_N_cells
+      grid.text_y <- vals$grid.text_y
     } else {
       width            <- 11
       height           <- 4
@@ -574,9 +585,9 @@ for (HH in patients){
     
     # Caption 
     grid.text(
-      glue("N cells: {n_cells}, V gene: {v_gene}, J gene: {j_gene}\nCombinations with >= {more_than_N_cells} cells are shown."),
+      glue("Heavy chain gene usage: {v_gene_heavy}, {j_gene_heavy}\nLight chain gene usage: {v_gene_light}, {j_gene_light}\nN cells total: {n_cells}. Combinations with >= {more_than_N_cells} cells are shown."),
       just = "right", 
-      x = 0.99, y = 0.025,          # adjust position as needed
+      x = 0.99, y = grid.text_y,          # adjust position as needed
       gp = gpar(fontsize = 8)
     )
     
@@ -672,11 +683,11 @@ print(
     labs(
       x = "Follicle number", 
       y = "Frequency", 
-      title = glue("{p}: GC B cells in {HH_fol_sample_clean} follicles - Largest clone removed"),
+      title = glue("{p}\nGerminal center B cells from Peyer's patch follicles - Largest clone removed"),
       fill = "Isotype"
     ) + 
     theme(
-      plot.title = element_text(face = "bold", size = 26),
+      plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
       axis.title = element_text(size = 20),
       axis.text = element_text(size = 16),
       legend.title = element_text(size = 20),
@@ -717,7 +728,7 @@ lapply(patients, function(HH){
     add_count(manual_ADT_ID_plot, name = "Count") 
   
   # Across follicles 
-  HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+  # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
   
   # Define clone colors 
   clone_colors <- list(
@@ -795,12 +806,13 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
+        # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
+        title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
         # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
         fill = "Clone"
       ) + 
       theme(
-        plot.title = element_text(face = "bold", size = 26),
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
         axis.title = element_text(size = 20),
         axis.text = element_text(size = 16),
         legend.title = element_text(size = 20),
@@ -813,5 +825,5 @@ lapply(patients, function(HH){
   
   
 })
-
+ 
 
