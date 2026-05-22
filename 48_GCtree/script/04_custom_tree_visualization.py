@@ -199,12 +199,22 @@ label_translate = {
 }
 
 # sample_clean_fol translator
+#def format_label(label, HH):
+#    # Remove patient prefix e.g. "HH117-"
+#    label = label.replace(f"{HH}-", "")
+#    label = label.replace(f"SILP", "SI-LP")
+#    # Replace "Fol-1" with "Follicle 1"
+#    label = re.sub(r".*_Fol-(\d+)", r"Follicle \1", label)
+#    return label
+
+# sample_clean_fol translator
 def format_label(label, HH):
     # Remove patient prefix e.g. "HH117-"
     label = label.replace(f"{HH}-", "")
-    label = label.replace(f"SILP", "SI-LP")
     # Replace "Fol-1" with "Follicle 1"
     label = re.sub(r".*_Fol-(\d+)", r"Follicle \1", label)
+    # Translate using label_translate if available
+    label = label_translate.get("sample_clean_fol", {}).get(label, label)
     return label
 
 for sample, sample_name in samples_dict.items():
