@@ -44,7 +44,7 @@ DimPlot(seurat_integrated, group.by = "L1_annotation", split.by = "patient", red
 
 for (HH in names(all_clones)){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   
   fols <- seurat_integrated[[]] %>% filter(patient == HH) %>% pull(manual_ADT_ID) %>% unique()
   fols <- fols %>% na.omit()
@@ -53,6 +53,7 @@ for (HH in names(all_clones)){
   for (fol in fols){
     
     # fol <- "Fol-1"
+    # fol <- "Fol-8"
     # Subset seurat object 
     # sub <- subset(seurat_integrated, patient == HH & manual_ADT_ID == fol & L1_annotation != "Tfh_cells")
     sub <- subset(seurat_integrated, patient == HH & manual_ADT_ID == fol & L1_annotation %in% c("GC_B_cells", "Naive_Bcells"))
@@ -119,7 +120,7 @@ for (HH in names(all_clones)){
     # Run slingshot
     # sce <- slingshot(sce, clusterLabels = clusterLabel, reducedDim = 'PCA')
     # sce <- slingshot(sce, clusterLabels = 'L1_annotation', reducedDim = 'PCA', start.clus = "Naive_Bcells")
-    sce <- slingshot(sce, clusterLabels = 'seurat_clusters', reducedDim = 'PCA', start.clus = "3")
+    sce <- slingshot(sce, clusterLabels = 'seurat_clusters', reducedDim = 'PCA', start.clus = "0")
     
     # Plot
     summary(sce$slingPseudotime_1)
