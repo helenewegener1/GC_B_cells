@@ -347,7 +347,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}\nGerminal center B cells from Peyer's patch follicles"),
+        title = glue("{p}\nGC B cells from Peyer's patch follicles"),
         fill = "Isotype"
       ) + 
       theme(
@@ -639,8 +639,8 @@ dev.off()
 
 HH <- "HH119"
 p <- patient_names[[HH]]
-large_clone <- top_GC_clones[[HH]][[1]]
-# large_clone <- top_GC_clones[[HH]][c(1,2)]
+# large_clone <- top_GC_clones[[HH]][[1]]
+large_clone <- top_GC_clones[[HH]][c(1,2)]
 
 plot_df <- resolve_LC_list[[HH]] %>% 
   filter(
@@ -658,7 +658,7 @@ plot_df <- resolve_LC_list[[HH]] %>%
 
 # Isotype
 ## Freq
-png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone.png"), width = 15.5, height = 7, res = 1000, units = "in")
+png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone_2.png"), width = 15.5, height = 7, res = 1000, units = "in")
 
 print(
   plot_df %>% 
@@ -683,7 +683,7 @@ print(
     labs(
       x = "Follicle number", 
       y = "Frequency", 
-      title = glue("{p}\nGerminal center B cells from Peyer's patch follicles - Largest clone removed"),
+      title = glue("{p}\nGC B cells from Peyer's patch follicles - Two largest clones removed"),
       fill = "Isotype"
     ) + 
     theme(
@@ -807,7 +807,8 @@ lapply(patients, function(HH){
         x = "Follicle number", 
         y = "Frequency", 
         # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
-        title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
+        # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
+        title = glue("{p}\nTop {n_clones} GC B cell clones in Peyer's patch follicles"),
         # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
         fill = "Clone"
       ) + 
@@ -826,4 +827,155 @@ lapply(patients, function(HH){
   
 })
  
+# ==============================================================================
+# Frequency of top clone per follicle - junction sequence 
+# ==============================================================================
 
+# outdir_6 <- glue("45_immcantation/{plot_version}/15_poster_figures/Follicle_GC_B_cells_freq_barplot")
+# dir.create(outdir_6, recursive = TRUE)
+# 
+n_clones <- 10
+
+clone_colors_all <- list(
+  "HH117" = c(
+    "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
+    "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+    "grey85"
+  ), 
+  "HH119" = c(
+    "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
+    "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
+    "grey85"
+  )
+) 
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  p <- patient_names[[HH]]
+  
+  # Subset clones
+  top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
+  
+  plot_df <- resolve_LC_list[[HH]] %>% 
+    filter(
+      locus == "IGH", 
+      L1_annotation == "GC_B_cells",
+      !is.na(manual_ADT_ID)
+    ) %>% 
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer(),
+      clone_subgroup_id_plot = ifelse(clone_subgroup_id %in% top_GC_clones_subset, clone_subgroup_id, "other"),
+      clone_subgroup_id_plot = factor(clone_subgroup_id_plot, levels = c(top_GC_clones_subset, "other"))
+    ) %>%
+    add_count(manual_ADT_ID_plot, name = "Count") 
+  
+  # Across follicles 
+  # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+  
+  # Define clone colors 
+  clone_colors <- clone_colors_all[[HH]] %>% setNames(c(top_GC_clones_subset, "other"))
+  
+  # Define clone names
+  # clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
+  
+  # Define majority junction sequence as clone name 
+  clone_names <- resolve_LC_list[[HH]] %>% 
+    filter(
+      locus == "IGH", clone_subgroup_id %in% top_GC_clones_subset
+    ) %>% 
+    count(clone_subgroup_id, junction, sort = TRUE) %>% 
+    group_by(clone_subgroup_id) %>% 
+    slice(1) %>% 
+    ungroup() %>% 
+    select(-n) %>% 
+    deframe() %>% 
+    as.list()
+  
+  clone_names <- c(clone_names, "other"= "Other")
+    
+  
+  # N clones 
+  N_clones_per_fol <- plot_df %>%
+    filter(
+      !is.na(manual_ADT_ID)
+    ) %>%
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+    ) %>%
+    group_by(manual_ADT_ID_plot) %>%
+    count(clone_subgroup_id) %>%
+    count(manual_ADT_ID_plot) %>%
+    ungroup() %>%
+    complete(
+      manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
+      fill = list(n = 0)
+    ) 
+  
+  # colnames(N_clones_per_fol) <- c("Follicle", "N clones")
+  # 
+  # ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
+  # # grid.text(
+  # #   glue("{p}: N clones per follicle"),
+  # #   x = 0.50, y = 0.97,          # adjust position as needed
+  # #   gp = gpar(fontsize = 20, fontface = "bold")
+  # # )
+  # ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
+  # 
+  # N clones 
+  
+  if (HH == "HH117"){
+    width <- 15
+  } else if (HH == "HH119"){
+    width <- 20
+  }
+  
+  png(glue("{outdir_6}/{HH}_N_{n_clones}_sequences.png"), width = width, height = 7, units = "in", res = 1000)
+  
+  print(
+    plot_df %>%
+      filter(!is.na(manual_ADT_ID)) %>%
+      ggplot(aes(x = manual_ADT_ID_plot)) + 
+      geom_bar(aes(fill = clone_subgroup_id_plot), position = "fill") + 
+      # geom_text(
+      #   # data = N_clones_per_fol, 
+      #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+      # ) +
+      geom_text(
+        data = N_clones_per_fol,
+        aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
+      ) +
+      scale_fill_manual(
+        values = clone_colors, 
+        labels = clone_names
+      ) + 
+      scale_x_continuous(
+        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+        limits = c(0.5, NA),
+        expand = c(0, 0.5)
+      ) + 
+      scale_y_continuous(labels = scales::percent) +
+      theme_classic() +
+      labs(
+        x = "Follicle number", 
+        y = "Frequency", 
+        # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
+        # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
+        title = glue("{p}\nTop {n_clones} GC B cell clones in Peyer's patch follicles"),
+        # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
+        fill = "Clone"
+      ) + 
+      theme(
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 16)
+        # legend.title = element_text(size = 20),
+        # legend.text = element_text(size = 16)
+      )
+  )
+  
+  dev.off()
+  
+  
+  
+})
