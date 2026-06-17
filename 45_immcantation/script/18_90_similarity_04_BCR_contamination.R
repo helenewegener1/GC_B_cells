@@ -210,7 +210,7 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   # Remove cells without GEX data
   # -------------------
   
-  df <- df %>% filter(!is.na(celltype_broad))
+  # df <- df %>% filter(!is.na(celltype_broad))
   
   # -------------------
   # Remove negative follicles and doublets 
@@ -239,24 +239,24 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   # Remove TFH cells and GC B cells from the LP and contamination 
   # -------------------
   
-  LP_samples <- grep("LP", df$sample_clean, value = TRUE) %>% unique()
-  
-  # table(df$L1_annotation == "Tfh_cells")
-  # table(df$L1_annotation == "GC_B_cells" & df$sample_clean %in% LP_samples)
-  
-  # df <- df %>% filter(
-  #   (celltype_broad != "Tfh_like_cells") & !(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
-  # )
-  # nrow(df)
-  
-  df <- df %>% 
-    mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
-    filter(
-      (L1_annotation != "Tfh_cells"), 
-      !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), 
-      (str_detect(L1_annotation, "Contamination", negate = TRUE))
-    )
-  
+  # LP_samples <- grep("LP", df$sample_clean, value = TRUE) %>% unique()
+  # 
+  # # table(df$L1_annotation == "Tfh_cells")
+  # # table(df$L1_annotation == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  # 
+  # # df <- df %>% filter(
+  # #   (celltype_broad != "Tfh_like_cells") & !(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  # # )
+  # # nrow(df)
+  # 
+  # df <- df %>% 
+  #   mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
+  #   filter(
+  #     (L1_annotation != "Tfh_cells"), 
+  #     !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), 
+  #     (str_detect(L1_annotation, "Contamination", negate = TRUE))
+  #   )
+  # 
   # nrow(df)
   
   # -------------------
@@ -293,48 +293,40 @@ cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
 # Export bcr_data_qc_annot
 # ------------------------------------------------------------------------------
 
-saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
+# saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
 # bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
 
+
 # ------------------------------------------------------------------------------
-# Summary follicles and cell types
+# Look at BCR in contamination 
 # ------------------------------------------------------------------------------
 
-source("10_broad_annotation/script/color_palette.R")
-patients <- names(bcr_data_qc_annot)
 
-lapply(patients, function(HH){
+
+for (HH in c("HH117", "HH119")){
   
   # HH <- "HH119"
+  df <- bcr_data_qc_annot[[HH]]
   
-  bcr_data_qc_annot[[HH]] %>% 
-    ggplot(aes(x = sample_clean, fill = L1_annotation)) +
-    geom_bar() + 
-    scale_fill_manual(values = L1_colors) + 
+  table(df$L1_annotation, useNA = "always")
+  table(df$L1_annotation == "Tfh_cells")
+  
+  df %>% filter(L1_annotation == "Tfh_cells") %>% 
+    dplyr::count(junction_length, v_call, j_call, c_call, sort = TRUE) %>% 
+    # filter(n > 1) %>% 
+    mutate(
+      JL_V_J_C_call = paste(junction_length, v_call, j_call, c_call, sep = "_")
+    ) %>% 
+    select(JL_V_J_C_call, n) %>% 
+    ggplot(aes(y = JL_V_J_C_call, x = n)) + 
+    geom_col() + 
     theme_bw() + 
     labs(
-      x = "", 
-      y = "Count", 
-      title = glue ("{HH}: N cells across samples")
-    ) + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+      title = glue("{HH}: Tfh cells BCR characteristics")
+    ) 
   
-  ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_samples.png"), width = 12, height = 7)
+  ggsave(glue("45_immcantation/plot/18_90_similarity/04_BCR_contamination/{HH}_N_Tfh_with_BCR.png"))
   
-  bcr_data_qc_annot[[HH]] %>% 
-    filter(!is.na(manual_ADT_ID)) %>% 
-    ggplot(aes(x = manual_ADT_ID, fill = L1_annotation)) + 
-    geom_bar() + 
-    scale_fill_manual(values = L1_colors) + 
-    theme_bw() + 
-    labs(
-      x = "", 
-      y = "Count", 
-      title = glue("{HH}: N cells across follicles of SI-PP")
-    ) + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-  
-  ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_follicles.png"), width = 14, height = 7)
-  
-})
+}
+
 
