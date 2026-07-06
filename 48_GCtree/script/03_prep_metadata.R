@@ -10,15 +10,18 @@ library(glue)
 # resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
 # version <- ""
 
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
-version <- "gmm_threshold"
+# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
+version <- "90_similarity"
 dir.create(glue("48_GCtree/gctree_meta_{version}"), recursive = TRUE)
 
 patients <- names(resolve_LC_list_germlined)
 
 # fasta_path <- "48_GCtree/fasta/GC_clones/"
-fasta_path <- glue("48_GCtree/fasta/{version}_GC_clones")
+fasta_path <- glue("48_GCtree/fasta/{version}")
 fasta_files <- list.files(fasta_path)
+
+# resolve_LC_list_germlined$HH117$clone_subgroup_id_90_similarity
 
 # ------------------------------------------------------------------------------
 # Meta data file writing
@@ -49,7 +52,7 @@ for (HH in patients){
     clone <- str_extract(filename, "\\d+_\\d+(?=\\.fasta)")
     
     # Extract metadata
-    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% select(L1_annotation, c_call, sample_clean_fol)
+    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% select(L1_annotation, c_call, sample_clean_fol)
     
     # Map seq_names on meta data
     seq_names <- names(fasta)[1:length(fasta)-1]

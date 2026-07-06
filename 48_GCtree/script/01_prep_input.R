@@ -8,11 +8,12 @@ library(glue)
 # ------------------------------------------------------------------------------
 
 # resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
-
-version <- "gmm_threshold_GC_clones"
+# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
 
 patients <- names(resolve_LC_list_germlined)
+
+version <- "90_similarity"
 
 # ------------------------------------------------------------------------------
 # Make overview
@@ -33,6 +34,8 @@ patients <- names(resolve_LC_list_germlined)
 # HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% count(sequence_alignment, sort = TRUE) %>% pull(sequence_alignment)
 # HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% count(germline_alignment_d_mask, sort = TRUE) %>% pull(germline_alignment_d_mask)
 
+# resolve_LC_list_germlined$HH117$clone_subgroup_id_90_similarity
+
 # ------------------------------------------------------------------------------
 # FASTA file writing
 # ------------------------------------------------------------------------------
@@ -41,12 +44,12 @@ patients <- names(resolve_LC_list_germlined)
 top_GC_clones <- lapply(patients, function(HH) {
   
   # find clones that have GC cells in at least 2 different sample_ids
-  GC_clones <- resolve_LC_list[[HH]] %>%
+  GC_clones <- resolve_LC_list_germlined[[HH]] %>%
     filter(locus == "IGH") %>% 
     filter(L1_annotation == "GC_B_cells") %>%
-    count(clone_subgroup_id, sort = TRUE) %>% 
+    count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
     head(10) %>% 
-    pull(clone_subgroup_id)
+    pull(clone_subgroup_id_90_similarity)
   
 }) %>% setNames(patients)
 
@@ -66,8 +69,8 @@ for (HH in patients){
     clone <- top_GC_clones[[HH]][[clone_nr]]
     
     # Extract sequences of clone, each's abundance and the germline sequence (GL)
-    seqs <- HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% pull(sequence_alignment)
-    GL <- HH_spec_clones_vj %>% filter(clone_subgroup_id == clone & locus == "IGH") %>% count(germline_alignment_d_mask, sort = TRUE) %>% pull(germline_alignment_d_mask)
+    seqs <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% pull(sequence_alignment)
+    GL <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% count(germline_alignment_d_mask, sort = TRUE) %>% pull(germline_alignment_d_mask)
     
     # PHYLIP format no longer allows dots in sequence (ValueError when running gctree duplicate)
     seqs <- seqs %>% str_replace_all("\\.", "-")

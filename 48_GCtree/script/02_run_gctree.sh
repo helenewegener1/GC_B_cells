@@ -20,35 +20,39 @@ WD=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree
 #   # HH119_clone_nr_2_clone_5791_1
 # )
 
-DATA_DIR=${WD}/fasta/gmm_threshold_GC_clones
-OUT_DIR=${WD}/out_gmm_threshold
-PLOT_DIR=${WD}/plot_gmm_threshold
+# DATA_DIR=${WD}/fasta/gmm_threshold_GC_clones
+# OUT_DIR=${WD}/out_gmm_threshold
+# PLOT_DIR=${WD}/plot_gmm_threshold
+
+DATA_DIR=${WD}/fasta/90_similarity
+OUT_DIR=${WD}/out_90_similarity
+PLOT_DIR=${WD}/plot_90_similarity
 
 # sample_list=$(ls $DATA_DIR | cut -d "." -f1)
 sample_list=(
+
+  HH117_clone_nr_10_clone_2457_1, 
+  HH117_clone_nr_1_clone_500_1, 
+  HH117_clone_nr_2_clone_2885_1, 
+  HH117_clone_nr_3_clone_2018_1, 
+  HH117_clone_nr_4_clone_3953_1, 
+  HH117_clone_nr_5_clone_2588_1, 
+  HH117_clone_nr_6_clone_1571_1, 
+  HH117_clone_nr_7_clone_5554_1, 
+  HH117_clone_nr_8_clone_5725_1, 
+  HH117_clone_nr_9_clone_2211_1,
   
-  HH117_clone_nr_10_clone_2169_1
-  HH117_clone_nr_9_clone_1910_1
-  HH117_clone_nr_8_clone_6115_1
-  HH117_clone_nr_7_clone_5941_1
-  HH117_clone_nr_6_clone_1320_1
-  HH117_clone_nr_5_clone_2301_1
-  HH117_clone_nr_4_clone_3709_1
-  HH117_clone_nr_3_clone_1849_1
-  HH117_clone_nr_2_clone_2628_1
-  HH117_clone_nr_1_clone_4221_1
-  
-  HH119_clone_nr_10_clone_7913_1
-  HH119_clone_nr_9_clone_25158_1
-  HH119_clone_nr_8_clone_3869_1
-  HH119_clone_nr_7_clone_8372_1
-  HH119_clone_nr_6_clone_23124_1
-  HH119_clone_nr_5_clone_15287_1
-  HH119_clone_nr_4_clone_12120_1
-  HH119_clone_nr_3_clone_28075_1
-  HH119_clone_nr_2_clone_22387_1
-  # HH119_clone_nr_1_clone_22355_1
-  
+  HH119_clone_nr_10_clone_23719_1, 
+  # HH119_clone_nr_1_clone_20693_1, 
+  # HH119_clone_nr_2_clone_27035_1, 
+  HH119_clone_nr_3_clone_11978_1, 
+  HH119_clone_nr_4_clone_7879_1, 
+  HH119_clone_nr_5_clone_14912_1, 
+  HH119_clone_nr_6_clone_21402_1, 
+  HH119_clone_nr_7_clone_8286_1, 
+  HH119_clone_nr_8_clone_8625_1, 
+  HH119_clone_nr_9_clone_3913_1
+
 )
 
 # # Run gctree
