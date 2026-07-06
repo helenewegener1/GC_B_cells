@@ -29,7 +29,7 @@ cp phylip/phylip-3.697/exe/dnapars /home/projects/dtu_00062/people/helweg/projec
 
 ############### RUNNING SCRIPT ############### 
 # screen -S gctree
-screen -r 2984649.gctree
+screen -r 3613935.gctree
 iqsub
 cd /home/people/helweg/gcb/48_GCtree/script
 source gctree_env/bin/activate

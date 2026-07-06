@@ -25,7 +25,7 @@ samples_dict = {
 
   #"HH117_clone_nr_1_clone_4221_1":  "CD: Largest GC B cell clone",
   #"HH117_clone_nr_2_clone_2628_1":  "CD: 2. largest GC B cell clone",
-  "HH117_clone_nr_3_clone_1849_1":  "Crohn's disease: 3. largest GC B cell clone",
+  "HH117_clone_nr_3_clone_2018_1":  "Crohn's disease: 3. largest GC B cell clone",
   #"HH117_clone_nr_4_clone_3709_1":  "CD: 4. largest GC B cell clone",
   #"HH117_clone_nr_5_clone_2301_1":  "CD: 5. largest GC B cell clone",
   #"HH117_clone_nr_6_clone_1320_1":  "CD: 6. largest GC B cell clone",
@@ -36,7 +36,7 @@ samples_dict = {
 
   # "HH119_clone_nr_1_clone_22355_1": "CRC: Largest GC B cell clone",
   
-  "HH119_clone_nr_3_clone_28075_1": "Colorectal cancer: 3. largest GC B cell clone",
+  # "HH119_clone_nr_3_clone_28075_1": "Colorectal cancer: 3. largest GC B cell clone",
   #"HH119_clone_nr_4_clone_12120_1": "CRC: 4. largest GC B cell clone",
   #"HH119_clone_nr_5_clone_15287_1": "CRC: 5. largest GC B cell clone",
   #"HH119_clone_nr_6_clone_23124_1": "CRC: 6. largest GC B cell clone",
@@ -60,7 +60,8 @@ samples_dict = {
 # sample_name = "Colorectal Cancer: Second largest clone with GC B cells across samples"
 
 # version = ""
-version = "gmm_threshold"
+# version = "gmm_threshold"
+version = "90_similarity"
 
 ########################################################################################
 # COLOR BY ANYTHING
