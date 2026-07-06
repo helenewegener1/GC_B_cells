@@ -10,6 +10,10 @@ library(stringdist)
 library(igraph)
 library(scoper)
 library(pheatmap)
+library(dowser)
+library(patchwork)
+
+data(HH_S5F)  # load the built-in human SHM targeting model
 
 # version <- "HH119_two_largest_clones"
 # version <- "HH119_two_largest_clones_junction"
@@ -28,23 +32,23 @@ library(pheatmap)
 
 HH <- "HH119"
 # df <- resolve_LC_list[[HH]]
-
-# # Clean V and J gene by removing allele information 
+# 
+# # Clean V and J gene by removing allele information
 # df <- df %>%
 #   mutate(
 #     v_call_no_allele = gsub("\\*\\d+", "", v_call),
 #     v_call_no_allele = sapply(strsplit(v_call_no_allele, ","), function(x) paste(unique(x), collapse = ",")),
 #     j_call_no_allele = gsub("\\*\\d+", "", j_call),
 #     j_call_no_allele = sapply(strsplit(j_call_no_allele, ","), function(x) paste(unique(x), collapse = ","))
-#   ) %>% 
+#   ) %>%
 #   rename(
-#     "clone_id_og_scoper" = clone_id, 
+#     "clone_id_og_scoper" = clone_id,
 #     "clone_subgroup_og_scoper" = clone_subgroup,
 #     "clone_subgroup_id_og_scoper" = clone_subgroup_id
 #   )
 # 
 # # ------------------------------------------------------------------------------
-# # SCOPer no allele 
+# # SCOPer no allele
 # # ------------------------------------------------------------------------------
 # 
 # # Threshold
@@ -56,20 +60,20 @@ HH <- "HH119"
 # 
 # # SCOPer with no allele information in V and J gene
 # res_scoper_no_allele <- spectralClones(
-#   
+# 
 #   df_heavy,
-#   method="vj", 
-#   v_call = "v_call_no_allele", 
+#   method="vj",
+#   v_call = "v_call_no_allele",
 #   j_call = "j_call_no_allele",
 #   threshold = list_thresholds[[HH]]$gmm,
 #   germline = "germline_alignment_d_mask",
 #   cell_id = "cell_id",
-#   clone = "clone_id_no_allele_scoper", # output column 
+#   clone = "clone_id_no_allele_scoper", # output column
 #   junction = "junction",
 #   first = FALSE,
 #   targeting_model = HH_S5F,
 #   summarize_clones = FALSE
-#   
+# 
 # )
 # 
 # # Add heavy chain clone to df (includes both heavy and light chain information)
@@ -79,7 +83,7 @@ HH <- "HH119"
 # # dowser to resolve light chain
 # res_scoper_no_allele_resolve_LC <- resolveLightChains(
 #   df_clones,
-#   clone = "clone_id_no_allele_scoper", 
+#   clone = "clone_id_no_allele_scoper",
 #   v_call = "v_call_no_allele",
 #   j_call = "j_call_no_allele"
 # )
@@ -96,16 +100,16 @@ HH <- "HH119"
 # 
 # df_heavy <- res_scoper_no_allele_resolve_LC %>% filter(locus == "IGH")
 # 
-# # Do the connected components with 90% similarity. 
+# # Do the connected components with 90% similarity.
 # res_90_similarity <- hierarchicalClones(
 #   df_heavy,
 #   threshold = 0.1,        # 1 - 0.9 = 10% dissimilarity = 90% similarity
 #   method = "nt",          # or "aa" for amino acid
 #   linkage = "single",     # single linkage = connected components
-#   junction = "junction", 
+#   junction = "junction",
 #   v_call = "v_call_no_allele",
 #   j_call = "j_call_no_allele",
-#   clone = "clone_id_90_similarity", # output column 
+#   clone = "clone_id_90_similarity", # output column
 #   cell_id = "cell_id", # single-cell mode
 #   first = FALSE,          # use all ambiguous gene calls for matching
 #   summarize_clones = FALSE
@@ -117,7 +121,7 @@ HH <- "HH119"
 # df_heavy_chain_clones <- res_90_similarity %>% select(cell_id, clone_id_90_similarity)
 # df_clones <- res_scoper_no_allele_resolve_LC %>% left_join(df_heavy_chain_clones, by = "cell_id")
 # 
-# # dowser to resolve light chain 
+# # dowser to resolve light chain
 # resolve_LC_final <- resolveLightChains(
 #   df_clones,
 #   clone = "clone_id_90_similarity",
@@ -131,8 +135,84 @@ HH <- "HH119"
 #   "clone_subgroup_id_90_similarity" = clone_subgroup_id
 # )
 # 
-# saveRDS(resolve_LC_final, glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds"))
+# 
+# # ------------------------------------------------------------------------------
+# # SCOPer with speceficity = 0.995
+# # ------------------------------------------------------------------------------
+# 
+# df_heavy <- resolve_LC_final %>% filter(locus == "IGH")
+# 
+# # Calculate nearest-neighbor Hamming distance distribution
+# # Per sequence, what is the Hamming distance to the nearest-neighbor (1 distance per sequence)
+# dist_nearest <- distToNearest(
+#   df_heavy,
+#   sequenceColumn = "junction",
+#   cellIdColumn="cell_id" # Important for invoking in run in single-cell mode
+# )
+# 
+# # find threshold for cloning automatically
+# spc <- 0.995
+# 
+# threshold_output <- shazam::findThreshold(
+#   dist_nearest$dist_nearest,
+#   method = "gmm",
+#   model = "gamma-norm",
+#   cutoff = "user",
+#   spc = spc  # specificity
+# )
+# 
+# threshold <- threshold_output@threshold
+# threshold 
+# 
+# plot(threshold_output, binwidth = 0.02, silent = TRUE) +
+#   theme(axis.title = element_text(size = 12)) +
+#   plot_annotation(
+#     title = glue("{HH}: Nearest-neighbor Hamming distance distribution"),
+#     subtitle = glue("GMM, gamma-norm model, specificity = {spc}, threshold: {round(threshold, 3)}")
+#   )
+# 
+# ggsave(glue("45_immcantation/plot/18_90_similarity/gmm_threshold_spc/{HH}_gmm_threshold_spc_{spc*1000}.png"), width = 12, height = 6.5)
+# 
+# # SCOPer
+# scoper_spc_99 <- spectralClones(
+#   df_heavy,
+#   method="vj",
+#   threshold = threshold,
+#   germline = "germline_alignment_d_mask",
+#   v_call = "v_call_no_allele", 
+#   j_call = "j_call_no_allele",
+#   cell_id = "cell_id",
+#   clone = "clone_id_spc_99_scoper",
+#   junction = "junction",
+#   first = FALSE,
+#   targeting_model = HH_S5F,
+#   summarize_clones = FALSE
+# )
+# 
+# # Resolving light chain clones with dowser
+# 
+# # Add heavy chain clone to df (includes both heavy and light chain information)
+# df_heavy_chain_clones <- scoper_spc_99 %>% select(cell_id, clone_id_spc_99_scoper)
+# df_clones <- resolve_LC_final %>% left_join(df_heavy_chain_clones, by = "cell_id")
+# 
+# # dowser to resolve light chain
+# resolve_LC_final_2 <- resolveLightChains(
+#   df_clones,
+#   clone = "clone_id_spc_99_scoper",
+#   v_call = "v_call_no_allele",
+#   j_call = "j_call_no_allele"
+# )
+# 
+# # Update clone column names
+# resolve_LC_final_2 <- resolve_LC_final_2 %>% rename(
+#   "clone_subgroup_spc_99_scoper" = clone_subgroup,
+#   "clone_subgroup_id_spc_99_scoper" = clone_subgroup_id
+# )
+# 
+# saveRDS(resolve_LC_final_2, glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds"))
 resolve_LC_final <- readRDS(glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds"))
+
+# resolve_LC_final <- resolve_LC_final_2 
 
 # ------------------------------------------------------------------------------
 # Heatmaps to compare clone definitions
@@ -142,23 +222,28 @@ df_heavy <- resolve_LC_final %>% filter(locus == "IGH")
 
 # Top clones subgroups
 n_clones <- 20
-clones_og_scoper <- df_heavy %>% count(clone_subgroup_id_og_scoper, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_og_scoper)
-clones_no_allele_scoper <- df_heavy %>% count(clone_subgroup_id_no_allele_scoper, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_no_allele_scoper)
-clones_90_similarity <- df_heavy %>% count(clone_subgroup_id_90_similarity, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_90_similarity)
+clones_og_scoper <- df_heavy %>% filter(L1_annotation == "GC_B_cells") %>% count(clone_subgroup_id_og_scoper, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_og_scoper)
+clones_no_allele_scoper <- df_heavy %>% filter(L1_annotation == "GC_B_cells") %>% count(clone_subgroup_id_no_allele_scoper, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_no_allele_scoper)
+clones_90_similarity <- df_heavy %>% filter(L1_annotation == "GC_B_cells") %>% count(clone_subgroup_id_90_similarity, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_90_similarity)
+clones_spc_99_scoper <- df_heavy %>% filter(L1_annotation == "GC_B_cells") %>% count(clone_subgroup_id_spc_99_scoper, sort = TRUE) %>% head(n_clones) %>% pull(clone_subgroup_id_spc_99_scoper)
 
 # Prep for plotting
 resolve_LC_compare <- df_heavy %>% 
   filter(
-    (clone_subgroup_id_og_scoper %in% clones_og_scoper | 
-      clone_subgroup_id_no_allele_scoper %in% clones_no_allele_scoper | 
-      clone_subgroup_id_90_similarity %in% clones_90_similarity)
+    (
+      clone_subgroup_id_og_scoper %in% clones_og_scoper | 
+        clone_subgroup_id_no_allele_scoper %in% clones_no_allele_scoper | 
+        clone_subgroup_id_90_similarity %in% clones_90_similarity | 
+        clone_subgroup_id_spc_99_scoper %in% clones_spc_99_scoper
+    )
   ) 
 
 # Define clone definitions 
 clone_definitions <- list(
   "SCOPer (original)" = "clone_subgroup_id_og_scoper", 
   "SCOPer (no allele information)" = "clone_subgroup_id_no_allele_scoper", 
-  "90% similarity + no allele information" = "clone_subgroup_id_90_similarity"
+  "90% similarity + no allele information" = "clone_subgroup_id_90_similarity",
+  "SCOPER (no allele information) spec = 0.995" = "clone_subgroup_id_spc_99_scoper"
 )
 
 pairs <- combn(length(clone_definitions), 2, simplify = FALSE)
@@ -208,23 +293,25 @@ for (pair in pairs) {
 df_heavy <- resolve_LC_final %>% filter(locus == "IGH") 
 
 # Top clones subgroups
-n_clones <- 16
+n_clones <- 20
 clone_colors_vec <- c(
   "#E63946", "#2196F3", "#3DAA55", "#FF9800",
   "#9C27B0", "#00BCD4", "#F5C518", "#FF4081",
   "#6D4C41", "#76FF03", "#6200EA", "#37474F",
   "#80CBC4", "#CE93D8", "#FFF176", "#A5D6A7",
+  "#1A237E", "#D84315", "#00897B", "#C2185B",
   "grey90"
 )
 
 clone_definitions <- c(
   "clone_subgroup_id_og_scoper",
   "clone_subgroup_id_no_allele_scoper",
-  "clone_subgroup_id_90_similarity"
+  "clone_subgroup_id_90_similarity",
+  "clone_subgroup_id_spc_99_scoper"
 )
 
 top_clones <- lapply(clone_definitions, function(col) {
-  df_heavy %>% count(!!sym(col), sort = TRUE) %>% head(n_clones) %>% pull(1)
+  df_heavy %>% filter(L1_annotation == "GC_B_cells") %>% count(!!sym(col), sort = TRUE) %>% head(n_clones) %>% pull(1)
 })
 
 clone_colors <- setNames(
@@ -237,7 +324,8 @@ subset <- df_heavy %>%
   filter(
     clone_subgroup_id_og_scoper %in% clones_og_scoper | 
       clone_subgroup_id_no_allele_scoper %in% clones_no_allele_scoper | 
-      clone_subgroup_id_90_similarity %in% clones_90_similarity
+      clone_subgroup_id_90_similarity %in% clones_90_similarity |
+      clone_subgroup_id_spc_99_scoper %in% clones_spc_99_scoper
   ) 
 
 # N_cells
@@ -264,6 +352,7 @@ sequence_types <- c("junction", "sequence_trimmed_300")
 
 for (sequence_type in sequence_types){
   
+  # sequence_type <- "sequence_trimmed_300"
   # sequence_type <- "junction"
   
   # seqs <- subset$sequence_trimmed_300
@@ -282,7 +371,8 @@ for (sequence_type in sequence_types){
       junction_length = as.character(junction_length),
       clone_subgroup_id_og_scoper_plot = ifelse(clone_subgroup_id_og_scoper %in% names(clone_colors$clone_subgroup_id_og_scoper), clone_subgroup_id_og_scoper, "other"),
       clone_subgroup_id_no_allele_scoper_plot = ifelse(clone_subgroup_id_no_allele_scoper %in% names(clone_colors$clone_subgroup_id_no_allele_scoper), clone_subgroup_id_no_allele_scoper, "other"),
-      clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% names(clone_colors$clone_subgroup_id_90_similarity), clone_subgroup_id_90_similarity, "other")
+      clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% names(clone_colors$clone_subgroup_id_90_similarity), clone_subgroup_id_90_similarity, "other"),
+      clone_subgroup_id_spc_99_scoper_plot = ifelse(clone_subgroup_id_spc_99_scoper %in% names(clone_colors$clone_subgroup_id_spc_99_scoper), clone_subgroup_id_spc_99_scoper, "other")
     ) %>% 
     select(label, everything()) %>% # Move label to front
     as.data.frame()
@@ -327,12 +417,13 @@ for (sequence_type in sequence_types){
   
   variables <- c(
     "v_call_no_allele",  "j_call_no_allele", "v_call",  "j_call", "junction_length",
-    "clone_subgroup_id_og_scoper_plot", "clone_subgroup_id_no_allele_scoper_plot", "clone_subgroup_id_90_similarity_plot"
+    "clone_subgroup_id_og_scoper_plot", "clone_subgroup_id_no_allele_scoper_plot", 
+    "clone_subgroup_id_90_similarity_plot", "clone_subgroup_id_spc_99_scoper_plot"
   )
   
   for (var in variables){
     
-    # var <- "clone_subgroup_id_og_scoper_plot"
+    # var <- "clone_subgroup_id_no_allele_scoper_plot"
     
     p <- ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta + 
       geom_tippoint(aes(color = !!sym(var)), size=0.5) +
@@ -421,38 +512,103 @@ for (sequence_type in sequence_types){
   
 }
 
+# ------------------------------------------------------------------------------
+# All samples combined for test
+# Heavy chain clone definition: same V and J gene (ignore allele) and cdr3 length + 90% similarity
+# ------------------------------------------------------------------------------
 
-# # ------------------------------------------------------------------------------
-# # Cut the tree
-# # ------------------------------------------------------------------------------
+# # Load data
+# resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds") %>% bind_rows()
 # 
-# k <- 8
+# # Clean V and J gene by removing allele information
+# resolve_LC_list <- resolve_LC_list %>%
+#   mutate(
+#     v_call_no_allele = gsub("\\*\\d+", "", v_call),
+#     v_call_no_allele = sapply(strsplit(v_call_no_allele, ","), function(x) paste(unique(x), collapse = ",")),
+#     j_call_no_allele = gsub("\\*\\d+", "", j_call),
+#     j_call_no_allele = sapply(strsplit(j_call_no_allele, ","), function(x) paste(unique(x), collapse = ","))
+#   ) %>%
+#   select(-c(clone_id, clone_subgroup, clone_subgroup_id))
 # 
-# # outdir <- glue("46_sequence_driven_clustering/plot/{version}/{k}_clusters")
-# # dir.create(outdir, showWarnings = FALSE, recursive = TRUE)
+# # Filter for heavy chain 
+# df_all_heavy <- resolve_LC_list %>% filter(locus == "IGH")
 # 
-# # Cut tree
-# clusters <- cutree(fit, k = k)
-# table(clusters)
+# # Do the connected components with 90% similarity.
+# res_90_similarity <- hierarchicalClones(
+#   df_all_heavy,
+#   threshold = 0.1,        # 1 - 0.9 = 10% dissimilarity = 90% similarity
+#   method = "nt",          # or "aa" for amino acid
+#   linkage = "single",     # single linkage = connected components
+#   junction = "junction",
+#   v_call = "v_call_no_allele",
+#   j_call = "j_call_no_allele",
+#   clone = "clone_id_90_similarity", # output column
+#   cell_id = "cell_id", # single-cell mode
+#   first = FALSE,          # use all ambiguous gene calls for matching
+#   summarize_clones = FALSE
+# )
 # 
-# # Add to metadata
-# seqs_meta$clusters <- clusters %>% as.character()
+# # Resolving light chain clones with dowser
 # 
-# # See patient split
-# table(seqs_meta$clusters, seqs_meta$clone_subgroup_id)
+# # Add heavy chain clone to df (includes both heavy and light chain information)
+# df_heavy_chain_clones <- res_90_similarity %>% select(cell_id, clone_id_90_similarity)
+# df_clones <- resolve_LC_list %>% left_join(df_heavy_chain_clones, by = "cell_id")
 # 
-# # Show clusters 
-# var <- "clusters"
-# ggtree(tree, layout="fan", size=0.2) %<+% seqs_meta + 
-#   geom_tippoint(aes(color = !!sym(var)), size=0.5, alpha = 0.5) +
-#   theme_tree2() + 
-#   guides(color = guide_legend(override.aes = list(size = 4))) + 
+# # dowser to resolve light chain
+# resolve_LC_final <- resolveLightChains(
+#   df_clones,
+#   clone = "clone_id_90_similarity",
+#   v_call = "v_call_no_allele",
+#   j_call = "j_call_no_allele"
+# )
+# 
+# # Get top clones for each patient 
+# clones <- lapply(c("HH117", "HH119"), function(HH){
+#   resolve_LC_final %>% filter(patient_id == HH) %>% 
+#     count(clone_subgroup_id, sort = TRUE) %>% head(40) %>% pull(clone_subgroup_id)
+# }) %>% unlist()
+# 
+# # Plot 
+# resolve_LC_final %>% 
+#   filter(clone_subgroup_id %in% clones) %>% 
+#   count(patient_id, clone_subgroup_id, sort = TRUE) %>% 
+#   ggplot(aes(x = patient_id, y = clone_subgroup_id, fill = n)) + 
+#   geom_tile() + 
+#   theme_bw() +
 #   labs(
-#     title = glue("{version} colored by {k}_{var}")
-#     # subtitle = glue("Clusters: {clusters_string}")
+#     title = "Clones across patients"
 #   )
 # 
-# ggsave(glue("{outdir_trees}/{version}_{k}_{var}.png"), width = 15, height = 10, dpi = 1000)
+# ggsave("45_immcantation/plot/18_90_similarity/clones_90_similarity_across_patients.png", width = 8, height = 8)
 # 
+# # Remove biggest clone
+# top_clone <- resolve_LC_final %>% count(clone_subgroup_id, sort = TRUE) %>% head(1) %>% pull(clone_subgroup_id)
+#  
+# resolve_LC_final %>% 
+#   filter(clone_subgroup_id %in% clones & clone_subgroup_id != top_clone) %>% 
+#   count(patient_id, clone_subgroup_id, sort = TRUE) %>% 
+#   ggplot(aes(x = patient_id, y = clone_subgroup_id, fill = n)) + 
+#   geom_tile() + 
+#   theme_bw() +
+#   labs(
+#     title = "Clones across patients - largest clone removed"
+#   )
 # 
-# 
+# ggsave("45_immcantation/plot/18_90_similarity/clones_90_similarity_across_patients_rm_largest_clone.png", width = 8, height = 8)
+
+  
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
