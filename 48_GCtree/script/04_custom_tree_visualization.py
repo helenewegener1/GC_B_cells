@@ -23,12 +23,12 @@ os.environ["MPLCONFIGDIR"] = "/home/projects/dtu_00062/people/helweg/projects/GC
 
 samples_dict = {
 
-  "HH117_clone_nr_1_clone_500_1":  "CD: Largest GC B cell clone",
-  "HH117_clone_nr_2_clone_2885_1":  "CD: 2. largest GC B cell clone",
-  "HH117_clone_nr_3_clone_2018_1":  "Crohn's disease: 3. largest GC B cell clone",
-  "HH117_clone_nr_4_clone_3953_1":  "CD: 4. largest GC B cell clone",
-  "HH117_clone_nr_5_clone_2588_1":  "CD: 5. largest GC B cell clone",
-  "HH117_clone_nr_6_clone_1517_1":  "CD: 6. largest GC B cell clone",
+  #"HH117_clone_nr_1_clone_500_1":  "CD: Largest GC B cell clone",
+  #"HH117_clone_nr_2_clone_2885_1":  "CD: 2. largest GC B cell clone",
+  #"HH117_clone_nr_3_clone_2018_1":  "Crohn's disease: 3. largest GC B cell clone",
+  #"HH117_clone_nr_4_clone_3953_1":  "CD: 4. largest GC B cell clone",
+  #"HH117_clone_nr_5_clone_2588_1":  "CD: 5. largest GC B cell clone",
+  "HH117_clone_nr_6_clone_1571_1":  "CD: 6. largest GC B cell clone",
   "HH117_clone_nr_7_clone_5554_1":  "CD: 7. largest GC B cell clone",
   "HH117_clone_nr_8_clone_5725_1":  "CD: 8. largest GC B cell clone",
   "HH117_clone_nr_9_clone_2211_1":  "CD: 9. largest GC B cell clone",
