@@ -98,3 +98,15 @@ cell_type_names <- list(
   "Unconventional_Bcells"      = "Unconventional B cells"
   
 )
+
+isotype_colors_custom <- c(
+  "IGHA1" = "#F5A623",  # orange
+  "IGHA2" = "#D62728",  # red
+  "IGHD"  = "#00E5FF",  # cyan
+  "IGHE"  = "#2CA02C",  # green
+  "IGHG1" = "#3D0F8C",  # dark purple
+  "IGHG2" = "#7B2D9E",  # medium purple
+  "IGHG3" = "#8C8CC7",  # light purple/lavender
+  "IGHG4" = "#C9C1E8",  # pale lavender
+  "IGHM"  = "#2E7DB8"   # blue
+)
