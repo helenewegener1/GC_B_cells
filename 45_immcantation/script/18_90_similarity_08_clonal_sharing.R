@@ -79,6 +79,88 @@ df_n_fol %>%
 
 ggsave(glue("{outdir}/clones_in_n_follicles.png"), width = 8, height = 6)
 
+# # ------------------------------------------------------------------------------
+# # Different isotypes in different follicles? (GC B cells)
+# # ------------------------------------------------------------------------------
+# 
+# df_shared_clones <- df_n_fol %>% filter(n_follicles > 1)
+# 
+# # ---- 1. prep counts per clone x follicle x isotype ----
+# 
+# plot_data <- df_both %>% 
+#   filter(
+#     !is.na(c_call),
+#     L1_annotation == "GC_B_cells",
+#     !is.na(manual_ADT_full_ID)
+#   ) %>% 
+#   mutate(manual_ADT_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer() %>% as.factor()) %>% 
+#   inner_join(df_shared_clones, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
+#   count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_ID_plot, c_call)
+# 
+# clone_id_lookup <- plot_data %>% 
+#   distinct(patient_id, clone_subgroup_id_90_similarity) %>% 
+#   arrange(patient_id, clone_subgroup_id_90_similarity) %>% 
+#   group_by(patient_id) %>% 
+#   mutate(y = row_number()) %>% 
+#   ungroup()
+# 
+# pie_data <- plot_data %>% 
+#   mutate(x = as.numeric(as.character(manual_ADT_ID_plot))) %>% 
+#   left_join(clone_id_lookup, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
+#   pivot_wider(
+#     id_cols = c(patient_id, clone_subgroup_id_90_similarity, x, y),
+#     names_from = c_call, 
+#     values_from = n, 
+#     values_fill = 0
+#   )
+# 
+# isotype_cols <- setdiff(names(pie_data), c("patient_id", "clone_subgroup_id_90_similarity", "x", "y"))
+# 
+# # ---- 2. one plot per patient, each with its own axis labels and coord_equal ----
+# 
+# make_pie_plot <- function(HH) {
+#   
+#   # HH <- "HH117"
+#   data_sub <- pie_data %>% filter(patient_id == HH)
+#   lookup_sub <- clone_id_lookup %>% filter(patient_id == HH)
+#   
+#   ggplot() + 
+#     geom_scatterpie(
+#       data = data_sub, 
+#       aes(x = x, y = y, r = 0.35),
+#       cols = isotype_cols, 
+#       color = NA
+#     ) + 
+#     scale_fill_manual(
+#       values = isotype_colors_custom,
+#       breaks = c("IGHM", "IGHD", "IGHA1", "IGHA2", "IGHG1", "IGHG2",  "IGHG3", "IGHG4", "IGHE")
+#     ) + 
+#     scale_x_continuous(
+#       # breaks = sort(unique(data_sub$x)),
+#       breaks = 1:max(data_sub$x),
+#       minor_breaks = scales::breaks_width(1)
+#     ) +
+#     scale_y_continuous(
+#       breaks = lookup_sub$y,
+#       labels = lookup_sub$clone_subgroup_id_90_similarity,
+#       minor_breaks = scales::breaks_width(1)
+#     ) +
+#     coord_equal() + 
+#     labs(
+#       x = "Follicle", y = "Clone", fill = "Isotype", 
+#       title = glue("{HH}: Isotype usage in follicle-shared clones")
+#     ) + 
+#     theme_bw()
+# }
+# 
+# # patient_names
+# 
+# for (HH in names(patient_names)){
+#   # HH <- "HH119"
+#   make_pie_plot(HH)
+#   ggsave(glue("{outdir}/{HH}_isotype_follicle_shared_clones.png"), width = 10, height = 8)
+#   
+# }
 
 # ------------------------------------------------------------------------------
 # Different isotypes in different follicles and sites? (All cells )

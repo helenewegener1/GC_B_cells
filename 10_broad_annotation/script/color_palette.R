@@ -100,13 +100,15 @@ cell_type_names <- list(
 )
 
 isotype_colors_custom <- c(
-  "IGHA1" = "#F5A623",  # orange
-  "IGHA2" = "#D62728",  # red
-  "IGHD"  = "#00E5FF",  # cyan
-  "IGHE"  = "#2CA02C",  # green
-  "IGHG1" = "#3D0F8C",  # dark purple
-  "IGHG2" = "#7B2D9E",  # medium purple
-  "IGHG3" = "#8C8CC7",  # light purple/lavender
-  "IGHG4" = "#C9C1E8",  # pale lavender
-  "IGHM"  = "#2E7DB8"   # blue
+  "IGHA1" = "#FF7F00",
+  "IGHA2" = "#E31A1C",
+  "IGHM" = "#1F78B4",
+  "IGHD" = "#00E5FF",
+  "IGHG1" = "#3F007D",
+  "IGHG2" = "#54278F",
+  "IGHG3" = "#756BB1",
+  "IGHG4" = "#9E9AC8"
 )
+
+
+
