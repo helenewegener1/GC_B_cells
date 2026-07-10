@@ -58,7 +58,12 @@ for (site in LP_sites){
     
     # Read idmap.txt file
     sample <- str_split_i(filename, "\\.", 1)
-    idmap <- read.csv(glue("60_PC_clones/out/{sample}/idmap.txt"), header = FALSE, col.names = c("seq_unique", "seq_name")) 
+    
+    tryCatch({
+      idmap <- read.csv(glue("60_PC_clones/out/{sample}/idmap.txt"), header = FALSE, col.names = c("seq_unique", "seq_name")) 
+    }, error = function(e) {
+      message("Skipping ", site, " clone nr ", clone_nr, " - ", conditionMessage(e))
+    })
     
     # Remove GL
     idmap <- idmap %>% filter(seq_unique != "GL")
