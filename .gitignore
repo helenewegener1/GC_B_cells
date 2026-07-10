@@ -44,6 +44,19 @@ tmp
 48_GCtree/fasta
 48_GCtree/script/gctree_env_local/
 
+*.svg
+*.nk
+*.p
+
+48_GCtree/out_gmm_threshold/
+48_GCtree/plot_gmm_threshold/
+
+48_GCtree/out
+48_GCtree/plot
+
+60_PC_clones/gctree_meta/
+
+
 .DS_Store
 .Rproj.user
 .Rhistory

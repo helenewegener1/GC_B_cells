@@ -1,0 +1,6 @@
+# Running 02_run_gctree.sh
+
+screen -R XXXXX
+iqsub
+source /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/48_GCtree/script/gctree_env/bin/activate
+
