@@ -1,0 +1,8 @@
+seq_unique,seq_name,L1_annotation,c_call,sample_clean_fol,L1_annotation_int,c_call_int,sample_clean_fol_int
+seq1,sequence_1:sequence_5,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-3,1,1,3
+seq2,sequence_2:sequence_7,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-3,1,1,3
+seq3,sequence_3,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-17,1,1,2
+seq4,sequence_4,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-3,1,1,3
+seq5,sequence_6,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-10,1,1,1
+seq6,sequence_8,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-3,1,1,3
+seq7,sequence_9,GC_B_cells,IGHM,HH117-SI-PP-nonINF_Fol-3,1,1,3

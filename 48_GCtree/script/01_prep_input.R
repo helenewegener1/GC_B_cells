@@ -40,20 +40,24 @@ version <- "90_similarity"
 # FASTA file writing
 # ------------------------------------------------------------------------------
 
+n_clones <- 20
+
 # Define top GC clone
 top_GC_clones <- lapply(patients, function(HH) {
+  
+  # HH <- "HH117"
   
   # find clones that have GC cells in at least 2 different sample_ids
   GC_clones <- resolve_LC_list_germlined[[HH]] %>%
     filter(locus == "IGH") %>% 
     filter(L1_annotation == "GC_B_cells") %>%
-    count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
-    head(10) %>% 
+    dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
+    head(n_clones) %>% 
     pull(clone_subgroup_id_90_similarity)
   
 }) %>% setNames(patients)
 
-clone_nrs <- 1:10
+clone_nrs <- 1:n_clones
 
 # prep seq name dir 
 seq_dir <- list()
@@ -73,7 +77,8 @@ for (HH in patients){
     
     # Extract sequences of clone, each's abundance and the germline sequence (GL)
     seqs <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% pull(sequence_alignment)
-    GL <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% count(germline_alignment_d_mask, sort = TRUE) %>% pull(germline_alignment_d_mask)
+    GL <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% 
+      dplyr::count(germline_alignment_d_mask, sort = TRUE) %>% pull(germline_alignment_d_mask)
     
     # PHYLIP format no longer allows dots in sequence (ValueError when running gctree duplicate)
     seqs <- seqs %>% str_replace_all("\\.", "-")

@@ -1,0 +1,9 @@
+seq_unique,seq_name,L1_annotation,c_call,sample_clean_fol,L1_annotation_int,c_call_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2:sequence_3:sequence_4:sequence_5:sequence_6:sequence_8:sequence_9:sequence_11:sequence_12:sequence_13:sequence_14:sequence_15:sequence_17:sequence_18:sequence_19:sequence_21:sequence_22:sequence_23:sequence_24:sequence_25:sequence_26:sequence_30,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29:HH119-SI-PP_Fol-32,1,1,2
+seq2,sequence_7,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1
+seq3,sequence_10,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1
+seq4,sequence_16,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1
+seq5,sequence_20,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1
+seq6,sequence_27,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1
+seq7,sequence_28,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1
+seq8,sequence_29,GC_B_cells,IGHA2,HH119-SI-PP_Fol-29,1,1,1

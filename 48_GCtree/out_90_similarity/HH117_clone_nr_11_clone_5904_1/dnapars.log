@@ -1,0 +1,345 @@
+[2J[Hdnapars: can't find input file "infile"
+Please enter a new file name> [2J[H
+DNA parsimony algorithm, version 3.697
+
+Setting for this run:
+  U                 Search for best tree?  Yes
+  S                        Search option?  More thorough search
+  V              Number of trees to save?  10000
+  J   Randomize input order of sequences?  No. Use input order
+  O                        Outgroup root?  No, use as outgroup species  1
+  T              Use Threshold parsimony?  No, use ordinary parsimony
+  N           Use Transversion parsimony?  No, count all steps
+  W                       Sites weighted?  No
+  M           Analyze multiple data sets?  No
+  I          Input sequences interleaved?  Yes
+  0   Terminal type (IBM PC, ANSI, none)?  ANSI
+  1    Print out the data at start of run  No
+  2  Print indications of progress of run  Yes
+  3                        Print out tree  Yes
+  4          Print out steps in each site  No
+  5  Print sequences at all nodes of tree  No
+  6       Write out trees onto tree file?  Yes
+
+  Y to accept these or type the letter for one to change
+
+Random number seed (must be odd)?
+Number of times to jumble?
+[2J[H
+DNA parsimony algorithm, version 3.697
+
+Setting for this run:
+  U                 Search for best tree?  Yes
+  S                        Search option?  More thorough search
+  V              Number of trees to save?  10000
+  J   Randomize input order of sequences?  Yes (seed =       1, 10 times)
+  O                        Outgroup root?  No, use as outgroup species  1
+  T              Use Threshold parsimony?  No, use ordinary parsimony
+  N           Use Transversion parsimony?  No, count all steps
+  W                       Sites weighted?  No
+  M           Analyze multiple data sets?  No
+  I          Input sequences interleaved?  Yes
+  0   Terminal type (IBM PC, ANSI, none)?  ANSI
+  1    Print out the data at start of run  No
+  2  Print indications of progress of run  Yes
+  3                        Print out tree  Yes
+  4          Print out steps in each site  No
+  5  Print sequences at all nodes of tree  No
+  6       Write out trees onto tree file?  Yes
+
+  Y to accept these or type the letter for one to change
+Type number of the outgroup:
+[2J[H
+DNA parsimony algorithm, version 3.697
+
+Setting for this run:
+  U                 Search for best tree?  Yes
+  S                        Search option?  More thorough search
+  V              Number of trees to save?  10000
+  J   Randomize input order of sequences?  Yes (seed =       1, 10 times)
+  O                        Outgroup root?  Yes, at sequence number  1
+  T              Use Threshold parsimony?  No, use ordinary parsimony
+  N           Use Transversion parsimony?  No, count all steps
+  W                       Sites weighted?  No
+  M           Analyze multiple data sets?  No
+  I          Input sequences interleaved?  Yes
+  0   Terminal type (IBM PC, ANSI, none)?  ANSI
+  1    Print out the data at start of run  No
+  2  Print indications of progress of run  Yes
+  3                        Print out tree  Yes
+  4          Print out steps in each site  No
+  5  Print sequences at all nodes of tree  No
+  6       Write out trees onto tree file?  Yes
+
+  Y to accept these or type the letter for one to change
+[2J[H
+DNA parsimony algorithm, version 3.697
+
+Setting for this run:
+  U                 Search for best tree?  Yes
+  S                        Search option?  More thorough search
+  V              Number of trees to save?  10000
+  J   Randomize input order of sequences?  Yes (seed =       1, 10 times)
+  O                        Outgroup root?  Yes, at sequence number  1
+  T              Use Threshold parsimony?  No, use ordinary parsimony
+  N           Use Transversion parsimony?  No, count all steps
+  W                       Sites weighted?  No
+  M           Analyze multiple data sets?  No
+  I          Input sequences interleaved?  Yes
+  0   Terminal type (IBM PC, ANSI, none)?  ANSI
+  1    Print out the data at start of run  No
+  2  Print indications of progress of run  Yes
+  3                        Print out tree  Yes
+  4          Print out steps in each site  Yes
+  5  Print sequences at all nodes of tree  No
+  6       Write out trees onto tree file?  Yes
+
+  Y to accept these or type the letter for one to change
+[2J[H
+DNA parsimony algorithm, version 3.697
+
+Setting for this run:
+  U                 Search for best tree?  Yes
+  S                        Search option?  More thorough search
+  V              Number of trees to save?  10000
+  J   Randomize input order of sequences?  Yes (seed =       1, 10 times)
+  O                        Outgroup root?  Yes, at sequence number  1
+  T              Use Threshold parsimony?  No, use ordinary parsimony
+  N           Use Transversion parsimony?  No, count all steps
+  W                       Sites weighted?  No
+  M           Analyze multiple data sets?  No
+  I          Input sequences interleaved?  Yes
+  0   Terminal type (IBM PC, ANSI, none)?  ANSI
+  1    Print out the data at start of run  No
+  2  Print indications of progress of run  Yes
+  3                        Print out tree  Yes
+  4          Print out steps in each site  Yes
+  5  Print sequences at all nodes of tree  Yes
+  .  Use dot-differencing to display them  Yes
+  6       Write out trees onto tree file?  Yes
+
+  Y to accept these or type the letter for one to change
+[2J[H
+DNA parsimony algorithm, version 3.697
+
+Setting for this run:
+  U                 Search for best tree?  Yes
+  S                        Search option?  More thorough search
+  V              Number of trees to save?  10000
+  J   Randomize input order of sequences?  Yes (seed =       1, 10 times)
+  O                        Outgroup root?  Yes, at sequence number  1
+  T              Use Threshold parsimony?  No, use ordinary parsimony
+  N           Use Transversion parsimony?  No, count all steps
+  W                       Sites weighted?  No
+  M           Analyze multiple data sets?  No
+  I          Input sequences interleaved?  Yes
+  0   Terminal type (IBM PC, ANSI, none)?  ANSI
+  1    Print out the data at start of run  No
+  2  Print indications of progress of run  Yes
+  3                        Print out tree  Yes
+  4          Print out steps in each site  Yes
+  5  Print sequences at all nodes of tree  Yes
+  .  Use dot-differencing to display them  No
+  6       Write out trees onto tree file?  Yes
+
+  Y to accept these or type the letter for one to change
+Adding species:
+   1. seq9      
+   2. GL        
+   3. seq2      
+   4. seq6      
+   5. seq10     
+   6. seq1      
+   7. seq4      
+   8. seq7      
+   9. seq11     
+  10. seq3      
+  11. seq8      
+  12. seq5      
+  13. seq12     
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+   .........................
+
+Adding species:
+   1. seq10     
+   2. seq11     
+   3. GL        
+   4. seq1      
+   5. seq3      
+   6. seq12     
+   7. seq9      
+   8. seq2      
+   9. seq7      
+  10. seq6      
+  11. seq4      
+  12. seq5      
+  13. seq8      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. seq5      
+   2. seq1      
+   3. seq4      
+   4. seq8      
+   5. seq7      
+   6. GL        
+   7. seq6      
+   8. seq3      
+   9. seq2      
+  10. seq11     
+  11. seq9      
+  12. seq12     
+  13. seq10     
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. GL        
+   2. seq1      
+   3. seq11     
+   4. seq10     
+   5. seq3      
+   6. seq2      
+   7. seq8      
+   8. seq5      
+   9. seq6      
+  10. seq4      
+  11. seq7      
+  12. seq12     
+  13. seq9      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. GL        
+   2. seq11     
+   3. seq6      
+   4. seq5      
+   5. seq12     
+   6. seq9      
+   7. seq2      
+   8. seq1      
+   9. seq7      
+  10. seq8      
+  11. seq10     
+  12. seq3      
+  13. seq4      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. seq2      
+   2. seq1      
+   3. seq9      
+   4. seq6      
+   5. seq5      
+   6. seq11     
+   7. seq10     
+   8. GL        
+   9. seq3      
+  10. seq7      
+  11. seq4      
+  12. seq12     
+  13. seq8      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. seq4      
+   2. seq1      
+   3. seq6      
+   4. seq5      
+   5. seq3      
+   6. GL        
+   7. seq10     
+   8. seq12     
+   9. seq11     
+  10. seq7      
+  11. seq8      
+  12. seq2      
+  13. seq9      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. seq5      
+   2. GL        
+   3. seq3      
+   4. seq12     
+   5. seq11     
+   6. seq10     
+   7. seq7      
+   8. seq4      
+   9. seq8      
+  10. seq2      
+  11. seq1      
+  12. seq6      
+  13. seq9      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. seq3      
+   2. seq4      
+   3. GL        
+   4. seq6      
+   5. seq1      
+   6. seq7      
+   7. seq2      
+   8. seq12     
+   9. seq11     
+  10. seq8      
+  11. seq10     
+  12. seq9      
+  13. seq5      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Adding species:
+   1. seq6      
+   2. seq4      
+   3. seq11     
+   4. seq12     
+   5. seq8      
+   6. seq10     
+   7. seq2      
+   8. GL        
+   9. seq9      
+  10. seq5      
+  11. seq7      
+  12. seq1      
+  13. seq3      
+
+Doing global rearrangements on all trees tied for best
+  !-------------------------!
+   .........................
+
+Collapsing best trees
+   .
+
+Output written to file "outfile"
+
+Tree also written onto file "outtree"
+
+Done.
+

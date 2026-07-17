@@ -1,0 +1,143 @@
+
+DNA parsimony algorithm, version 3.697
+
+
+One most parsimonious tree found:
+
+
+  +seq3      
+  |  
+  |  +seq2      
+  1--2  
+  |  +seq1      
+  |  
+  +------GL        
+
+
+requires a total of     47.000
+
+  between      and       length
+  -------      ---       ------
+     1      seq3         0.000000
+     1           2       0.002519
+     2      seq2         0.002519
+     2      seq1         0.000000
+     1      GL           0.113350
+
+steps in each site:
+         0   1   2   3   4   5   6   7   8   9
+     *-----------------------------------------
+    0|       0   0   0   0   0   0   0   0   1
+   10|   0   0   0   0   0   0   0   0   0   0
+   20|   0   0   0   0   0   0   0   0   0   0
+   30|   0   0   0   0   0   0   0   0   0   0
+   40|   0   0   0   0   0   1   0   0   0   0
+   50|   0   0   0   0   0   0   0   1   0   0
+   60|   0   0   0   0   0   0   0   0   0   0
+   70|   0   0   0   0   0   0   0   0   0   0
+   80|   0   0   0   0   0   1   0   0   0   0
+   90|   0   0   0   0   0   0   0   0   0   0
+  100|   0   0   0   0   0   0   0   0   1   0
+  110|   0   0   0   0   0   1   0   0   0   1
+  120|   0   0   0   0   0   0   0   0   0   0
+  130|   0   0   0   0   0   0   0   0   1   0
+  140|   0   0   0   0   0   0   0   0   0   0
+  150|   0   0   0   0   0   0   1   0   0   0
+  160|   0   0   0   0   0   0   0   0   0   0
+  170|   0   1   0   0   0   0   0   0   0   0
+  180|   0   0   0   0   0   0   0   0   0   0
+  190|   0   0   0   0   0   0   0   1   0   0
+  200|   0   0   1   0   0   0   0   0   0   0
+  210|   0   0   0   0   0   0   0   0   0   0
+  220|   0   0   0   0   0   0   0   0   0   0
+  230|   0   0   0   0   0   0   0   0   0   0
+  240|   0   0   0   0   0   0   0   0   0   0
+  250|   0   0   0   0   0   0   0   0   0   0
+  260|   0   1   0   0   0   0   0   0   0   0
+  270|   0   0   0   0   0   0   0   0   0   0
+  280|   0   0   0   0   0   0   0   0   0   0
+  290|   0   0   0   0   0   0   0   0   0   0
+  300|   0   0   0   1   0   0   0   0   0   0
+  310|   0   0   0   1   0   0   0   0   0   0
+  320|   1   1   1   1   1   1   1   1   1   1
+  330|   1   1   1   1   1   1   1   1   1   1
+  340|   1   1   1   1   1   1   1   1   1   1
+  350|   1   1   0   0   0   0   0   0   0   0
+  360|   0   0   0   0   0   0   0   0   0   0
+  370|   0   0   0   0   0   0   0   0   0   0
+  380|   0   0   0   0   0   0   0   0   0   0
+  390|   0   0   0   0   0   0   0   0        
+
+From    To     Any Steps?    State at upper node
+                            
+root      1                GAGGTGCACC TGGTGGAGTC TGGGGGA--- GGCTTGGTCC 
+   1   seq3         no     GAGGTGCACC TGGTGGAGTC TGGGGGA--- GGCTTGGTCC 
+   1      2         no     GAGGTGCACC TGGTGGAGTC TGGGGGA--- GGCTTGGTCC 
+   2   seq2         no     GAGGTGCACC TGGTGGAGTC TGGGGGA--- GGCTTGGTCC 
+   2   seq1         no     GAGGTGCACC TGGTGGAGTC TGGGGGA--- GGCTTGGTCC 
+   1   GL           yes    GAGGTGCAGC TGGTGGAGTC TGGGGGA--- GGCTTGGTCC 
+
+root      1                AGCCGGGGGG GTCCCTCAGA CTCTCCTGTG CAGCCTCTGG 
+   1   seq3         no     AGCCGGGGGG GTCCCTCAGA CTCTCCTGTG CAGCCTCTGG 
+   1      2         no     AGCCGGGGGG GTCCCTCAGA CTCTCCTGTG CAGCCTCTGG 
+   2   seq2         no     AGCCGGGGGG GTCCCTCAGA CTCTCCTGTG CAGCCTCTGG 
+   2   seq1         no     AGCCGGGGGG GTCCCTCAGA CTCTCCTGTG CAGCCTCTGG 
+   1   GL           yes    AGCCTGGGGG GTCCCTGAGA CTCTCCTGTG CAGCCTCTGG 
+
+root      1                ATTCGCCTTT ---------- --AGTAGTTA TTGGGTGACC 
+   1   seq3         no     ATTCGCCTTT ---------- --AGTAGTTA TTGGGTGACC 
+   1      2         no     ATTCGCCTTT ---------- --AGTAGTTA TTGGGTGACC 
+   2   seq2         no     ATTCGCCTTT ---------- --AGTAGTTA TTGGGTGACC 
+   2   seq1         no     ATTCGCCTTT ---------- --AGTAGTTA TTGGGTGACC 
+   1   GL           yes    ATTCACCTTT ---------- --AGTAGCTA TTGGATGAGC 
+
+root      1                TGGGTCCGCC AGGCTCCGGG GAAGGGGCTG GAGTGGGTGG 
+   1   seq3         no     TGGGTCCGCC AGGCTCCGGG GAAGGGGCTG GAGTGGGTGG 
+   1      2         no     TGGGTCCGCC AGGCTCCGGG GAAGGGGCTG GAGTGGGTGG 
+   2   seq2         yes    TGGGTCCGCC AGGCTCCGGG GAAGGGGCTG GAGTGCGTGG 
+   2   seq1         no     TGGGTCCGCC AGGCTCCGGG GAAGGGGCTG GAGTGGGTGG 
+   1   GL           yes    TGGGTCCGCC AGGCTCCAGG GAAGGGGCTG GAGTGGGTGG 
+
+root      1                CCAACATAAA CCAAGAT--- ---GGAAGTG AGAAATACTA 
+   1   seq3         no     CCAACATAAA CCAAGAT--- ---GGAAGTG AGAAATACTA 
+   1      2         yes    CCAACATAAA CCAAGAT--- ---GGAAGTG AGAAATCCTA 
+   2   seq2         no     CCAACATAAA CCAAGAT--- ---GGAAGTG AGAAATCCTA 
+   2   seq1         no     CCAACATAAA CCAAGAT--- ---GGAAGTG AGAAATCCTA 
+   1   GL           yes    CCAACATAAA GCAAGAT--- ---GGAAGTG AGAAATACTA 
+
+root      1                TTTGGACTCT GTGAAG---G GCCGATTCAC CATCTCCAGA 
+   1   seq3         no     TTTGGACTCT GTGAAG---G GCCGATTCAC CATCTCCAGA 
+   1      2         no     TTTGGACTCT GTGAAG---G GCCGATTCAC CATCTCCAGA 
+   2   seq2         no     TTTGGACTCT GTGAAG---G GCCGATTCAC CATCTCCAGA 
+   2   seq1         no     TTTGGACTCT GTGAAG---G GCCGATTCAC CATCTCCAGA 
+   1   GL           yes    TGTGGACTCT GTGAAG---G GCCGATTCAC CATCTCCAGA 
+
+root      1                GACAACGCCA AGAACTCACT ATATCTGCAA ATGAACAGCC 
+   1   seq3         no     GACAACGCCA AGAACTCACT ATATCTGCAA ATGAACAGCC 
+   1      2         no     GACAACGCCA AGAACTCACT ATATCTGCAA ATGAACAGCC 
+   2   seq2         no     GACAACGCCA AGAACTCACT ATATCTGCAA ATGAACAGCC 
+   2   seq1         no     GACAACGCCA AGAACTCACT ATATCTGCAA ATGAACAGCC 
+   1   GL           yes    GACAACGCCA AGAACTCACT GTATCTGCAA ATGAACAGCC 
+
+root      1                TGAGAGCCGA GGACACGGCT GTCTATTACT GTTCGAGAGG 
+   1   seq3         no     TGAGAGCCGA GGACACGGCT GTCTATTACT GTTCGAGAGG 
+   1      2         no     TGAGAGCCGA GGACACGGCT GTCTATTACT GTTCGAGAGG 
+   2   seq2         no     TGAGAGCCGA GGACACGGCT GTCTATTACT GTTCGAGAGG 
+   2   seq1         no     TGAGAGCCGA GGACACGGCT GTCTATTACT GTTCGAGAGG 
+   1   GL           yes    TGAGAGCCGA GGACACGGCT GTGTATTACT GTGCGAGAG- 
+
+root      1                GGTCTTAAAC GTAGCAGCCC GGGGTTTGAG GTACTTTGAC 
+   1   seq3         no     GGTCTTAAAC GTAGCAGCCC GGGGTTTGAG GTACTTTGAC 
+   1      2         no     GGTCTTAAAC GTAGCAGCCC GGGGTTTGAG GTACTTTGAC 
+   2   seq2         no     GGTCTTAAAC GTAGCAGCCC GGGGTTTGAG GTACTTTGAC 
+   2   seq1         no     GGTCTTAAAC GTAGCAGCCC GGGGTTTGAG GTACTTTGAC 
+   1   GL           yes    ---------- ---------- ---------- -TACTTTGAC 
+
+root      1                TACTGGGGCC AGGGAACCCT GGTCACCGTC TCCTCAG
+   1   seq3         no     TACTGGGGCC AGGGAACCCT GGTCACCGTC TCCTCAG
+   1      2         no     TACTGGGGCC AGGGAACCCT GGTCACCGTC TCCTCAG
+   2   seq2         no     TACTGGGGCC AGGGAACCCT GGTCACCGTC TCCTCAG
+   2   seq1         no     TACTGGGGCC AGGGAACCCT GGTCACCGTC TCCTCAG
+   1   GL           no     TACTGGGGCC AGGGAACCCT GGTCACCGTC TCCTCAG
+
+

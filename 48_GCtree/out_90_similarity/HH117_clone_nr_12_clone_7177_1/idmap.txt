@@ -1,0 +1,4 @@
+GL,
+seq1,sequence_1:sequence_2:sequence_3:sequence_4:sequence_5:sequence_6:sequence_9:sequence_10:sequence_11:sequence_12:sequence_13:sequence_14
+seq2,sequence_7
+seq3,sequence_8

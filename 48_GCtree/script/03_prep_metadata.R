@@ -36,7 +36,7 @@ fasta_files <- list.files(fasta_path)
 #   "Unconventional_Bcells"      = 6
 # )
 
-clone_nrs <- 1:10
+clone_nrs <- 2:20
 
 for (HH in patients){
   
