@@ -20,7 +20,7 @@ patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 1)) %>% unl
 patients
 
 # Prep output
-outdir = glue("45_immcantation/plot/18_90_similarity/08_clonal_sharing/")
+outdir = glue("45_immcantation/plot/18_90_similarity/09_clonal_sharing_largest_clone_removed/")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # Distance between follicles 
@@ -50,6 +50,15 @@ large_crc_clone <- df_both %>%
   count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
   head(1) %>% 
   pull(clone_subgroup_id_90_similarity)
+
+# Remove largest clone from patient HH119
+df_both <- df_both %>% 
+  filter(
+    !(patient_id == "HH119" & clone_subgroup_id_90_similarity == large_crc_clone)
+    # patient_id == "HH119"
+  ) 
+
+# patients <- df_both$patient_id %>% unique()
 
 for (n_min_cells in c(1, 2)){
   
@@ -155,19 +164,13 @@ for (n_min_cells in c(1, 2)){
       width = 0.4
     ) + 
     theme_bw() +
-    scale_y_break(c(100, 7050), scales = 1/4) +
+    # scale_y_break(c(100, 7050), scales = 1/4) +
+    # facet_wrap(vars(patient_id)) +
     scale_x_continuous(
-      breaks = scales::breaks_width(5), 
+      breaks = 1:10,
+      # limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
+      expand = c(0.05, 0),
       minor_breaks = scales::breaks_width(1)
-    ) +
-    scale_y_continuous(
-      breaks = scales::breaks_width(20),
-      minor_breaks = scales::breaks_width(10)
-    ) +
-    theme(
-      axis.text.y.right = element_blank(),
-      axis.ticks.y.right = element_blank(),
-      axis.line.y.right = element_blank()
     ) + 
     labs(
       color = "Patient ID",
@@ -467,7 +470,7 @@ for (HH in patients){
     manual_ADT_ID = names(n_shared_follicles),
     n_shared_follicles = as.integer(n_shared_follicles)
   )
-  
+
   # Total GC B cells per follicle (same filtering as the rest of the pipeline)
   df_follicle_cells <- df_both %>% 
     filter(
@@ -491,7 +494,7 @@ for (HH in patients){
       minor_breaks = scales::breaks_width(10)
     ) + 
     labs(
-      title = glue("{HH}: Clonal sharing degree VS follicle size"),
+      title = glue("{HH}: Clonal sharing degree VS follicle size - largest CRC clone removed"),
       subtitle = "At least 2 cells per follicle",
       x = "Total N GC B cells in follicle",
       y = "N follicles sharing \u2265 1 clone with this follicle"
@@ -583,7 +586,7 @@ for (HH in patients){
     geom_point(position = position_jitterdodge(jitter.width = 0, dodge.width = 0.75), alpha = 0.5) + 
     theme_bw() + 
     labs(
-      title = glue("{HH}: Pairwise distance and N shared clones between follicles"),  
+      title = glue("{HH}: Pairwise distance and N shared clones between follicles"), 
       x = "Distance between pairs of follicles",
       y = "N shared clones between pairs of follciles"
     )
@@ -591,6 +594,5 @@ for (HH in patients){
   ggsave(glue("{outdir}/{HH}_pairwise_clonal_sharing_follicles_VS_distance.png"), width = 8, height = 8)
 
 }
-
 
 

@@ -55,6 +55,9 @@ top_GC_clones <- lapply(patients, function(HH) {
 
 clone_nrs <- 1:10
 
+# prep seq name dir 
+seq_dir <- list()
+
 for (HH in patients){
   
   # HH <- "HH117"
@@ -88,6 +91,12 @@ for (HH in patients){
     seqs_fasta <- DNAStringSet(seqs)
     names(seqs_fasta) <- paste0("sequence_", 1:length(seqs_fasta))
     
+    # Export seq_dir
+    seq_dir_tmp <- seqs
+    seq_dir_tmp <- seq_dir_tmp %>% str_replace_all("-", "\\.")
+    names(seq_dir_tmp) <- names(seqs_fasta)
+    seq_dir[[glue("{HH}_clone_nr_{clone_nr}_clone_{clone}")]] <- seq_dir_tmp
+    
     # Convert germline sequence into fasta format and name the sequence "GL"
     GL_fasta <- DNAStringSet(GL)
     names(GL_fasta) <- "GL"
@@ -105,9 +114,16 @@ for (HH in patients){
     outdir <- glue("48_GCtree/fasta/{version}")
     dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
     writeXStringSet(final_fasta, filepath = glue("{outdir}/{HH}_clone_nr_{clone_nr}_clone_{clone}.fasta"))
+
     
   }
   
 }
+
+
+saveRDS(seq_dir, "48_GCtree/out_90_similarity/rds/seq_dir.rds")
+
+
+
 
 
