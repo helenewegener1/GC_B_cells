@@ -1,0 +1,17 @@
+seq_unique,seq_name,L1_annotation,c_call,sample_clean_fol,L1_annotation_int,c_call_int,sample_clean_fol_int
+seq1,sequence_1:sequence_7:sequence_10:sequence_17:sequence_26:sequence_43:sequence_58:sequence_77,PCs,IGHA2,HH119-SI-MILF:HH119-SILP,1,2,2
+seq10,sequence_34:sequence_48,PCs,IGHA2,HH119-SILP,1,2,1
+seq11,sequence_45,PCs,IGHA1,HH119-SILP,1,1,1
+seq12,sequence_50,PCs,IGHA2,HH119-SILP,1,2,1
+seq13,sequence_59,PCs,IGHA2,HH119-SILP,1,2,1
+seq14,sequence_67,PCs,IGHA2,HH119-SILP,1,2,1
+seq15,sequence_72,PCs,IGHA2,HH119-SILP,1,2,1
+seq16,sequence_78,PCs,IGHA2,HH119-SILP,1,2,1
+seq2,sequence_2:sequence_4:sequence_13:sequence_15:sequence_19:sequence_20:sequence_22:sequence_23:sequence_24:sequence_29:sequence_30:sequence_32:sequence_33:sequence_35:sequence_37:sequence_39:sequence_41:sequence_42:sequence_46:sequence_47:sequence_52:sequence_54:sequence_56:sequence_57:sequence_60:sequence_61:sequence_63:sequence_64:sequence_65:sequence_66:sequence_69:sequence_70:sequence_75:sequence_76,PCs,IGHA2,HH119-SILP,1,2,1
+seq3,sequence_3,PCs,IGHA2,HH119-SILP,1,2,1
+seq4,sequence_5:sequence_6:sequence_9:sequence_11:sequence_12:sequence_25:sequence_31:sequence_36:sequence_49:sequence_51:sequence_53:sequence_62,PCs,IGHA2,HH119-SILP,1,2,1
+seq5,sequence_8:sequence_18,PCs,IGHA2,HH119-SILP,1,2,1
+seq6,sequence_14:sequence_27:sequence_38:sequence_40:sequence_44:sequence_68:sequence_71:sequence_73:sequence_74,PCs,IGHA2,HH119-SILP,1,2,1
+seq7,sequence_16,PCs,IGHA2,HH119-SILP,1,2,1
+seq8,sequence_21:sequence_55,PCs,IGHA2,HH119-SILP,1,2,1
+seq9,sequence_28,PCs,IGHA2,HH119-SILP,1,2,1

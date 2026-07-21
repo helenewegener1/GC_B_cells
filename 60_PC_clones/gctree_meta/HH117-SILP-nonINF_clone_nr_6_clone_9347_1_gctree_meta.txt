@@ -1,0 +1,9 @@
+seq_unique,seq_name,L1_annotation,c_call,sample_clean_fol,L1_annotation_int,c_call_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2:sequence_3:sequence_5:sequence_6:sequence_8:sequence_9:sequence_10:sequence_11:sequence_13:sequence_14:sequence_15:sequence_16:sequence_17:sequence_19:sequence_21:sequence_23:sequence_26:sequence_27:sequence_29:sequence_30:sequence_34:sequence_36:sequence_37:sequence_38:sequence_40:sequence_41:sequence_42,PCs,IGHA1,HH117-SI-MILF-INF:HH117-SILP-nonINF:HH117-SI-MILF-nonINF:HH117-SILP-INF,1,1,3
+seq2,sequence_4,PCs,IGHA1,HH117-SI-MILF-nonINF,1,1,4
+seq3,sequence_7:sequence_20:sequence_22:sequence_28:sequence_35:sequence_39,PCs,IGHA1,HH117-SILP-nonINF,1,1,2
+seq4,sequence_12:sequence_18:sequence_25,PCs,IGHA1,HH117-SILP-INF:HH117-SILP-nonINF,1,1,1
+seq5,sequence_24,PCs,IGHA1,HH117-SILP-nonINF,1,1,2
+seq6,sequence_31,PCs,IGHA1,HH117-SILP-nonINF,1,1,2
+seq7,sequence_32,PCs,IGHA1,HH117-SILP-nonINF,1,1,2
+seq8,sequence_33,PCs,IGHA1,HH117-SILP-nonINF,1,1,2
