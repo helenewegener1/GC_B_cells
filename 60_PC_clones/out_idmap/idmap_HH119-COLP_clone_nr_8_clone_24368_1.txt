@@ -1,0 +1,10 @@
+GL,
+seq1,sequence_1:sequence_22
+seq2,sequence_2:sequence_7:sequence_10:sequence_11:sequence_14:sequence_23:sequence_25
+seq3,sequence_3
+seq4,sequence_4:sequence_5:sequence_8:sequence_9:sequence_12:sequence_13:sequence_15:sequence_16:sequence_17:sequence_18:sequence_20:sequence_21:sequence_24:sequence_27
+seq5,sequence_6:sequence_19
+seq6,sequence_26
+seq7,sequence_28
+seq8,sequence_29:sequence_31
+seq9,sequence_30

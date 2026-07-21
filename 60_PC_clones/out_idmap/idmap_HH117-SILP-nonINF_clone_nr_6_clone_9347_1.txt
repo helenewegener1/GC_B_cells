@@ -1,0 +1,9 @@
+GL,
+seq1,sequence_1:sequence_2:sequence_3:sequence_5:sequence_6:sequence_8:sequence_9:sequence_10:sequence_11:sequence_13:sequence_14:sequence_15:sequence_16:sequence_17:sequence_19:sequence_21:sequence_23:sequence_26:sequence_27:sequence_29:sequence_30:sequence_34:sequence_36:sequence_37:sequence_38:sequence_40:sequence_41:sequence_42
+seq2,sequence_4
+seq3,sequence_7:sequence_20:sequence_22:sequence_28:sequence_35:sequence_39
+seq4,sequence_12:sequence_18:sequence_25
+seq5,sequence_24
+seq6,sequence_31
+seq7,sequence_32
+seq8,sequence_33
