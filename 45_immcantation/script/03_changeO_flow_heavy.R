@@ -13,6 +13,7 @@ library(patchwork)
 library(forcats)
 library(glue)
 library(stringr)
+library(wesanderson)
 
 packageVersion("airr")
 packageVersion("alakazam")
@@ -21,6 +22,8 @@ packageVersion("shazam")
 
 # Following this Immcantation flow:
 # https://immcantation.readthedocs.io/en/latest/getting_started/10x_tutorial.html
+
+
 
 # ------------------------------------------------------------------------------
 # Get sample names
@@ -141,12 +144,16 @@ cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
 cat(paste("HH117:", nrow(bcr_data_qc$HH117), "sequences\n"))
 cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
 
+
 # ------------------------------------------------------------------------------
 # Add cell type annotation 
 # ------------------------------------------------------------------------------
 
 seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
 patients <- names(bcr_data_qc)
+
+seurat_integrated[[]] %>% filter(patient == "HH117") %>% nrow()
+seurat_integrated[[]] %>% filter(patient == "HH119") %>% nrow()
 
 # Filter cells based on multiple heavy chain
 bcr_data_qc_annot <- lapply(patients, function(HH) {
@@ -288,6 +295,37 @@ cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
 # Rows in the data after subsetting with seurat object  
 cat(paste("HH117:", nrow(bcr_data_qc_annot$HH117), "sequences\n"))
 cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
+
+# ------------------------------------------------------------------------------
+# BCR availability stats
+# ------------------------------------------------------------------------------
+
+df_stats <- data.frame(
+  patient = c("HH117", "HH119"),
+  bcr_raw = c(nrow(bcr_data$HH117), nrow(bcr_data$HH119)),
+  bcr_qc = c(nrow(bcr_data_qc$HH117), nrow(bcr_data_qc$HH119)),
+  seurat_cells = c(seurat_integrated[[]] %>% filter(patient == "HH117") %>% nrow(), seurat_integrated[[]] %>% filter(patient == "HH119") %>% nrow()),
+  bcr_qc_annot = c(nrow(bcr_data_qc_annot$HH117), nrow(bcr_data_qc_annot$HH119))
+) %>% 
+  pivot_longer(cols = c("seurat_cells", "bcr_raw", "bcr_qc", "bcr_qc_annot")) %>% 
+  mutate(
+    name = factor(name, levels = c("seurat_cells", "bcr_raw", "bcr_qc", "bcr_qc_annot"))
+  )
+
+df_stats %>% 
+  ggplot(aes(x = patient, y = value, fill = name)) + 
+  geom_col(position = "dodge") + 
+  theme_bw() + 
+  scale_fill_manual(values = wes_palette("Royal1")) + 
+  labs(
+    title = "BCR availability stats", 
+    x = "Patient ID", 
+    y = "Count", 
+    fill = "Fitlering"
+  ) 
+
+ggsave("45_immcantation/plot/bcr_availability_barplot.png")
+  
 
 # ------------------------------------------------------------------------------
 # Export bcr_data_qc_annot
