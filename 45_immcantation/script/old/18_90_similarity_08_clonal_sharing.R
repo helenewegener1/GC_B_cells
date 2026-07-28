@@ -13,16 +13,14 @@ source("10_broad_annotation/script/color_palette.R")
 # Load data
 # ------------------------------------------------------------------------------
 
-# TODO: c_call_grouped --> c_call_grouped_grouped
-
 rds_files <- list.files("45_immcantation/out/rds") 
-resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
+resolve_LC_files <- grep("resolve_LC_3_definitions", rds_files, value = TRUE)
 
-patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
+patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 1)) %>% unlist()
 patients
 
 # Prep output
-outdir = glue("45_immcantation/plot/13_clonal_sharing/")
+outdir = glue("45_immcantation/plot/18_90_similarity/08_clonal_sharing/")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # Distance between follicles 
@@ -38,7 +36,7 @@ fol_distances_list <- lapply(
 
 # Load both patients
 df_both <- lapply(patients, function(HH) {
-  readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
+  readRDS(glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds")) %>%
     filter(
       locus == "IGH"
       # !is.na(manual_ADT_full_ID)
@@ -239,7 +237,7 @@ df_n_fol <- df_both %>%
   filter(
     L1_annotation == "GC_B_cells",
     !is.na(manual_ADT_full_ID),
-    !is.na(c_call_grouped)
+    !is.na(c_call)
   ) %>% 
   group_by(clone_subgroup_id_90_similarity, patient_id) %>% 
   count(manual_ADT_full_ID) %>% 
@@ -257,7 +255,7 @@ df_shared_clones %>% filter(patient_id == "HH117" & clone_subgroup_id_90_similar
 df_both %>% filter(
   L1_annotation == "GC_B_cells",
   !is.na(manual_ADT_full_ID), 
-  !is.na(c_call_grouped)
+  !is.na(c_call)
 ) %>% filter(patient == "HH117" & clone_subgroup_id_90_similarity == "2018_1") %>% count(manual_ADT_ID)
 
 
@@ -270,7 +268,7 @@ build_isotype_pie_data <- function(df_both, df_shared_clones, cell_filter = TRUE
   df_filtered <- df_both %>% filter(
     L1_annotation == "GC_B_cells",
     !is.na(manual_ADT_full_ID), 
-    !is.na(c_call_grouped)
+    !is.na(c_call)
   ) 
   
   # ---- ordered site lookup per patient, plus a trailing "Total" column ----
@@ -308,14 +306,14 @@ build_isotype_pie_data <- function(df_both, df_shared_clones, cell_filter = TRUE
       qualifying_follicles %>% select(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID), 
       by = c("patient_id", "clone_subgroup_id_90_similarity", "manual_ADT_full_ID")
     ) %>% 
-    count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, c_call_grouped)
+    count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, c_call)
   # counts_by_site <- df_filtered %>% 
   #   inner_join(df_shared_clones, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
-  #   count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, c_call_grouped) 
+  #   count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, c_call) 
   
   # ---- counts per clone summed across ALL sites -> the "Total" column ----
   counts_total <- counts_by_site %>% 
-    group_by(patient_id, clone_subgroup_id_90_similarity, c_call_grouped) %>% 
+    group_by(patient_id, clone_subgroup_id_90_similarity, c_call) %>% 
     summarise(n = sum(n), .groups = "drop") %>% 
     mutate(manual_ADT_full_ID = "Combined")
   
@@ -329,13 +327,13 @@ build_isotype_pie_data <- function(df_both, df_shared_clones, cell_filter = TRUE
     mutate(y = row_number()) %>% 
     ungroup()
   
-  isotype_cols <- plot_data$c_call_grouped %>% unique() %>% na.omit() %>% as.character()
+  isotype_cols <- plot_data$c_call %>% unique() %>% na.omit() %>% as.character()
   
   pie_data <- plot_data %>% 
     left_join(clone_id_lookup, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
     pivot_wider(
       id_cols = c(patient_id, clone_subgroup_id_90_similarity, x, y),
-      names_from = c_call_grouped, 
+      names_from = c_call, 
       values_from = n, 
       values_fill = 0
     ) %>% 
@@ -370,8 +368,8 @@ make_pie_plot <- function(patient_name, dat) {
       nudge_y = -0.5
     ) +
     scale_fill_manual(
-      values = isotype_grouped_colors_custom,
-      breaks = c("IGHM/D", "IGHA1", "IGHA2", "IGHG1", "IGHG2", "IGHG3", "IGHG4", "IGHE")
+      values = isotype_colors_custom,
+      breaks = c("IGHM", "IGHD", "IGHA1", "IGHA2", "IGHG1", "IGHG2", "IGHG3", "IGHG4", "IGHE")
     ) + 
     scale_x_continuous(
       breaks = x_lookup_sub$x, 
