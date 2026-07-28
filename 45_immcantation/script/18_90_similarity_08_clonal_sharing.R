@@ -123,9 +123,15 @@ for (n_min_cells in c(1, 2)){
       position = position_nudge(x = 0.45)
     ) +
     theme_bw() + 
+    scale_y_break(c(10, 33), scales = 1/4) +
     scale_y_continuous(
-      breaks = scales::breaks_width(5),
+      breaks = scales::breaks_width(1),
       minor_breaks = scales::breaks_width(1)
+    ) + 
+    theme(
+      axis.text.y.right = element_blank(),
+      axis.ticks.y.right = element_blank(),
+      axis.line.y.right = element_blank()
     ) + 
     labs(
       x = "Patient ID",
@@ -139,30 +145,31 @@ for (n_min_cells in c(1, 2)){
   
   # Mean clonal size VS presents in N follicles
   range_fun <- function(x) {
-    data.frame(y = mean(x), ymin = min(x), ymax = max(x))
+    data.frame(y = median(x), ymin = min(x), ymax = max(x))
   }
   
   df_plot %>%
-    select(patient_id, mean_clone_size, n_follicles) %>%
+    select(patient_id, median_clone_size, n_follicles) %>%
     distinct() %>% 
-    ggplot(aes(x = n_follicles, y = mean_clone_size, color = patient_id)) +
-    geom_point(size = 2.5, alpha = 0.7) +
+    ggplot(aes(x = n_follicles, y = median_clone_size, color = patient_id)) +
+    geom_point(size = 2.5, alpha = 0.7, position = position_dodge(width = 0.5)) +
     stat_summary(
       data = df_plot,
       aes(y = clone_size),
       fun.data = range_fun,
       geom = "errorbar",
-      width = 0.4
+      width = 0.4,
+      position = position_dodge(width = 0.5)
     ) + 
     theme_bw() +
-    scale_y_break(c(100, 7050), scales = 1/4) +
     scale_x_continuous(
       breaks = scales::breaks_width(5), 
       minor_breaks = scales::breaks_width(1)
     ) +
+    scale_y_break(c(100, 7075), scales = 1/4) +
     scale_y_continuous(
-      breaks = scales::breaks_width(20),
-      minor_breaks = scales::breaks_width(10)
+      breaks = scales::breaks_width(10),
+      minor_breaks = scales::breaks_width(5)
     ) +
     theme(
       axis.text.y.right = element_blank(),
@@ -172,8 +179,8 @@ for (n_min_cells in c(1, 2)){
     labs(
       color = "Patient ID",
       x = "N follicles",
-      y = "Mean clone size",
-      title = "Mean clonal size VS presents in N follicles",
+      y = "Median clone size",
+      title = "Median clonal size VS presents in N follicles",
       subtitle = glue("For each clone (GC B cells), how many follicles is it present in (at least {n_min_cells} cells)")
     )
   
@@ -223,57 +230,95 @@ for (n_min_cells in c(1, 2)){
 # Different isotypes in different follicles? (GC B cells)
 # ------------------------------------------------------------------------------
 
+n_min_cells <- 2
+
+# Clones are present in N follicles  
+df_n_fol <- df_both %>% 
+  filter(
+    L1_annotation == "GC_B_cells",
+    !is.na(manual_ADT_full_ID),
+    !is.na(c_call)
+  ) %>% 
+  group_by(clone_subgroup_id_90_similarity, patient_id) %>% 
+  count(manual_ADT_full_ID) %>% 
+  filter(n >= n_min_cells) %>%
+  count(manual_ADT_full_ID) %>% 
+  count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
+  dplyr::rename(n_follicles = n) %>% 
+  ungroup()
+
 df_shared_clones <- df_n_fol %>% filter(n_follicles > 1)
 
+# CHECK 
+df_shared_clones %>% filter(patient_id == "HH117" & clone_subgroup_id_90_similarity == "2018_1")
+
+df_both %>% filter(
+  L1_annotation == "GC_B_cells",
+  !is.na(manual_ADT_full_ID), 
+  !is.na(c_call)
+) %>% filter(patient == "HH117" & clone_subgroup_id_90_similarity == "2018_1") %>% count(manual_ADT_ID)
+
+
 # ------------------------------------------------------------------------------
-# Build the pie-chart data for a given cell population (all cells, GC B cells, ...)
+# Build the pie-chart data for GC B cells
 # ------------------------------------------------------------------------------
 build_isotype_pie_data <- function(df_both, df_shared_clones, cell_filter = TRUE) {
   
-  df_filtered <- df_both %>% filter({{ cell_filter }})
+  # df_filtered <- df_both %>% filter({{ cell_filter }})
+  df_filtered <- df_both %>% filter(
+    L1_annotation == "GC_B_cells",
+    !is.na(manual_ADT_full_ID), 
+    !is.na(c_call)
+  ) 
   
   # ---- ordered site lookup per patient, plus a trailing "Total" column ----
   site_lookup <- df_filtered %>% 
-    distinct(patient_id, sample_clean_fol) %>% 
+    distinct(patient_id, manual_ADT_full_ID) %>% 
     mutate(
-      follicle_num = str_extract(sample_clean_fol, "(?<=Fol-)\\d+") %>% as.integer(),
-      is_follicle = !is.na(follicle_num),
-      sample_clean_fol_plot = sample_clean_fol %>% 
-        str_remove("HH11\\d+-") %>% 
-        str_remove("SI-PP_|SI-PP-nonINF_")
+      # follicle_num = str_extract(sample_clean_fol, "(?<=Fol-)\\d+") %>% as.integer(),
+      follicle_num = str_split_i(manual_ADT_full_ID, "-", 2) %>% as.integer(),
+      is_follicle = !is.na(follicle_num)
+      # sample_clean_fol_plot = sample_clean_fol %>%
+      #   str_remove("HH11\\d+-") %>%
+      #   str_remove("SI-PP_|SI-PP-nonINF_")
     ) %>% 
-    arrange(patient_id, is_follicle, follicle_num, sample_clean_fol) %>% 
+    arrange(patient_id, is_follicle, follicle_num, manual_ADT_full_ID) %>% 
     group_by(patient_id) %>% 
     mutate(x = row_number()) %>% 
     ungroup() %>% 
-    select(patient_id, sample_clean_fol_plot, x)
+    select(patient_id, manual_ADT_full_ID, x)
   
   total_lookup <- site_lookup %>% 
     group_by(patient_id) %>% 
     summarise(x = max(x) + 1, .groups = "drop") %>% 
-    mutate(sample_clean_fol_plot = "Combined")
+    mutate(manual_ADT_full_ID = "Combined")
   
   site_lookup <- bind_rows(site_lookup, total_lookup)
   
+  qualifying_follicles <- df_filtered %>% 
+    count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, name = "n_cells_total") %>% 
+    filter(n_cells_total >= n_min_cells)
+  
   # ---- counts per clone x site x isotype ----
   counts_by_site <- df_filtered %>% 
-    filter(!is.na(c_call)) %>% 
     inner_join(df_shared_clones, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
-    mutate(
-      sample_clean_fol_plot = sample_clean_fol %>% 
-        str_remove("HH11\\d+-") %>% 
-        str_remove("SI-PP_|SI-PP-nonINF_")
+    inner_join(
+      qualifying_follicles %>% select(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID), 
+      by = c("patient_id", "clone_subgroup_id_90_similarity", "manual_ADT_full_ID")
     ) %>% 
-    count(patient_id, clone_subgroup_id_90_similarity, sample_clean_fol_plot, c_call)
+    count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, c_call)
+  # counts_by_site <- df_filtered %>% 
+  #   inner_join(df_shared_clones, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
+  #   count(patient_id, clone_subgroup_id_90_similarity, manual_ADT_full_ID, c_call) 
   
   # ---- counts per clone summed across ALL sites -> the "Total" column ----
   counts_total <- counts_by_site %>% 
     group_by(patient_id, clone_subgroup_id_90_similarity, c_call) %>% 
     summarise(n = sum(n), .groups = "drop") %>% 
-    mutate(sample_clean_fol_plot = "Combined")
+    mutate(manual_ADT_full_ID = "Combined")
   
   plot_data <- bind_rows(counts_by_site, counts_total) %>% 
-    left_join(site_lookup, by = c("patient_id", "sample_clean_fol_plot"))
+    left_join(site_lookup, by = c("patient_id", "manual_ADT_full_ID"))
   
   clone_id_lookup <- plot_data %>% 
     distinct(patient_id, clone_subgroup_id_90_similarity) %>% 
@@ -306,7 +351,7 @@ make_pie_plot <- function(patient_name, dat) {
   lookup_sub   <- dat$clone_id_lookup %>% filter(patient_id == patient_name)
   x_lookup_sub <- dat$site_lookup     %>% filter(patient_id == patient_name)
   
-  last_real_x <- x_lookup_sub %>% filter(sample_clean_fol_plot != "Combined") %>% pull(x) %>% max()
+  last_real_x <- x_lookup_sub %>% filter(manual_ADT_full_ID != "Combined") %>% pull(x) %>% max()
   
   ggplot() + 
     geom_vline(xintercept = last_real_x + 0.5, color = "grey30") +
@@ -328,7 +373,7 @@ make_pie_plot <- function(patient_name, dat) {
     ) + 
     scale_x_continuous(
       breaks = x_lookup_sub$x, 
-      labels = x_lookup_sub$sample_clean_fol_plot,
+      labels = x_lookup_sub$manual_ADT_full_ID,
       minor_breaks = scales::breaks_width(1)
     ) + 
     scale_y_continuous(
@@ -348,7 +393,7 @@ make_pie_plot <- function(patient_name, dat) {
 plot_isotype_pies <- function(dat, filename_suffix, title_suffix) {
   
   width <- 12
-  height <- 10
+  height <- 8
   
   for (HH in names(patient_names)) {
     
@@ -357,7 +402,10 @@ plot_isotype_pies <- function(dat, filename_suffix, title_suffix) {
     # title_suffix <- "bla"
     
     p <- make_pie_plot(HH, dat) + 
-      labs(title = glue("{HH}: Isotype usage in follicle-shared clones - {title_suffix}"))
+      labs(
+        title = glue("{HH}: Isotype usage in follicle-shared clones - {title_suffix}"),
+        subtitle = glue("Clones shown are present in ≥2 follicles, each with ≥{n_min_cells} GC B cells with an annotated isotype")
+      )
     
     plot_width <- if (HH == "HH119") width + 4 else width
     plot_height <- if (HH == "HH119") height + 4 else height
@@ -372,8 +420,8 @@ plot_isotype_pies <- function(dat, filename_suffix, title_suffix) {
 # ------------------------------------------------------------------------------
 # Run for both populations
 # ------------------------------------------------------------------------------
-dat_all <- build_isotype_pie_data(df_both, df_shared_clones, cell_filter = TRUE)
-plot_isotype_pies(dat_all, "all_cells", "all cells")
+# dat_all <- build_isotype_pie_data(df_both, df_shared_clones, cell_filter = TRUE)
+# plot_isotype_pies(dat_all, "all_cells", "all cells")
 
 dat_gc <- build_isotype_pie_data(df_both, df_shared_clones, cell_filter = L1_annotation == "GC_B_cells")
 plot_isotype_pies(dat_gc, "GC_B_cells", "GC B cells")
@@ -390,7 +438,7 @@ plot_isotype_pies(dat_gc, "GC_B_cells", "GC B cells")
 isotype_diversity <- function(dat) {
   
   combined_x <- dat$site_lookup %>% 
-    filter(sample_clean_fol_plot == "Combined") %>% 
+    filter(manual_ADT_full_ID == "Combined") %>% 
     select(patient_id, x)
   
   dat$pie_data %>% 
@@ -517,28 +565,33 @@ for (HH in patients){
   
   follicle_breaks <- sort(unique(c(shared_full$follicle_1, shared_full$follicle_2)))
   
-  ggplot(shared_full, aes(x = follicle_1, y = follicle_2, fill = n_shared_clones)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = n_shared_clones), size = 2.5) +
-    scale_fill_viridis_c(option = "magma", direction = -1, na.value = "grey90") +
-    coord_equal() +
-    theme_bw() +
-    scale_x_continuous(
-      breaks = follicle_breaks,
-      limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
-      expand = c(0, 0),
-      minor_breaks = scales::breaks_width(1)
-    ) + 
-    scale_y_continuous(
-      breaks = follicle_breaks,
-      limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
-      expand = c(0, 0),
-      minor_breaks = scales::breaks_width(1)
-    ) + 
-    labs(
-      x = "Follicle", y = "Follicle", fill = "N shared\nclones",
-      title = glue("{HH}: Pairwise clonal sharing between follicles")
-    )
+  shared_full %>% 
+    mutate(
+      n_shared_clones = ifelse(n_shared_clones == 0, NA, n_shared_clones)
+    ) %>% 
+    ggplot(aes(x = follicle_1, y = follicle_2, fill = n_shared_clones)) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = n_shared_clones), size = 3, color = "blue") +
+      scale_fill_viridis_c(option = "magma", direction = -1, na.value = "grey90") +
+      coord_equal() +
+      theme_bw() +
+      scale_x_continuous(
+        breaks = follicle_breaks,
+        limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
+        expand = c(0, 0),
+        minor_breaks = scales::breaks_width(1)
+      ) + 
+      scale_y_continuous(
+        breaks = follicle_breaks,
+        limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
+        expand = c(0, 0),
+        minor_breaks = scales::breaks_width(1)
+      ) + 
+      labs(
+        x = "Follicle", y = "Follicle", fill = "N shared\nclones",
+        subtitle = "Grey = 0 shared clones",
+        title = glue("{HH}: Pairwise clonal sharing between follicles")
+      )
   
   ggsave(glue("{outdir}/{HH}_pairwise_clonal_sharing_follicles.png"), width = 8, height = 8)
   
@@ -554,17 +607,20 @@ for (HH in patients){
     )
   
   fol_distances_reorder <- fol_distances_list[[HH]] %>% 
-    filter(!(str_detect(follicle_1, "_R|_L") | str_detect(follicle_2, "_R|_L"))) %>% # TODO figure out what is follicle 13 and what is follicle 15 
+    # TODO figure out what is follicle 13 and what is follicle 15 
+    filter(!(str_detect(follicle_1, "_R|_L") | str_detect(follicle_2, "_R|_L"))) %>% 
     mutate(
-      f_lo = pmin(follicle_1, follicle_2) %>% as.double(),
-      f_hi = pmax(follicle_1, follicle_2) %>% as.double()
+      follicle_1 = as.double(follicle_1),
+      follicle_2 = as.double(follicle_2),
+      f_lo = pmin(follicle_1, follicle_2),
+      f_hi = pmax(follicle_1, follicle_2)
     ) %>% 
     select(!c(follicle_1, follicle_2)) 
   
   # Join dataframes of N shared clones and distance
   shared_full_dist <- shared_full_reorder %>% 
-    left_join(fol_distances_reorder, by = c("f_lo", "f_hi")) %>% 
     select(!c(follicle_1, follicle_2)) %>% 
+    left_join(fol_distances_reorder, by = c("f_lo", "f_hi")) %>% 
     mutate(
       n_shared_clones_fct = n_shared_clones %>% as.factor()
     )
