@@ -110,5 +110,81 @@ isotype_colors_custom <- c(
   "IGHG4" = "#9E9AC8"
 )
 
+isotype_grouped_colors_custom <- c(
+  "IGHA1" = "#FF7F00",
+  "IGHA2" = "#E31A1C",
+  "IGHM/D" = "#1F78B4",
+  "IGHG1" = "#3F007D",
+  "IGHG2" = "#54278F",
+  "IGHG3" = "#756BB1",
+  "IGHG4" = "#9E9AC8"
+)
 
 
+# Sample colors 
+sample_clean_plot_colors <- c(
+    # HH117 samples
+    "HH117-SI-MILF-INF"          = "#C42030",
+    "HH117-SILP-INF"             = "#E08C20",
+    "HH117-SI-MILF-nonINF"       = "#2AAAC8",
+    "HH117-SILP-nonINF"          = "#1A6090",
+    
+    "HH117-SI-PP-nonINF_Fol-1"   = "#8855CC",
+    "HH117-SI-PP-nonINF_Fol-2"   = "#A066DD",
+    "HH117-SI-PP-nonINF_Fol-3"   = "#55CC77",
+    "HH117-SI-PP-nonINF_Fol-4"   = "#44BB66",
+    "HH117-SI-PP-nonINF_Fol-5"   = "#33AA55",
+    "HH117-SI-PP-nonINF_Fol-6"   = "#D4C420",
+    "HH117-SI-PP-nonINF_Fol-7"   = "#C4B410",
+    "HH117-SI-PP-nonINF_Fol-8"   = "#E8608A",
+    "HH117-SI-PP-nonINF_Fol-9"   = "#D85070",
+    "HH117-SI-PP-nonINF_Fol-10"  = "#EF19EC",
+    "HH117-SI-PP-nonINF_Fol-11"  = "#CC10CC",
+    "HH117-SI-PP-nonINF_Fol-12"  = "#FF8C00",
+    "HH117-SI-PP-nonINF_Fol-13"  = "#20B2AA",
+    "HH117-SI-PP-nonINF_Fol-14"  = "#10A090",
+    "HH117-SI-PP-nonINF_Fol-15"  = "#6A5ACD",
+    "HH117-SI-PP-nonINF_Fol-16"  = "#7B68EE",
+    "HH117-SI-PP-nonINF_Fol-17"  = "#228B22",
+    "HH117-SI-PP-nonINF_Fol-18"  = "#32CD32",
+    
+    # HH119 samples
+    "HH119-CO-SMILF"      = "#C42030",
+    "HH119-COLP"          = "#E08C20",
+    "HH119-SILP"          = "#1A6090",
+    "HH119-SI-MILF"       = "#2AAAC8",
+    "HH119-SI-PP_Fol-1"   = "#8855CC",
+    "HH119-SI-PP_Fol-2"   = "#A066DD",
+    "HH119-SI-PP_Fol-3"   = "#55CC77",
+    "HH119-SI-PP_Fol-4"   = "#44BB66",
+    "HH119-SI-PP_Fol-5"   = "#33AA55",
+    "HH119-SI-PP_Fol-6"   = "#D4C420",
+    "HH119-SI-PP_Fol-7"   = "#C4B410",
+    "HH119-SI-PP_Fol-8"   = "#E8608A",
+    "HH119-SI-PP_Fol-9"   = "#D85070",
+    "HH119-SI-PP_Fol-10"  = "#EF19EC",
+    "HH119-SI-PP_Fol-11"  = "#CC10CC",
+    "HH119-SI-PP_Fol-12"  = "#FF8C00",
+    "HH119-SI-PP_Fol-13"  = "#20B2AA",
+    "HH119-SI-PP_Fol-14"  = "#10A090",
+    "HH119-SI-PP_Fol-15"  = "#6A5ACD",
+    "HH119-SI-PP_Fol-16"  = "#7B68EE",
+    "HH119-SI-PP_Fol-17"  = "#228B22",
+    "HH119-SI-PP_Fol-18"  = "#32CD32",
+    "HH119-SI-PP_Fol-19"  = "#C42030",
+    "HH119-SI-PP_Fol-20"  = "#E08C20",
+    "HH119-SI-PP_Fol-21"  = "#2AAAC8",
+    "HH119-SI-PP_Fol-22"  = "#1A6090",
+    "HH119-SI-PP_Fol-23"  = "#8855CC",
+    "HH119-SI-PP_Fol-24"  = "#55CC77",
+    "HH119-SI-PP_Fol-25"  = "#D4C420",
+    "HH119-SI-PP_Fol-26"  = "#E8608A",
+    "HH119-SI-PP_Fol-27"  = "#EF19EC",
+    "HH119-SI-PP_Fol-28"  = "#FF8C00",
+    "HH119-SI-PP_Fol-29"  = "#20B2AA",
+    "HH119-SI-PP_Fol-30"  = "#6A5ACD",
+    "HH119-SI-PP_Fol-31"  = "#228B22",
+    "HH119-SI-PP_Fol-32"  = "#A066DD",
+    "HH119-SI-PP_Fol-33"  = "#44BB66",
+    "HH119-SI-PP_Fol-34"  = "#C4B410"
+  )
