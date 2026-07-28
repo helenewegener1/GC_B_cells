@@ -23,7 +23,8 @@ packageVersion("shazam")
 # Following this Immcantation flow:
 # https://immcantation.readthedocs.io/en/latest/getting_started/10x_tutorial.html
 
-
+outdir <- "45_immcantation/plot/03_change0/"
+dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # ------------------------------------------------------------------------------
 # Get sample names
@@ -54,8 +55,6 @@ bcr_data <- list(
 
 cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
 cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
-
-
 
 # ------------------------------------------------------------------------------
 # Check V/D/J gene call consistency
@@ -113,28 +112,72 @@ bcr_data$HH119$productive %>% table()
 # Handle multiple heavy chains 
 # ------------------------------------------------------------------------------
 
-# Filter cells based on multiple heavy chain
+# Visualize UMIs of multiple contigs (heavy chains)
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  
+  umi_pairs <- bcr_data[[HH]] %>% 
+    group_by(cell_id) %>% 
+    arrange(desc(umi_count), .by_group = TRUE) %>% 
+    filter(n() == 2) %>% 
+    summarise(
+      top_umi = umi_count[1], 
+      second_umi = umi_count[2],
+      ratio = umi_count[1] / umi_count[2],
+      .groups = "drop"
+    )
+  
+  ggplot(umi_pairs, aes(x = top_umi, y = second_umi, color = ratio >= 2)) + 
+    geom_jitter(alpha = 0.4, width = 0.1, height = 0.1) + 
+    scale_x_log10() + 
+    scale_y_log10() + 
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey40") + 
+    theme_bw() + 
+    labs(
+      title = glue("{HH}: Top vs second heavy chain contig UMI count"), 
+      x = "Top contig UMI (log scale)", y = "Second contig UMI (log scale)",
+      color = "Ratio ≥ 2"
+    )
+  
+  ggsave(glue("{outdir}/{HH}_two_contigs.png"))
+  
+  
+})
+
+min_second_umi_noise <- 3  # from the flat bottom band in the plot; adjust if you want it tighter/looser
+
 bcr_data_qc <- lapply(bcr_data, function(x) {
+  
+  # x <- bcr_data[["HH117"]]
   
   df <- x %>%
     group_by(cell_id) %>%
     arrange(desc(umi_count), .by_group = TRUE) %>%
     mutate(
       n_heavy = n(),
+      same_rearrangement = n_distinct(v_call, j_call, junction) == 1,
+      # only IGHM+IGHD specifically counts as benign co-expression
+      is_md_pair = n_heavy == 2 & all(c_call %in% c("IGHM", "IGHD")) & n_distinct(c_call) == 2,
       dominant = case_when(
-        n_heavy == 1 ~ TRUE,                          # only one heavy chain, keep it
-        umi_count[1] >= 2 * umi_count[2] ~ row_number() == 1,  # dominant contig has 2x UMIs
-        TRUE ~ FALSE                                  # ambiguous, drop all contigs for this cell
+        n_heavy == 1 ~ TRUE,
+        same_rearrangement & is_md_pair ~ c_call == "IGHM",
+        # everything else with 2 heavy contigs (different rearrangements, or same rearrangement but not IGHM/IGHD) -> same ratio/noise logic
+        n_heavy == 2 & umi_count[2] <= min_second_umi_noise ~ row_number() == 1,
+        n_heavy == 2 & umi_count[2] > min_second_umi_noise & umi_count[1] >= 2 * umi_count[2] ~ row_number() == 1,
+        TRUE ~ FALSE
       )
     ) %>%
     filter(dominant) %>%
-    select(-n_heavy, -dominant) %>%
-    ungroup()
+    select(-n_heavy, -same_rearrangement, -is_md_pair, -dominant) %>%
+    ungroup() %>% 
+    mutate(
+      c_call_grouped = if_else(c_call %in% c("IGHM", "IGHD"), "IGHM/D", c_call)
+    )
   
   return(df)
   
-}
-)
+})
 
 # Rows in the data before filtering 
 cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
@@ -143,7 +186,6 @@ cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
 # Rows in the data after filtering 
 cat(paste("HH117:", nrow(bcr_data_qc$HH117), "sequences\n"))
 cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
-
 
 # ------------------------------------------------------------------------------
 # Add cell type annotation 
@@ -317,6 +359,9 @@ df_stats %>%
   geom_col(position = "dodge") + 
   theme_bw() + 
   scale_fill_manual(values = wes_palette("Royal1")) + 
+  scale_y_continuous(
+    breaks = scales::breaks_width(10000)
+  ) +
   labs(
     title = "BCR availability stats", 
     x = "Patient ID", 
@@ -324,7 +369,7 @@ df_stats %>%
     fill = "Fitlering"
   ) 
 
-ggsave("45_immcantation/plot/bcr_availability_barplot.png")
+ggsave(glue("{outdir}/bcr_availability_barplot.png"))
   
 
 # ------------------------------------------------------------------------------
@@ -334,45 +379,45 @@ ggsave("45_immcantation/plot/bcr_availability_barplot.png")
 saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
 # bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
 
-# ------------------------------------------------------------------------------
-# Summary follicles and cell types
-# ------------------------------------------------------------------------------
-
-source("10_broad_annotation/script/color_palette.R")
-patients <- names(bcr_data_qc_annot)
-
-lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  
-  bcr_data_qc_annot[[HH]] %>% 
-    ggplot(aes(x = sample_clean, fill = L1_annotation)) +
-    geom_bar() + 
-    scale_fill_manual(values = L1_colors) + 
-    theme_bw() + 
-    labs(
-      x = "", 
-      y = "Count", 
-      title = glue ("{HH}: N cells across samples")
-    ) + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
-  ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_samples.png"), width = 12, height = 7)
-  
-  bcr_data_qc_annot[[HH]] %>% 
-    filter(!is.na(manual_ADT_ID)) %>% 
-    ggplot(aes(x = manual_ADT_ID, fill = L1_annotation)) + 
-    geom_bar() + 
-    scale_fill_manual(values = L1_colors) + 
-    theme_bw() + 
-    labs(
-      x = "", 
-      y = "Count", 
-      title = glue("{HH}: N cells across follicles of SI-PP")
-    ) + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-  
-  ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_follicles.png"), width = 14, height = 7)
-  
-})
-
+# # ------------------------------------------------------------------------------
+# # Summary follicles and cell types
+# # ------------------------------------------------------------------------------
+# 
+# source("10_broad_annotation/script/color_palette.R")
+# patients <- names(bcr_data_qc_annot)
+# 
+# lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   
+#   bcr_data_qc_annot[[HH]] %>% 
+#     ggplot(aes(x = sample_clean, fill = L1_annotation)) +
+#     geom_bar() + 
+#     scale_fill_manual(values = L1_colors) + 
+#     theme_bw() + 
+#     labs(
+#       x = "", 
+#       y = "Count", 
+#       title = glue ("{HH}: N cells across samples")
+#     ) + 
+#     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#   
+#   ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_samples.png"), width = 12, height = 7)
+#   
+#   bcr_data_qc_annot[[HH]] %>% 
+#     filter(!is.na(manual_ADT_ID)) %>% 
+#     ggplot(aes(x = manual_ADT_ID, fill = L1_annotation)) + 
+#     geom_bar() + 
+#     scale_fill_manual(values = L1_colors) + 
+#     theme_bw() + 
+#     labs(
+#       x = "", 
+#       y = "Count", 
+#       title = glue("{HH}: N cells across follicles of SI-PP")
+#     ) + 
+#     theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+#   
+#   ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_follicles.png"), width = 14, height = 7)
+#   
+# })
+# 
