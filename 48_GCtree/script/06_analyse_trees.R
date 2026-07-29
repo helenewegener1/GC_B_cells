@@ -12,7 +12,7 @@ seq_dir <- readRDS("48_GCtree/out/rds/seq_dir.rds")
 
 patients <- names(resolve_LC_list_germlined)
 
-HH <- "HH119" 
+HH <- "HH117" 
 
 n_clones_begin_list <- list(
   "HH117" = 1, 
@@ -675,8 +675,8 @@ lapply(c(10, 20), function(n_clones){
       filter(clone_subgroup_id_90_similarity == clone) %>% 
       mutate(sequence_id_gctree = names(sequence_ids)[match(sequence_alignment, sequence_ids)])
     
-    tree_file <- glue("48_GCtree/plot_90_similarity/{clone_full_name}/{clone_full_name}.inference.1.nk")
-    idmap_file <- glue("48_GCtree/out_90_similarity/{clone_full_name}/idmap.txt")
+    tree_file <- glue("48_GCtree/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
+    idmap_file <- glue("48_GCtree/out/{clone_full_name}/idmap.txt")
     
     tree <- read.tree(tree_file)
     idmap <- read_csv(idmap_file, col_names = c("node", "sequence_id"), show_col_types = FALSE) %>% 

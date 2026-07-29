@@ -2,7 +2,7 @@
 *.pdf
 *.rds
 
-*/out
+*/out/*
 !/out/README
 */table
 */fasta
@@ -45,17 +45,14 @@ tmp
 48_GCtree/script/gctree_env_local/
 
 *.svg
-*.nk
 *.p
-
-48_GCtree/out_gmm_threshold/
-48_GCtree/plot_gmm_threshold/
 
 48_GCtree/out
 48_GCtree/plot
+48_GCtree/plot/*/*.nk
 
-60_PC_clones/gctree_meta/
-
+#60_PC_clones/gctree_meta/
+#60_PC_clones/plot/*/*.nk
 
 .DS_Store
 .Rproj.user
