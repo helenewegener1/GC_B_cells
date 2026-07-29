@@ -13,8 +13,6 @@ source("10_broad_annotation/script/color_palette.R")
 # Load data
 # ------------------------------------------------------------------------------
 
-# TODO: c_call_grouped --> c_call_grouped_grouped
-
 rds_files <- list.files("45_immcantation/out/rds") 
 resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 

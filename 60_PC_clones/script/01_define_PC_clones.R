@@ -6,30 +6,8 @@ library(Biostrings)
 # Load data
 # ------------------------------------------------------------------------------
 
-# rds_files <- list.files("45_immcantation/out/rds") 
-# resolve_LC_files <- grep("resolve_LC_3_definitions", rds_files, value = TRUE)
-# 
-# patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 1)) %>% unlist()
-# patients
-
-# ------------------------------------------------------------------------------
-# Get data
-# ------------------------------------------------------------------------------
-
-# Load both patients
-# df_both <- lapply(patients, function(HH) {
-#   readRDS(glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds")) %>%
-#     filter(
-#       locus == "IGH"
-#       # !is.na(manual_ADT_full_ID)
-#     ) %>%
-#     mutate(patient = HH)
-# }) %>% setNames(patients)
-
-df_both <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
+df_both <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 patients <- names(df_both)
-
-# df_both$HH117$clone_subgroup_id_90_similarity
 
 # ------------------------------------------------------------------------------
 # Define top PC clones 
@@ -43,7 +21,7 @@ for (HH in patients){
   
   df_HH <- df_both[[HH]]
   
-  LP_sites <- grep("LP", unique(df_HH$sample_clean_fol), value = TRUE)
+  LP_sites <- grep("LP", unique(df_HH$sample_clean), value = TRUE)
   
   for (site in LP_sites){
     
@@ -51,14 +29,14 @@ for (HH in patients){
       filter(
         locus == "IGH", 
         L1_annotation == "PCs", 
-        sample_clean_fol == sym(site)
+        sample_clean == site
       ) %>% 
       dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
       head(10) %>% 
       pull(clone_subgroup_id_90_similarity)
     
     PC_clones[[site]] <- site_clones
-    
+
   }
   
 }
@@ -74,6 +52,9 @@ outdir <- glue("60_PC_clones/fasta")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 clone_nrs <- 1:10
+
+# prep seq name dir 
+seq_dir <- list()
 
 for (site in names(PC_clones)){
   
@@ -111,6 +92,12 @@ for (site in names(PC_clones)){
     seqs_fasta <- DNAStringSet(seqs)
     names(seqs_fasta) <- paste0("sequence_", 1:length(seqs_fasta))
     
+    # Export seq_dir
+    seq_dir_tmp <- seqs
+    seq_dir_tmp <- seq_dir_tmp %>% str_replace_all("-", "\\.")
+    names(seq_dir_tmp) <- names(seqs_fasta)
+    seq_dir[[glue("{HH}_clone_nr_{clone_nr}_clone_{clone}")]] <- seq_dir_tmp
+    
     # Convert germline sequence into fasta format and name the sequence "GL"
     GL_fasta <- DNAStringSet(GL)
     names(GL_fasta) <- "GL"
@@ -131,7 +118,7 @@ for (site in names(PC_clones)){
   
 }
 
-
+saveRDS(seq_dir, "60_PC_clones/out/rds/seq_dir.rds")
 
   
 

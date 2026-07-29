@@ -7,7 +7,7 @@ library(glue)
 # Load data
 # ------------------------------------------------------------------------------
 
-df_both <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
+df_both <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 dir.create(glue("60_PC_clones/gctree_meta"), recursive = TRUE)
 
 patients <- names(df_both)
@@ -49,7 +49,7 @@ for (site in LP_sites){
     clone <- str_extract(filename, "\\d+_\\d+(?=\\.fasta)")
     
     # Extract metadata
-    seqs_meta <- df_HH %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% select(L1_annotation, c_call, sample_clean_fol)
+    seqs_meta <- df_HH %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% select(L1_annotation, c_call_grouped, sample_clean_fol)
     
     # Map seq_names on meta data
     seq_names <- names(fasta)[1:length(fasta)-1]
@@ -76,7 +76,7 @@ for (site in LP_sites){
       summarise(
         seq_name = paste(seq_name, collapse = ":"),
         L1_annotation = paste(unique(L1_annotation), collapse = ":"),
-        c_call = paste(unique(c_call), collapse = ":"),
+        c_call_grouped = paste(unique(c_call_grouped), collapse = ":"),
         sample_clean_fol = paste(unique(sample_clean_fol), collapse = ":")
       ) %>% 
       # mutate(
@@ -87,16 +87,16 @@ for (site in LP_sites){
       # )
       mutate(
         L1_annotation_int = as.integer(factor(L1_annotation)),
-        c_call_int = as.integer(factor(c_call)),
+        c_call_grouped_int = as.integer(factor(c_call_grouped)),
         sample_clean_fol_int = as.integer(factor(sample_clean_fol))
       )
     
     # gctree_meta$L1_annotation %>% table()
-    # gctree_meta$c_call %>% table()
+    # gctree_meta$c_call_grouped %>% table()
     # gctree_meta$sample_clean_fol %>% table()
     
     # gctree_meta$L1_annotation_int %>% table()
-    # gctree_meta$c_call %>% table()
+    # gctree_meta$c_call_grouped %>% table()
     # gctree_meta$sample_clean_fol %>% table()
   
     
@@ -117,10 +117,10 @@ for (site in LP_sites){
     isotype_counts <- gctree_meta %>%
       select(seq_unique, seq_name) %>%       
       separate_rows(seq_name, sep = ":") %>% 
-      left_join(seqs_meta %>% select(seq_name, c_call), by = "seq_name") %>%  
-      group_by(seq_unique, c_call) %>%
+      left_join(seqs_meta %>% select(seq_name, c_call_grouped), by = "seq_name") %>%  
+      group_by(seq_unique, c_call_grouped) %>%
       summarise(count = n(), .groups = "drop") %>%
-      pivot_wider(names_from = c_call, values_from = count, values_fill = 0)
+      pivot_wider(names_from = c_call_grouped, values_from = count, values_fill = 0)
     
     write.csv(isotype_counts, glue("60_PC_clones/gctree_meta/{sample}_isotype_counts.csv"), row.names = FALSE)
     

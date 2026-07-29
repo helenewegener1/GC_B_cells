@@ -184,8 +184,6 @@ for (subset in names(B_cell_subsets)){
 outdir2 <- glue("{outdir}/N_B_cells/")
 dir.create(outdir2, recursive = TRUE, showWarnings = FALSE)
 
-meta <- readRDS("45_immcantation/out/rds/meta_4_Gina_list_90_similarity.rds")
-
 B_cell_subsets <- list(
   "all B cells" = c("GC_Bcells", "Memory_Bcells", "Naive_Bcells", "PCs", "Unconventional_Bcells"), 
   "GC B cells" = "GC_Bcells",
@@ -841,6 +839,8 @@ lapply(patients, function(HH){
   
   # HH <- "HH117"
   
+  p <- patient_names[[HH]]
+  
   # Subset data to patient, PPs and GC B cells
   df_HH <- resolve_LC_list[[HH]] %>% 
     filter(
@@ -848,38 +848,13 @@ lapply(patients, function(HH){
     ) %>% 
     mutate(
       fol_plot = str_split_i(sample_clean_fol, "_", 2)
+    ) %>% 
+    filter(
       !is.na(manual_ADT_ID), 
       L1_annotation == "GC_B_cells",
       !is.na(c_call_grouped)
-    ) %>% 
-    ggplot(aes(x = manual_ADT_ID_plot, fill = c_call_grouped)) + 
-    geom_bar(position = "fill") + 
-    geom_text(
-      aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
-    ) + 
-    scale_fill_manual(values = isotype_grouped_colors_custom) +
-    scale_y_continuous(labels = scales::percent) +
-    scale_x_continuous(
-      breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-      limits = c(0.5, NA),
-      expand = c(0, 0.5)
-    ) + 
-    theme_classic() +
-    labs(
-      x = "Follicle number", 
-      y = "Frequency", 
-      title = glue("{p}\nGC B cells from Peyer's patch follicles - Largest clones removed"),
-      # title = glue("{p}\nGC B cells from Peyer's patch follicles - Two largest clones removed"),
-      fill = "Isotype"
-    ) + 
-    theme(
-      plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
-      axis.title = element_text(size = 20),
-      axis.text = element_text(size = 16),
-      legend.title = element_text(size = 20),
-      legend.text = element_text(size = 16)
     )
-
+  
   # ------------------------------------------------------------------------------
   # Identify top 15 shared clones (present in >1 follicle), by total cell count
   # ------------------------------------------------------------------------------
@@ -913,7 +888,7 @@ lapply(patients, function(HH){
     )
   
   # ------------------------------------------------------------------------------
-  # Circle packing (same as before, now carrying clone_color_group through)
+  # Circle packing (clones packed within each follicle blob)
   # ------------------------------------------------------------------------------
   
   all_circles <- data.frame()

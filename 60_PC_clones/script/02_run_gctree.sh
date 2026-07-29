@@ -18,46 +18,46 @@ PLOT_DIR=${WD}/plot
 # sample_list=$(ls $DATA_DIR | cut -d "." -f1)
 sample_list=(
   
-  # HH117-SILP-INF_clone_nr_10_clone_718_1      
-  # HH117-SILP-INF_clone_nr_1_clone_8985_1      
-  # HH117-SILP-INF_clone_nr_2_clone_455_1     
-  # HH117-SILP-INF_clone_nr_3_clone_6469_1      
-  # HH117-SILP-INF_clone_nr_4_clone_9677_1      
-  # HH117-SILP-INF_clone_nr_5_clone_6896_1      
-  # HH117-SILP-INF_clone_nr_6_clone_7587_1      
-  # HH117-SILP-INF_clone_nr_7_clone_2275_1      
-  # HH117-SILP-INF_clone_nr_8_clone_24_1    
-  # HH117-SILP-INF_clone_nr_9_clone_9150_1 
-  # HH117-SILP-nonINF_clone_nr_10_clone_8985_1
-  # HH117-SILP-nonINF_clone_nr_1_clone_6469_1 
-  # HH117-SILP-nonINF_clone_nr_2_clone_8879_1 
-  # HH117-SILP-nonINF_clone_nr_3_clone_455_1 
-  # HH117-SILP-nonINF_clone_nr_4_clone_8700_1 
-  # HH117-SILP-nonINF_clone_nr_5_clone_9624_1 
-  # # HH117-SILP-nonINF_clone_nr_6_clone_9347_1 
-  # HH117-SILP-nonINF_clone_nr_7_clone_9677_1 
-  # HH117-SILP-nonINF_clone_nr_8_clone_6961_1 
-  # # HH117-SILP-nonINF_clone_nr_9_clone_8888_1
-  # HH119-COLP_clone_nr_10_clone_24340_1
-  # HH119-COLP_clone_nr_1_clone_23994_1
-  # HH119-COLP_clone_nr_2_clone_4885_1
-  # HH119-COLP_clone_nr_3_clone_2482_1
-  # HH119-COLP_clone_nr_4_clone_4747_1
-  # HH119-COLP_clone_nr_5_clone_28868_1
-  # HH119-COLP_clone_nr_6_clone_23862_1
-  # HH119-COLP_clone_nr_7_clone_14958_1
-  # HH119-COLP_clone_nr_8_clone_24368_1
-  # HH119-COLP_clone_nr_9_clone_20840_1
-  # HH119-SILP_clone_nr_10_clone_1800_1
-  HH119-SILP_clone_nr_1_clone_27895_1
-  HH119-SILP_clone_nr_2_clone_15879_1
-  HH119-SILP_clone_nr_3_clone_4315_1
-  HH119-SILP_clone_nr_4_clone_14406_1
-  HH119-SILP_clone_nr_5_clone_23715_1
-  HH119-SILP_clone_nr_6_clone_28184_1
-  HH119-SILP_clone_nr_7_clone_20693_1
-  HH119-SILP_clone_nr_8_clone_362_1
-  HH119-SILP_clone_nr_9_clone_23831_2
+  HH117-SILP-INF_clone_nr_1_clone_8843_1
+  HH117-SILP-INF_clone_nr_2_clone_9213_1
+  HH117-SILP-INF_clone_nr_3_clone_6758_1
+  HH117-SILP-INF_clone_nr_4_clone_5794_1
+  HH117-SILP-INF_clone_nr_5_clone_4207_1
+  HH117-SILP-INF_clone_nr_6_clone_9790_1
+  HH117-SILP-INF_clone_nr_7_clone_6895_1
+  HH117-SILP-INF_clone_nr_8_clone_7500_1
+  HH117-SILP-INF_clone_nr_9_clone_2015_1
+  HH117-SILP-INF_clone_nr_10_clone_142_1
+  HH117-SILP-nonINF_clone_nr_1_clone_9213_1
+  HH117-SILP-nonINF_clone_nr_2_clone_6758_1
+  HH117-SILP-nonINF_clone_nr_3_clone_8750_1
+  HH117-SILP-nonINF_clone_nr_4_clone_8565_1
+  HH117-SILP-nonINF_clone_nr_5_clone_9492_1
+  HH117-SILP-nonINF_clone_nr_6_clone_9232_1
+  HH117-SILP-nonINF_clone_nr_7_clone_4207_1
+  HH117-SILP-nonINF_clone_nr_8_clone_5794_1
+  HH117-SILP-nonINF_clone_nr_9_clone_6938_1
+  HH117-SILP-nonINF_clone_nr_10_clone_8843_1
+  HH119-COLP_clone_nr_1_clone_24419_1
+  HH119-COLP_clone_nr_2_clone_4664_1
+  HH119-COLP_clone_nr_3_clone_4528_1
+  HH119-COLP_clone_nr_4_clone_9_1
+  HH119-COLP_clone_nr_5_clone_17441_1
+  HH119-COLP_clone_nr_6_clone_2415_1
+  HH119-COLP_clone_nr_7_clone_14852_1
+  HH119-COLP_clone_nr_8_clone_24807_1
+  HH119-COLP_clone_nr_9_clone_21731_1
+  HH119-COLP_clone_nr_10_clone_24782_1
+  HH119-SILP_clone_nr_1_clone_27931_1
+  HH119-SILP_clone_nr_2_clone_15801_1
+  HH119-SILP_clone_nr_3_clone_4112_1
+  HH119-SILP_clone_nr_4_clone_14426_1
+  HH119-SILP_clone_nr_5_clone_24269_1
+  HH119-SILP_clone_nr_6_clone_28233_1
+  HH119-SILP_clone_nr_7_clone_21605_1
+  HH119-SILP_clone_nr_8_clone_344_1
+  HH119-SILP_clone_nr_9_clone_24246_2
+  HH119-SILP_clone_nr_10_clone_19014_1
 
 )
 

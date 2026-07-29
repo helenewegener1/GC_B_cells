@@ -23,43 +23,43 @@ os.environ["MPLCONFIGDIR"] = "/home/projects/dtu_00062/people/helweg/projects/GC
 
 samples_dict = {
 
-  # "HH117-SILP-INF_clone_nr_10_clone_718_1": "CD SI-LP-INF: 10. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_1_clone_8985_1": "CD SI-LP-INF: 1. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_2_clone_455_1": "CD SI-LP-INF: 2. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_3_clone_6469_1": "CD SI-LP-INF: 3. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_4_clone_9677_1": "CD SI-LP-INF: 4. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_5_clone_6896_1": "CD SI-LP-INF: 5. largest PC clone",
-  # # "HH117-SILP-INF_clone_nr_6_clone_7587_1": "CD SI-LP-INF: 6. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_7_clone_2275_1": "CD SI-LP-INF: 7. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_8_clone_24_1": "CD SI-LP-INF: 8. largest PC clone",
-  # "HH117-SILP-INF_clone_nr_9_clone_9150_1": "CD SI-LP-INF: 9. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_10_clone_8985_1": "CD SI-LP-nonINF: 10. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_1_clone_6469_1": "CD SI-LP-nonINF: 1. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_2_clone_8879_1": "CD SI-LP-nonINF: 2. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_3_clone_455_1": "CD SI-LP-nonINF: 3. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_4_clone_8700_1": "CD SI-LP-nonINF: 4. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_5_clone_9624_1": "CD SI-LP-nonINF: 5. largest PC clone",
-  # # "HH117-SILP-nonINF_clone_nr_6_clone_9347_1": "CD SI-LP-nonINF: 6. largest PC clone",
-  #"HH117-SILP-nonINF_clone_nr_7_clone_9677_1": "CD SI-LP-nonINF: 7. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_8_clone_6961_1": "CD SI-LP-nonINF: 8. largest PC clone",
-  # "HH117-SILP-nonINF_clone_nr_9_clone_8888_1": "CD SI-LP-nonINF: 9. largest PC clone",
-  # "HH119-COLP_clone_nr_10_clone_24340_1": "CD CO-LP: 10. largest PC clone",
-  # "HH119-COLP_clone_nr_1_clone_23994_1": "CD CO-LP: 1. largest PC clone",
-  # "HH119-COLP_clone_nr_2_clone_4885_1": "CD CO-LP: 2. largest PC clone",
-  # "HH119-COLP_clone_nr_3_clone_2482_1": "CD CO-LP: 3. largest PC clone",
-  # "HH119-COLP_clone_nr_4_clone_4747_1": "CD CO-LP: 4. largest PC clone",
-  # "HH119-COLP_clone_nr_5_clone_28868_1": "CD CO-LP: 5. largest PC clone",
-  # "HH119-COLP_clone_nr_6_clone_23862_1": "CD CO-LP: 6. largest PC clone",
-  # "HH119-COLP_clone_nr_7_clone_14958_1": "CD CO-LP: 7. largest PC clone",
-  # "HH119-COLP_clone_nr_8_clone_24368_1": "CD CO-LP: 8. largest PC clone",
-  # # "HH119-COLP_clone_nr_9_clone_20840_1": "CD CO-LP: 9. largest PC clone",
-  # "HH119-SILP_clone_nr_1_clone_27895_1": "CD SI-LP: 1. largest PC clone",
-  # "HH119-SILP_clone_nr_2_clone_15879_1": "CD SI-LP: 2. largest PC clone",
-  # "HH119-SILP_clone_nr_3_clone_4315_1": "CD SI-LP: 3. largest PC clone",
-  # "HH119-SILP_clone_nr_4_clone_14406_1": "CD SI-LP: 4. largest PC clone",
-  # "HH119-SILP_clone_nr_5_clone_23715_1": "CD SI-LP: 5. largest PC clone",
-  # "HH119-SILP_clone_nr_6_clone_28184_1": "CD SI-LP: 6. largest PC clone",
-  # # "HH119-SILP_clone_nr_7_clone_20693_1": "CD SI-LP: 7. largest PC clone",
+  "HH117-SILP-INF_clone_nr_10_clone_142_1": "CD SI-LP-INF: 10. largest PC clone",
+  "HH117-SILP-INF_clone_nr_1_clone_8843_1": "CD SI-LP-INF: 1. largest PC clone",
+  "HH117-SILP-INF_clone_nr_2_clone_9213_1": "CD SI-LP-INF: 2. largest PC clone",
+  "HH117-SILP-INF_clone_nr_3_clone_6758_1": "CD SI-LP-INF: 3. largest PC clone",
+  "HH117-SILP-INF_clone_nr_4_clone_5794_1": "CD SI-LP-INF: 4. largest PC clone",
+  "HH117-SILP-INF_clone_nr_5_clone_4207_1": "CD SI-LP-INF: 5. largest PC clone",
+  "HH117-SILP-INF_clone_nr_6_clone_9790_1": "CD SI-LP-INF: 6. largest PC clone",
+  "HH117-SILP-INF_clone_nr_7_clone_6895_1": "CD SI-LP-INF: 7. largest PC clone",
+  "HH117-SILP-INF_clone_nr_8_clone_7500_1": "CD SI-LP-INF: 8. largest PC clone",
+  "HH117-SILP-INF_clone_nr_9_clone_2015_1": "CD SI-LP-INF: 9. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_10_clone_8843_1": "CD SI-LP-nonINF: 10. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_1_clone_9213_1": "CD SI-LP-nonINF: 1. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_2_clone_6758_1": "CD SI-LP-nonINF: 2. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_3_clone_8750_1": "CD SI-LP-nonINF: 3. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_4_clone_8565_1": "CD SI-LP-nonINF: 4. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_5_clone_9492_1": "CD SI-LP-nonINF: 5. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_6_clone_9232_1": "CD SI-LP-nonINF: 6. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_7_clone_4207_1": "CD SI-LP-nonINF: 7. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_8_clone_5794_1": "CD SI-LP-nonINF: 8. largest PC clone",
+  "HH117-SILP-nonINF_clone_nr_9_clone_6938_1": "CD SI-LP-nonINF: 9. largest PC clone",
+  "HH119-COLP_clone_nr_10_clone_24782_1": "CD CO-LP: 10. largest PC clone",
+  "HH119-COLP_clone_nr_1_clone_24419_1": "CD CO-LP: 1. largest PC clone",
+  "HH119-COLP_clone_nr_2_clone_4664_1": "CD CO-LP: 2. largest PC clone",
+  "HH119-COLP_clone_nr_3_clone_4528_1": "CD CO-LP: 3. largest PC clone",
+  "HH119-COLP_clone_nr_4_clone_9_1": "CD CO-LP: 4. largest PC clone",
+  "HH119-COLP_clone_nr_5_clone_17441_1": "CD CO-LP: 5. largest PC clone",
+  "HH119-COLP_clone_nr_6_clone_2415_1": "CD CO-LP: 6. largest PC clone",
+  "HH119-COLP_clone_nr_7_clone_14852_1": "CD CO-LP: 7. largest PC clone",
+  "HH119-COLP_clone_nr_8_clone_24807_1": "CD CO-LP: 8. largest PC clone",
+  "HH119-COLP_clone_nr_9_clone_21731_1": "CD CO-LP: 9. largest PC clone",
+  "HH119-SILP_clone_nr_1_clone_27931_1": "CD SI-LP: 1. largest PC clone",
+  "HH119-SILP_clone_nr_2_clone_15801_1": "CD SI-LP: 2. largest PC clone",
+  "HH119-SILP_clone_nr_3_clone_4112_1": "CD SI-LP: 3. largest PC clone",
+  "HH119-SILP_clone_nr_4_clone_14426_1": "CD SI-LP: 4. largest PC clone",
+  "HH119-SILP_clone_nr_5_clone_24269_1": "CD SI-LP: 5. largest PC clone",
+  "HH119-SILP_clone_nr_6_clone_28233_1": "CD SI-LP: 6. largest PC clone",
+  "HH119-SILP_clone_nr_7_clone_21605_1": "CD SI-LP: 7. largest PC clone",
 
 }
 
@@ -86,11 +86,11 @@ color_list = {
         "PCs":                   "#C42030",
         "Unconventional_Bcells": "#8855CC",
     },
-    "c_call": {
+    "c_call_grouped": {
         "IGHA1": "#FF7F00",
         "IGHA2": "#E31A1C",
-        "IGHM":  "#1F78B4",
-        "IGHD":  "#00E5FF",
+        "IGHM/D":  "#1F78B4",
+        # "IGHD":  "#00E5FF",
         "IGHG1": "#3F007D",
         "IGHG2": "#54278F",
         "IGHG3": "#756BB1",
@@ -171,7 +171,7 @@ color_list = {
 
 var_translate = {
   "L1_annotation": "Cell type", 
-  "c_call": "Isotype",
+  "c_call_grouped": "Isotype",
   "sample_clean_fol": "Sample"
 }
 
@@ -184,7 +184,7 @@ label_translate = {
         "PCs":                   "Plasma cells",
         "Unconventional_Bcells": "Unconventional B cells",
     },
-    "c_call": {},        # no translation needed
+    "c_call_grouped": {},        # no translation needed
     "sample_clean_fol": {
       "SI-PP": "PP",
       "SILP": "Ileum LP",
@@ -369,8 +369,8 @@ for sample, sample_name in samples_dict.items():
   # Color by L1_annotation
   plot_tree(tree, df_meta, "L1_annotation", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")
   
-  # Color by c_call (with counts for correct pie charts)
-  plot_tree(tree, df_meta, "c_call", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")
+  # Color by c_call_grouped (with counts for correct pie charts)
+  plot_tree(tree, df_meta, "c_call_grouped", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")
   
   # Color by sample_clean_fol (with counts for correct pie charts)
   plot_tree(tree, df_meta, "sample_clean_fol", sample, custom_plot_path, color_list, counts_dir="../gctree_meta")

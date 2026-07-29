@@ -66,5 +66,20 @@ for (HH in patients){
 
 }
 
-saveRDS(resolve_LC_germline_list, "45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+# Update sample_clean_fol
+resolve_LC_germline_list_2 <- lapply(patients, function(HH){
+  
+  resolve_LC_germline_list[[HH]] %>% 
+    mutate(
+      sample_clean_fol = ifelse(!is.na(manual_ADT_ID), glue("{sample_clean}_{manual_ADT_ID}"), sample_clean)
+    )
+  
+}) %>% setNames(patients)
+
+table(resolve_LC_germline_list_2$HH117$locus, resolve_LC_germline_list_2$HH117$sample_clean_fol)
+
+saveRDS(resolve_LC_germline_list_2, "45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+
+
+
 
