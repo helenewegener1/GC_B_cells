@@ -41,8 +41,8 @@ top_clones <- resolve_LC_list_germlined[[HH]] %>%
 # Tree-based (patristic) distance matrix from GCtree output, aligned to df_clone row order
 # ------------------------------------------------------------------------------
 
-# clone_nr <- 3
-clone_nr <- 8
+clone_nr <- 3
+# clone_nr <- 8
 
 # Get clone
 clone <- top_clones %>% 
