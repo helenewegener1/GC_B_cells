@@ -6,14 +6,14 @@ library(ape)
 # Load data
 # ------------------------------------------------------------------------------
 
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
-seq_dir <- readRDS("48_GCtree/out_90_similarity/rds/seq_dir.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+seq_dir <- readRDS("48_GCtree/out/rds/seq_dir.rds")
 
 patients <- names(resolve_LC_list_germlined)
 
 HH <- "HH119" 
 
-outdir <- glue("48_GCtree/plot_90_similarity_06_analyse_trees/{HH}")
+outdir <- glue("48_GCtree/plot_06_analyse_trees/{HH}")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # Get top clones
@@ -57,8 +57,8 @@ df_clone <- resolve_LC_list_germlined[[HH]] %>%
     sequence_id_gctree = names(sequence_ids)[match(sequence_alignment, sequence_ids)]
   )
 
-tree_file <- glue("48_GCtree/plot_90_similarity/{clone_full_name}/{clone_full_name}.inference.1.nk")
-idmap_file <- glue("48_GCtree/out_90_similarity/{clone_full_name}/idmap.txt")
+tree_file <- glue("48_GCtree/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
+idmap_file <- glue("48_GCtree/out/{clone_full_name}/idmap.txt")
 
 # Load gctree
 tree <- read.tree(tree_file)
@@ -278,8 +278,8 @@ for (clone_nr in 2:n_clones){
     )
   
   # Get clone files 
-  tree_file <- glue("48_GCtree/plot_90_similarity/{clone_full_name}/{clone_full_name}.inference.1.nk")
-  idmap_file <- glue("48_GCtree/out_90_similarity/{clone_full_name}/idmap.txt")
+  tree_file <- glue("48_GCtree/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
+  idmap_file <- glue("48_GCtree/out/{clone_full_name}/idmap.txt")
   
   # Load gctree
   tree <- read.tree(tree_file)

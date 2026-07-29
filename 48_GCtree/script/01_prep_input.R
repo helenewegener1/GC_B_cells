@@ -7,13 +7,11 @@ library(glue)
 # Load data
 # ------------------------------------------------------------------------------
 
-# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
-# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+
+table(resolve_LC_list_germlined$HH117$locus, resolve_LC_list_germlined$HH117$sample_clean_fol)
 
 patients <- names(resolve_LC_list_germlined)
-
-version <- "90_similarity"
 
 # ------------------------------------------------------------------------------
 # Make overview
@@ -116,7 +114,7 @@ for (HH in patients){
     # alignment_dna <- as(alignment, "DNAStringSet")
     
     # Export as FASTA file
-    outdir <- glue("48_GCtree/fasta/{version}")
+    outdir <- glue("48_GCtree/fasta/")
     dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
     writeXStringSet(final_fasta, filepath = glue("{outdir}/{HH}_clone_nr_{clone_nr}_clone_{clone}.fasta"))
 
@@ -126,7 +124,7 @@ for (HH in patients){
 }
 
 
-saveRDS(seq_dir, "48_GCtree/out_90_similarity/rds/seq_dir.rds")
+saveRDS(seq_dir, "48_GCtree/out/rds/seq_dir.rds")
 
 
 

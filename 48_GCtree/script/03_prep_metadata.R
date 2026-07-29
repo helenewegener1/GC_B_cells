@@ -7,18 +7,12 @@ library(glue)
 # Load data
 # ------------------------------------------------------------------------------
 
-# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
-# version <- ""
-
-# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_list_gmm_threshold_germlined.rds")
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
-version <- "90_similarity"
-dir.create(glue("48_GCtree/gctree_meta_{version}"), recursive = TRUE)
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+dir.create(glue("48_GCtree/gctree_meta"), recursive = TRUE)
 
 patients <- names(resolve_LC_list_germlined)
 
-# fasta_path <- "48_GCtree/fasta/GC_clones/"
-fasta_path <- glue("48_GCtree/fasta/{version}")
+fasta_path <- glue("48_GCtree/fasta/")
 fasta_files <- list.files(fasta_path)
 
 # resolve_LC_list_germlined$HH117$clone_subgroup_id_90_similarity
@@ -52,7 +46,7 @@ for (HH in patients){
     clone <- str_extract(filename, "\\d+_\\d+(?=\\.fasta)")
     
     # Extract metadata
-    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% select(L1_annotation, c_call, sample_clean_fol)
+    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% select(L1_annotation, c_call_grouped, sample_clean_fol)
     
     # Map seq_names on meta data
     seq_names <- names(fasta)[1:length(fasta)-1]
@@ -61,7 +55,7 @@ for (HH in patients){
     
     # Read idmap.txt file
     sample <- str_split_i(filename, "\\.", 1)
-    idmap <- read.csv(glue("48_GCtree/out_{version}/{sample}/idmap.txt"), header = FALSE, col.names = c("seq_unique", "seq_name")) 
+    idmap <- read.csv(glue("48_GCtree/out/{sample}/idmap.txt"), header = FALSE, col.names = c("seq_unique", "seq_name")) 
     
     # Remove GL
     idmap <- idmap %>% filter(seq_unique != "GL")
@@ -74,7 +68,8 @@ for (HH in patients){
       summarise(
         seq_name = paste(seq_name, collapse = ":"),
         L1_annotation = paste(unique(L1_annotation), collapse = ":"),
-        c_call = paste(unique(c_call), collapse = ":"),
+        # c_call = paste(unique(c_call), collapse = ":"),
+        c_call_grouped = paste(unique(c_call_grouped), collapse = ":"),
         sample_clean_fol = paste(unique(sample_clean_fol), collapse = ":")
       ) %>% 
       # mutate(
@@ -85,20 +80,20 @@ for (HH in patients){
       # )
       mutate(
         L1_annotation_int = as.integer(factor(L1_annotation)),
-        c_call_int = as.integer(factor(c_call)),
+        c_call_grouped_int = as.integer(factor(c_call_grouped)),
         sample_clean_fol_int = as.integer(factor(sample_clean_fol))
       )
     
     # gctree_meta$L1_annotation %>% table()
-    # gctree_meta$c_call %>% table()
+    # gctree_meta$c_call_grouped %>% table()
     # gctree_meta$sample_clean_fol %>% table()
     
     # gctree_meta$L1_annotation_int %>% table()
-    # gctree_meta$c_call %>% table()
+    # gctree_meta$c_call_grouped %>% table()
     # gctree_meta$sample_clean_fol %>% table()
   
     
-    write.csv(gctree_meta, glue("48_GCtree/gctree_meta_{version}/{sample}_gctree_meta.txt"), row.names = FALSE, quote = FALSE)
+    write.csv(gctree_meta, glue("48_GCtree/gctree_meta/{sample}_gctree_meta.txt"), row.names = FALSE, quote = FALSE)
     
     # L1_counts.csv
     L1_counts <- gctree_meta %>%
@@ -109,18 +104,18 @@ for (HH in patients){
       summarise(count = n(), .groups = "drop") %>%
       pivot_wider(names_from = L1_annotation, values_from = count, values_fill = 0)
 
-    write.csv(L1_counts, glue("48_GCtree/gctree_meta_{version}/{sample}_L1_counts.csv"), row.names = FALSE)
+    write.csv(L1_counts, glue("48_GCtree/gctree_meta/{sample}_L1_counts.csv"), row.names = FALSE)
     
     # isotype_counts.csv
     isotype_counts <- gctree_meta %>%
       select(seq_unique, seq_name) %>%       
       separate_rows(seq_name, sep = ":") %>% 
-      left_join(seqs_meta %>% select(seq_name, c_call), by = "seq_name") %>%  
-      group_by(seq_unique, c_call) %>%
+      left_join(seqs_meta %>% select(seq_name, c_call_grouped), by = "seq_name") %>%  
+      group_by(seq_unique, c_call_grouped) %>%
       summarise(count = n(), .groups = "drop") %>%
-      pivot_wider(names_from = c_call, values_from = count, values_fill = 0)
+      pivot_wider(names_from = c_call_grouped, values_from = count, values_fill = 0)
     
-    write.csv(isotype_counts, glue("48_GCtree/gctree_meta_{version}/{sample}_isotype_counts.csv"), row.names = FALSE)
+    write.csv(isotype_counts, glue("48_GCtree/gctree_meta/{sample}_isotype_counts.csv"), row.names = FALSE)
     
     # sample_clean_fol_counts.csv
     sample_clean_fol_counts <- gctree_meta %>%
@@ -131,7 +126,7 @@ for (HH in patients){
       summarise(count = n(), .groups = "drop") %>%
       pivot_wider(names_from = sample_clean_fol, values_from = count, values_fill = 0)
 
-    write.csv(sample_clean_fol_counts, glue("48_GCtree/gctree_meta_{version}/{sample}_sample_clean_fol_counts.csv"), row.names = FALSE)
+    write.csv(sample_clean_fol_counts, glue("48_GCtree/gctree_meta/{sample}_sample_clean_fol_counts.csv"), row.names = FALSE)
 
   }
   
