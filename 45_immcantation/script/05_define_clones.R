@@ -32,7 +32,7 @@ patients <- names(resolve_LC_list)
 
 # lapply(patients, function(HH){
 #   
-HH <- "HH117"
+HH <- "HH119"
 #   
 # })
 
@@ -44,7 +44,8 @@ df <- df %>%
     v_call_no_allele = gsub("\\*\\d+", "", v_call),
     v_call_no_allele = sapply(strsplit(v_call_no_allele, ","), function(x) paste(unique(x), collapse = ",")),
     j_call_no_allele = gsub("\\*\\d+", "", j_call),
-    j_call_no_allele = sapply(strsplit(j_call_no_allele, ","), function(x) paste(unique(x), collapse = ","))
+    j_call_no_allele = sapply(strsplit(j_call_no_allele, ","), function(x) paste(unique(x), collapse = ",")),
+    sample_clean_fol = ifelse(!is.na(manual_ADT_ID), glue("{sample_clean}_{manual_ADT_ID}"), sample_clean)
   )
 
 # ------------------------------------------------------------------------------
@@ -91,6 +92,8 @@ resolve_LC_final <- resolve_LC_final %>% dplyr::rename(
 # ------------------------------------------------------------------------------
 # Export 
 # ------------------------------------------------------------------------------
+
+table(resolve_LC_final$locus, resolve_LC_final$sample_clean_fol)
 
 saveRDS(resolve_LC_final, glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds"))
 
