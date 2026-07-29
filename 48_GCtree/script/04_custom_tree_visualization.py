@@ -21,48 +21,49 @@ os.environ["MPLBACKEND"] = "agg"
 os.environ["MPLCONFIGDIR"] = "/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/.matplotlib"
 
 samples_dict = {
+
+  "HH117_clone_nr_1_clone_4252_1":  "CD: Largest GC B cell clone",
+  "HH117_clone_nr_2_clone_2654_1":  "CD: 2. largest GC B cell clone",
+  "HH117_clone_nr_3_clone_1854_1":  "CD: 3. largest GC B cell clone",
+  "HH117_clone_nr_4_clone_3755_1":  "CD: 4. largest GC B cell clone",
+  "HH117_clone_nr_5_clone_2335_1":  "CD: 5. largest GC B cell clone",
+  "HH117_clone_nr_6_clone_1307_1":  "CD: 6. largest GC B cell clone",
+  "HH117_clone_nr_7_clone_5945_1":  "CD: 7. largest GC B cell clone",
+  "HH117_clone_nr_8_clone_6111_1":  "CD: 8. largest GC B cell clone",
+  "HH117_clone_nr_9_clone_1922_1":  "CD: 9. largest GC B cell clone",
+  "HH117_clone_nr_10_clone_2197_1": "CD: 10. largest GC B cell clone",
+  "HH117_clone_nr_11_clone_2835_1": "CD: 11. largest GC B cell clone",
+  "HH117_clone_nr_12_clone_5340_1": "CD: 12. largest GC B cell clone",
+  "HH117_clone_nr_13_clone_6254_1": "CD: 13. largest GC B cell clone",
+  "HH117_clone_nr_14_clone_6680_1":  "CD: 14. largest GC B cell clone",
+  "HH117_clone_nr_15_clone_688_1": "CD: 15. largest GC B cell clone",
+  "HH117_clone_nr_16_clone_10074_1": "CD: 16. largest GC B cell clone",
+  "HH117_clone_nr_17_clone_9559_1": "CD: 17. largest GC B cell clone",
+  "HH117_clone_nr_18_clone_5832_1": "CD: 18. largest GC B cell clone",
+  "HH117_clone_nr_19_clone_6058_1": "CD: 19. largest GC B cell clone",
+  "HH117_clone_nr_20_clone_7375_1": "CD: 20. largest GC B cell clone",
+
+  # "HH119_clone_nr_1_clone_21605_1": "CRC: Largest GC B cell clone",
+  "HH119_clone_nr_2_clone_27055_1": "CRC: 2. largest GC B cell clone",
+  "HH119_clone_nr_3_clone_11748_1": "CRC: 3. largest GC B cell clone",
+  "HH119_clone_nr_4_clone_7647_1": "CRC: 4. largest GC B cell clone",
+  "HH119_clone_nr_5_clone_14825_1": "CRC: 5. largest GC B cell clone",
+  "HH119_clone_nr_6_clone_22333_1": "CRC: 6. largest GC B cell clone",
+  "HH119_clone_nr_7_clone_8071_1":  "CRC: 7. largest GC B cell clone",
+  "HH119_clone_nr_8_clone_8404_1":  "CRC: 8. largest GC B cell clone",
+  "HH119_clone_nr_9_clone_3761_1": "CRC: 9. largest GC B cell clone",
+  "HH119_clone_nr_10_clone_24273_1": "CRC: 10. largest GC B cell clone",
+  "HH119_clone_nr_11_clone_8356_1": "CRC: 11. largest GC B cell clone",
+  "HH119_clone_nr_12_clone_180_1": "CRC: 12. largest GC B cell clone",
+  "HH119_clone_nr_13_clone_28685_1": "CRC: 13. largest GC B cell clone",
+  "HH119_clone_nr_14_clone_15980_1": "CRC: 14. largest GC B cell clone",
+  "HH119_clone_nr_15_clone_10216_1": "CRC: 15. largest GC B cell clone",
+  "HH119_clone_nr_16_clone_10133_1": "CRC: 16. largest GC B cell clone",
+  "HH119_clone_nr_17_clone_8759_1": "CRC: 17. largest GC B cell clone",
+  "HH119_clone_nr_18_clone_25753_1": "CRC: 18. largest GC B cell clone",
+  "HH119_clone_nr_19_clone_26371_1": "CRC: 19. largest GC B cell clone",
+  "HH119_clone_nr_20_clone_10141_1": "CRC: 20. largest GC B cell clone",
   
-  #"HH117_clone_nr_1_clone_500_1":  "CD: Largest GC B cell clone",
-  #"HH117_clone_nr_2_clone_2885_1":  "CD: 2. largest GC B cell clone",
-  #"HH117_clone_nr_3_clone_2018_1":  "Crohn's disease: 3. largest GC B cell clone",
-  #"HH117_clone_nr_4_clone_3953_1":  "CD: 4. largest GC B cell clone",
-  #"HH117_clone_nr_5_clone_2588_1":  "CD: 5. largest GC B cell clone",
-  # "HH117_clone_nr_6_clone_1571_1":  "CD: 6. largest GC B cell clone",
-  # "HH117_clone_nr_7_clone_5554_1":  "CD: 7. largest GC B cell clone",
-  # "HH117_clone_nr_8_clone_5725_1":  "CD: 8. largest GC B cell clone",
-  # "HH117_clone_nr_9_clone_2211_1":  "CD: 9. largest GC B cell clone",
-  # "HH117_clone_nr_10_clone_2457_1": "CD: 10. largest GC B cell clone",
-  "HH117_clone_nr_11_clone_5904_1": "CD: 11. largest GC B cell clone",
-  "HH117_clone_nr_12_clone_7177_1": "CD: 12. largest GC B cell clone",
-  "HH117_clone_nr_13_clone_6361_1": "CD: 13. largest GC B cell clone",
-  "HH117_clone_nr_14_clone_972_1":  "CD: 14. largest GC B cell clone",
-  "HH117_clone_nr_15_clone_9669_1": "CD: 15. largest GC B cell clone",
-  "HH117_clone_nr_16_clone_9994_1": "CD: 16. largest GC B cell clone",
-  "HH117_clone_nr_17_clone_5459_1": "CD: 17. largest GC B cell clone",
-  "HH117_clone_nr_18_clone_5680_1": "CD: 18. largest GC B cell clone",
-  "HH117_clone_nr_19_clone_7466_1": "CD: 19. largest GC B cell clone",
-  "HH117_clone_nr_20_clone_2140_1": "CD: 20. largest GC B cell clone",
-  
-  # # "HH119_clone_nr_1_clone_22355_1": "CRC: Largest GC B cell clone",
-  # "HH119_clone_nr_2_clone_27035_1": "CRC: 2. largest GC B cell clone",
-  # "HH119_clone_nr_3_clone_11978_1": "Colorectal cancer: 3. largest GC B cell clone",
-  # "HH119_clone_nr_4_clone_7879_1": "CRC: 4. largest GC B cell clone",
-  # "HH119_clone_nr_5_clone_14912_1": "CRC: 5. largest GC B cell clone",
-  # "HH119_clone_nr_6_clone_21402_1": "CRC: 6. largest GC B cell clone",
-  # "HH119_clone_nr_7_clone_8286_1":  "CRC: 7. largest GC B cell clone",
-  # "HH119_clone_nr_8_clone_8625_1":  "CRC: 8. largest GC B cell clone",
-  # "HH119_clone_nr_9_clone_3913_1": "CRC: 9. largest GC B cell clone",
-  # "HH119_clone_nr_10_clone_23719_1": "CRC: 10. largest GC B cell clone",
-  "HH119_clone_nr_11_clone_8576_1": "CRC: 11. largest GC B cell clone",
-  "HH119_clone_nr_12_clone_145_1": "CRC: 12. largest GC B cell clone",
-  "HH119_clone_nr_13_clone_8374_1": "CRC: 13. largest GC B cell clone",
-  "HH119_clone_nr_14_clone_16064_1": "CRC: 14. largest GC B cell clone",
-  "HH119_clone_nr_15_clone_10590_1": "CRC: 15. largest GC B cell clone",
-  "HH119_clone_nr_16_clone_8980_1": "CRC: 16. largest GC B cell clone",
-  "HH119_clone_nr_17_clone_25709_1": "CRC: 17. largest GC B cell clone",
-  "HH119_clone_nr_18_clone_26412_1": "CRC: 18. largest GC B cell clone",
-  "HH119_clone_nr_19_clone_10599_1": "CRC: 19. largest GC B cell clone",
-  "HH119_clone_nr_20_clone_27222_1": "CRC: 20. largest GC B cell clone",
 }
 
 
@@ -76,9 +77,6 @@ samples_dict = {
 # sample = "HH119_clone_nr_2_clone_5791_1"
 # sample_name = "Colorectal Cancer: Second largest clone with GC B cells across samples"
 
-# version = ""
-# version = "gmm_threshold"
-version = "90_similarity"
 
 ########################################################################################
 # COLOR BY ANYTHING
@@ -103,11 +101,20 @@ color_list = {
         "PCs":                   "#C42030",
         "Unconventional_Bcells": "#8855CC",
     },
-    "c_call": {
+    # "c_call": {
+    #     "IGHA1": "#FF7F00",
+    #     "IGHA2": "#E31A1C",
+    #     "IGHM":  "#1F78B4",
+    #     "IGHD":  "#00E5FF",
+    #     "IGHG1": "#3F007D",
+    #     "IGHG2": "#54278F",
+    #     "IGHG3": "#756BB1",
+    #     "IGHG4": "#9E9AC8"
+    # },
+    "c_call_grouped": {
         "IGHA1": "#FF7F00",
         "IGHA2": "#E31A1C",
-        "IGHM":  "#1F78B4",
-        "IGHD":  "#00E5FF",
+        "IGHM/D":  "#1F78B4",
         "IGHG1": "#3F007D",
         "IGHG2": "#54278F",
         "IGHG3": "#756BB1",
@@ -188,7 +195,7 @@ color_list = {
 
 var_translate = {
   "L1_annotation": "Cell type", 
-  "c_call": "Isotype",
+  "c_call_grouped": "Isotype",
   "sample_clean_fol": "Sample"
 }
 
@@ -201,7 +208,7 @@ label_translate = {
         "PCs":                   "Plasma cells",
         "Unconventional_Bcells": "Unconventional B cells",
     },
-    "c_call": {},        # no translation needed
+    "c_call_grouped": {},        # no translation needed
     "sample_clean_fol": {
       "SI-PP": "PP",
       "SILP": "Ileum LP",
@@ -240,7 +247,7 @@ for sample, sample_name in samples_dict.items():
   print(sample, sample_name)
 
   HH = sample.split("_")[0]
-  plot_path = f"./../plot_{version}/{sample}"
+  plot_path = f"./../plot/{sample}"
   p_file = f"{plot_path}/{sample}.inference.1.p"
   # print(p_file)
   
@@ -273,7 +280,7 @@ for sample, sample_name in samples_dict.items():
   ########################################################################################
   
   # Read meta data
-  df_meta = pd.read_csv(f"../gctree_meta_{version}/{sample}_gctree_meta.txt",     
+  df_meta = pd.read_csv(f"../gctree_meta/{sample}_gctree_meta.txt",     
                    sep=",",          
                    header=0)
   
@@ -384,10 +391,10 @@ for sample, sample_name in samples_dict.items():
       print(f"Saved: {png_path}")
   
   # Color by L1_annotation
-  plot_tree(tree, df_meta, "L1_annotation", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta_{version}")
+  plot_tree(tree, df_meta, "L1_annotation", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta")
   
   # Color by c_call (with counts for correct pie charts)
-  plot_tree(tree, df_meta, "c_call", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta_{version}")
+  plot_tree(tree, df_meta, "c_call_grouped", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta")
   
   # Color by sample_clean_fol (with counts for correct pie charts)
-  plot_tree(tree, df_meta, "sample_clean_fol", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta_{version}")
+  plot_tree(tree, df_meta, "sample_clean_fol", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta")

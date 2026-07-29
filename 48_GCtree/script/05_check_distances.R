@@ -5,10 +5,9 @@ library(tidyverse)
 # Load data
 # ------------------------------------------------------------------------------
 
-resolve_LC_list <- readRDS("45_immcantation/out/rds/resolve_LC_list_germlined.rds")
+resolve_LC_list <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 
 patients <- names(resolve_LC_list)
-
 
 # ------------------------------------------------------------------------------
 # Test 
