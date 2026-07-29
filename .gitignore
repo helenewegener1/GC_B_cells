@@ -48,8 +48,7 @@ tmp
 *.p
 
 48_GCtree/out
-48_GCtree/plot
-48_GCtree/plot/*/*.nk
+#48_GCtree/plot
 
 #60_PC_clones/gctree_meta/
 #60_PC_clones/plot/*/*.nk

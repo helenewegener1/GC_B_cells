@@ -725,12 +725,12 @@ lapply(c(10, 20), function(n_clones){
   
   celltype_results_all %>% 
     filter(gc_to_output) %>% 
-    count(clone_nr, clone, ancestor_celltype, node_celltype, sort = TRUE)
+    dplyr::count(clone_nr, clone, ancestor_celltype, node_celltype, sort = TRUE)
   
   # ---- overall transition counts, any direction ----
   
   celltype_results_all %>% 
-    count(ancestor_celltype, node_celltype, sort = TRUE)
+    dplyr::count(ancestor_celltype, node_celltype, sort = TRUE)
   
   # Table
   celltype_transition_clones <- celltype_results_all %>% 
@@ -756,7 +756,7 @@ lapply(c(10, 20), function(n_clones){
   celltype_order <- df$L1_annotation_sample %>% unique() %>% sort()
   
   celltype_plot_data <- celltype_results_all %>% 
-    count(ancestor_celltype, node_celltype) %>% 
+    dplyr::count(ancestor_celltype, node_celltype) %>% 
     right_join(
       expand_grid(
         ancestor_celltype = celltype_order,
