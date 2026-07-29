@@ -30,7 +30,7 @@ top_clones <- resolve_LC_list_germlined[[HH]] %>%
     locus == "IGH", 
     L1_annotation == "GC_B_cells"
   ) %>% 
-  count(clone_subgroup_id_90_similarity, sort = TRUE) 
+  dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) 
 
 
 # ==============================================================================
@@ -409,7 +409,7 @@ ggsave(glue("{outdir}/{HH}_top_10_distance_median_boxplot_gctree.png"), width = 
 outdir_isotype_switching <- glue("{outdir}/isotype_switching")
 dir.create(outdir_isotype_switching, recursive = TRUE, showWarnings = FALSE)
 
-isotype_switch_order <- c("IGHM", "IGHD", "IGHG3", "IGHG1", "IGHA1", "IGHG2", "IGHG4", "IGHE", "IGHA2")
+isotype_switch_order <- c("IGHM/D", "IGHG3", "IGHG1", "IGHA1", "IGHG2", "IGHG4", "IGHE", "IGHA2")
 
 # for a given observed node, walk up the tree until hitting another observed ("seq*") node
 get_nearest_observed_ancestor <- function(node, parent_of) {
@@ -482,8 +482,8 @@ lapply(c(10, 20), function(n_clones){
       filter(locus == "IGH", clone_subgroup_id_90_similarity == clone) %>% 
       mutate(sequence_id_gctree = names(sequence_ids)[match(sequence_alignment, sequence_ids)])
     
-    tree_file <- glue("48_GCtree/plot_90_similarity/{clone_full_name}/{clone_full_name}.inference.1.nk")
-    idmap_file <- glue("48_GCtree/out_90_similarity/{clone_full_name}/idmap.txt")
+    tree_file <- glue("48_GCtree/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
+    idmap_file <- glue("48_GCtree/out/{clone_full_name}/idmap.txt")
     
     tree <- read.tree(tree_file)
     idmap <- read_csv(idmap_file, col_names = c("node", "sequence_id"), show_col_types = FALSE) %>% 
@@ -491,9 +491,9 @@ lapply(c(10, 20), function(n_clones){
       separate_longer_delim(sequence_id, delim = ":")
     
     node_isotype_map <- idmap %>% 
-      left_join(df_clone %>% select(sequence_id_gctree, c_call), by = c("sequence_id" = "sequence_id_gctree")) %>% 
+      left_join(df_clone %>% select(sequence_id_gctree, c_call_grouped), by = c("sequence_id" = "sequence_id_gctree")) %>% 
       group_by(node) %>% 
-      summarise(isotypes = list(unique(na.omit(c_call))), .groups = "drop")
+      summarise(isotypes = list(unique(na.omit(c_call_grouped))), .groups = "drop")
     isotype_lookup <- set_names(node_isotype_map$isotypes, node_isotype_map$node)
     
     node_labels <- c(tree$tip.label, tree$node.label)
@@ -540,7 +540,7 @@ lapply(c(10, 20), function(n_clones){
     
   }
   
-  switch_results_all %>% count(clone_nr, switch_type)
+  switch_results_all %>% dplyr::count(clone_nr, switch_type)
   
   # Plot result - Bar plot 
   switch_type_colors <- list("none" = "grey", "sequential" = "forestgreen", "reverse" = "purple")
@@ -550,7 +550,7 @@ lapply(c(10, 20), function(n_clones){
       clone_plot = glue("{clone_nr}\n({clone})") %>% fct_reorder(clone_nr), 
       switch_type_fct = factor(switch_type, levels = c("none", "sequential", "reverse"))
     ) %>% 
-    count(clone_plot, switch_type_fct, .drop = FALSE) %>%  # .drop = FALSE keeps zero-count combos
+    dplyr::count(clone_plot, switch_type_fct, .drop = FALSE) %>%  # .drop = FALSE keeps zero-count combos
     ggplot(aes(x = clone_plot, y = n, fill = switch_type_fct)) + 
     geom_col(position = position_dodge2(preserve = "single"), width = 0.7) + 
     theme_bw() + 
@@ -585,7 +585,7 @@ lapply(c(10, 20), function(n_clones){
   
   plot_data <- switch_results_all %>% 
     filter(switch_type %in% c("sequential", "reverse")) %>% 
-    count(node_isotype, ancestor_isotype, switch_type) %>% 
+    dplyr::count(node_isotype, ancestor_isotype, switch_type) %>% 
     right_join(
       expand_grid(
         ancestor_isotype = isotype_switch_order,

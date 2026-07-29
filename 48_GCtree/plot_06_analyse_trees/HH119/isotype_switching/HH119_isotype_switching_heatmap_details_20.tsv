@@ -1,0 +1,9 @@
+ancestor_isotype	node_isotype	switch_type	n_clones	clone_nrs	clones
+IGHG1	IGHG2	sequential	3	3, 6, 20	10141_1, 11748_1, 22333_1
+IGHA1	IGHA2	sequential	2	8, 9	3761_1, 8404_1
+IGHG1	IGHM/D	reverse	2	3, 17	11748_1, 8759_1
+IGHG2	IGHG1	reverse	2	11, 13	28685_1, 8356_1
+IGHG1	IGHG3	reverse	1	6	22333_1
+IGHG2	IGHM/D	reverse	1	11	8356_1
+IGHM/D	IGHA2	sequential	1	4	7647_1
+IGHM/D	IGHG1	sequential	1	3	11748_1
