@@ -11,16 +11,16 @@ source("10_broad_annotation/script/color_palette.R")
 # ------------------------------------------------------------------------------
 
 rds_files <- list.files("45_immcantation/out/rds") 
-resolve_LC_files <- grep("resolve_LC_3_definitions", rds_files, value = TRUE)
+resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 
-patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 1)) %>% unlist()
+patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
-HH <- "HH117"
+HH <- "HH119"
 extra <- ""
 
 # Read rds
-df_heavy <- readRDS(glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds")) %>% 
+df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>% 
   filter(
     locus == "IGH" & L1_annotation == "PCs" & str_detect(sample_clean, "LP")
   )
@@ -107,7 +107,7 @@ for (min_n in c(20, 30, 100)){
     geom_pointrange(aes(ymin = d_lower, ymax = d_upper), color = "steelblue", size = 0.5) +
     theme_minimal() +
     labs(
-      x = "Follicle",
+      x = "Compartment",
       y = "Shannon diversity (q=1)",
       title = glue("{HH}: Shannon diversity per LP PC compartment"),
       subtitle = glue("Clones with <{min_n} cells are excluded from this analysis because of bootstrapping"),
@@ -143,7 +143,7 @@ for (min_n in c(20, 30, 100)){
 
 
 # ------------------------------------------------------------------------------
-# Dxx plot - GC B cell clones
+# Dxx plot - PC cell clones
 # ------------------------------------------------------------------------------
 
 compute_Dxx <- function(clone_counts, xx = 0.5) {
@@ -229,7 +229,7 @@ ggplot(gini_per_follicle,
   scale_y_continuous(limits = c(0, 1)) +
   theme_minimal() +
   labs(
-    x = "Follicle",
+    x = "Compartment",
     y = "Gini coefficient",
     title = glue("{HH}: Gini coefficient per LP PC compartment")
   ) 
@@ -245,16 +245,12 @@ patients <- c("HH117", "HH119")
 
 # Load both patients
 df_both <- lapply(patients, function(HH) {
-  readRDS(glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds")) %>%
+  readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
     filter(
       locus == "IGH" & L1_annotation == "PCs" & str_detect(sample_clean, "LP")
     ) %>%
     mutate(patient = HH)
 }) %>% bind_rows()
-
-if (extra == "_largest_removed"){
-  df_both <- df_both %>% filter(clone_subgroup_id_90_similarity != "20693_1")
-}
 
 
 # ------------------------------------------------------------------------------
@@ -328,8 +324,8 @@ for (min_n in c(30, 100)) {
     labs(
       x = "Sample",
       y = "Shannon diversity (q=1)",
-      title = glue("Shannon diversity per follicle"),
-      subtitle = glue("Follicles with <{min_n} GC B cells excluded. Each point represents one follicle."),
+      title = glue("Shannon diversity per compartment - LP PCs"),
+      subtitle = glue("Compartments with <{min_n} PCs excluded."),
       caption = "Bootstrapped estimates (100 resamples, 95% CI)"
     ) +
     theme(legend.position = "none")

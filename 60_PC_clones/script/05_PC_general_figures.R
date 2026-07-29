@@ -150,14 +150,14 @@ dir.create(outdir6, recursive = TRUE, showWarnings = FALSE)
 
 df_plot <- df_both %>% 
   filter(
-    !is.na(clone_subgroup_id_90_similarity) & !is.na(c_call)
+    !is.na(clone_subgroup_id_90_similarity) & !is.na(c_call_grouped)
   ) %>% 
-  count(sample_clean, c_call) 
+  count(sample_clean, c_call_grouped) 
 
 df_plot %>% 
-  ggplot(aes(x = sample_clean, y = n, fill = c_call)) + 
+  ggplot(aes(x = sample_clean, y = n, fill = c_call_grouped)) + 
   geom_col() + 
-  scale_fill_manual(values = isotype_colors_custom) + 
+  scale_fill_manual(values = isotype_grouped_colors_custom) + 
   theme_bw() + 
   labs(
     title = "Isotypes of LP PCs clones",

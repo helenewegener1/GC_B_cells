@@ -14,9 +14,9 @@ source("10_broad_annotation/script/color_palette.R")
 # ------------------------------------------------------------------------------
 
 rds_files <- list.files("45_immcantation/out/rds") 
-resolve_LC_files <- grep("resolve_LC_3_definitions", rds_files, value = TRUE)
+resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 
-patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 1)) %>% unlist()
+patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
 # Prep output
@@ -25,7 +25,7 @@ dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # Load both patients
 df_both <- lapply(patients, function(HH) {
-  readRDS(glue("45_immcantation/out/rds/{HH}_resolve_LC_3_definitions.rds")) %>%
+  readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
     filter(
       locus == "IGH" & L1_annotation == "PCs" & str_detect(sample_clean, "LP")
     )
@@ -116,7 +116,7 @@ for (n_min_cells in c(1, 2)){
       x = "Patient ID",
       y = "N compartments",
       title = "Clonal sharing across LP PC compartments",
-      subtitle = glue("For each clone (GC B cells), how many follicles is it present in (at least {n_min_cells} cells)"),
+      subtitle = glue("For each clone, how many compartments is it present in (at least {n_min_cells} cells)"),
       caption = "N clones (mean clone size; median clone size)"
     )
   
@@ -191,7 +191,7 @@ df_shared_clones
 
 
 # ------------------------------------------------------------------------------
-# Build the pie-chart data for a given cell population (all cells, GC B cells, ...)
+# Build the pie-chart data for a given cell population 
 # ------------------------------------------------------------------------------
 build_isotype_pie_data <- function(df_both, df_shared_clones) {
 
@@ -331,220 +331,4 @@ plot_isotype_pies <- function(dat) {
 # ------------------------------------------------------------------------------
 dat_all <- build_isotype_pie_data(df_both, df_shared_clones)
 plot_isotype_pies(dat_all)
-
-
-# ==============================================================================
-# ==============================================================================
-# ==============================================================================
-
-
-# ------------------------------------------------------------------------------
-# Isotype diversity per clone (from the Combined row = summed across follicles)
-# ------------------------------------------------------------------------------
-isotype_diversity <- function(dat) {
-  
-  combined_x <- dat$site_lookup %>% 
-    filter(sample_clean_fol_plot == "Combined") %>% 
-    select(patient_id, x)
-  
-  dat$pie_data %>% 
-    inner_join(combined_x, by = c("patient_id", "x")) %>% 
-    mutate(n_isotypes = rowSums(across(all_of(dat$isotype_cols), ~ . > 0))) %>% 
-    select(patient_id, clone_subgroup_id_90_similarity, n_isotypes, total_n)
-}
-
-df_isotype_diversity <- isotype_diversity(dat_gc)  # or dat_all
-
-# ------------------------------------------------------------------------------
-# Plot: % of clones by number of distinct isotypes used
-# ------------------------------------------------------------------------------
-
-df_isotype_diversity %>% 
-  count(patient_id, n_isotypes) %>% 
-  group_by(patient_id) %>% 
-  mutate(pct = n / sum(n) * 100) %>% 
-  ungroup() %>% 
-  ggplot(aes(x = factor(n_isotypes), y = pct)) +
-  geom_col() +
-  geom_text(aes(label = n), vjust = -0.4, size = 3) +
-  facet_wrap(~patient_id) +
-  theme_bw() +
-  labs(
-    x = "N distinct isotypes used (combined across follicles)",
-    y = "% of clones",
-    title = "Isotype diversity within follicle-shared clones",
-    subtitle = "How often a clone sticks to one isotype vs. diversifies across several"
-  )
-
-ggsave(glue("{outdir}/N_isotypes_barplot.png"))
-
-# ==============================================================================
-# ==============================================================================
-# ==============================================================================
-
-# ------------------------------------------------------------------------------
-# N shared clones for each pair of follicles 
-# ------------------------------------------------------------------------------
-
-df_fols <- df_both %>% 
-  filter(!is.na(manual_ADT_ID)) %>% 
-  select(patient_id, clone_subgroup_id_90_similarity, manual_ADT_ID) 
-
-
-for (HH in patients){
-  
-  # HH <- "HH119"
-  # HH <- "HH117"
-  
-  # clone x follicle presence/absence matrix
-  incidence <- df_shared_clones %>% 
-    left_join(df_fols, by = c("patient_id", "clone_subgroup_id_90_similarity")) %>% 
-    filter(patient_id == HH) %>% 
-    select(clone_subgroup_id_90_similarity, manual_ADT_ID) %>% 
-    distinct(clone_subgroup_id_90_similarity, manual_ADT_ID) %>% 
-    mutate(present = 1) %>% 
-    pivot_wider(names_from = manual_ADT_ID, values_from = present, values_fill = 0)
-    
-  mat <- as.matrix(incidence %>% select(-clone_subgroup_id_90_similarity))
-  shared_mat <- t(mat) %*% mat
-  
-  # ------------------------------------------------------------------------------
-  # N shared follicles per follicle VS total cells in that follicle
-  # ------------------------------------------------------------------------------
-  
-  # N follicles each follicle shares >=1 clone with (excluding itself)
-  shared_mat_off_diag <- shared_mat
-  diag(shared_mat_off_diag) <- 0
-  n_shared_follicles <- rowSums(shared_mat_off_diag > 0)
-  
-  df_degree <- tibble(
-    manual_ADT_ID = names(n_shared_follicles),
-    n_shared_follicles = as.integer(n_shared_follicles)
-  )
-  
-  # Total GC B cells per follicle (same filtering as the rest of the pipeline)
-  df_follicle_cells <- df_both %>% 
-    filter(
-      patient_id == HH, L1_annotation == "GC_B_cells", !is.na(manual_ADT_ID)
-    ) %>% 
-    count(manual_ADT_ID, name = "total_cells")
-  
-  df_degree_plot <- df_degree %>% 
-    left_join(df_follicle_cells, by = "manual_ADT_ID")
-  
-  ggplot(df_degree_plot, aes(x = total_cells, y = n_shared_follicles)) +
-    geom_point(size = 2.5, alpha = 0.7) +
-    ggrepel::geom_text_repel(aes(label = manual_ADT_ID), size = 3) +
-    theme_bw() +
-    scale_y_continuous(
-      breaks = scales::breaks_width(1),
-      minor_breaks = scales::breaks_width(1)
-    ) +
-    scale_x_continuous(
-      breaks = scales::breaks_width(20),
-      minor_breaks = scales::breaks_width(10)
-    ) + 
-    labs(
-      title = glue("{HH}: Clonal sharing degree VS follicle size"),
-      subtitle = "At least 2 cells per follicle",
-      x = "Total N GC B cells in follicle",
-      y = "N follicles sharing \u2265 1 clone with this follicle"
-    )
-  
-  ggsave(glue("{outdir}/{HH}_n_shared_follicles_VS_total_cells.png"), width = 8, height = 6.5)
-  
-  
-  # ------------------------------------------------------------------------------
-  # Pairwise clonal sharing between follicles
-  # ------------------------------------------------------------------------------
-  
-  # long format, one row per unordered follicle pair
-  shared_full <- shared_mat %>% 
-    as.data.frame() %>% 
-    rownames_to_column("follicle_1") %>% 
-    pivot_longer(-follicle_1, names_to = "follicle_2", values_to = "n_shared_clones") %>% 
-    mutate(
-      follicle_1 = str_split_i(follicle_1, "-", 2) %>% as.double(),
-      follicle_2 = str_split_i(follicle_2, "-", 2) %>% as.double()
-    ) %>% 
-    filter(follicle_1 < follicle_2)
-  
-  follicle_breaks <- sort(unique(c(shared_full$follicle_1, shared_full$follicle_2)))
-  
-  ggplot(shared_full, aes(x = follicle_1, y = follicle_2, fill = n_shared_clones)) +
-    geom_tile(color = "white") +
-    geom_text(aes(label = n_shared_clones), size = 2.5) +
-    scale_fill_viridis_c(option = "magma", direction = -1, na.value = "grey90") +
-    coord_equal() +
-    theme_bw() +
-    scale_x_continuous(
-      breaks = follicle_breaks,
-      limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
-      expand = c(0, 0),
-      minor_breaks = scales::breaks_width(1)
-    ) + 
-    scale_y_continuous(
-      breaks = follicle_breaks,
-      limits = c(min(follicle_breaks) - 0.5, max(follicle_breaks) + 0.5),
-      expand = c(0, 0),
-      minor_breaks = scales::breaks_width(1)
-    ) + 
-    labs(
-      x = "Follicle", y = "Follicle", fill = "N shared\nclones",
-      title = glue("{HH}: Pairwise clonal sharing between follicles")
-    )
-  
-  ggsave(glue("{outdir}/{HH}_pairwise_clonal_sharing_follicles.png"), width = 8, height = 8)
-  
-  # ------------------------------------------------------------------------------
-  # N shared clones for each pair of follicles - Include distance
-  # ------------------------------------------------------------------------------
-  
-  # Get pairs in same order
-  shared_full_reorder <- shared_full %>% 
-    mutate(
-      f_lo = pmin(follicle_1, follicle_2),
-      f_hi = pmax(follicle_1, follicle_2)
-    )
-  
-  fol_distances_reorder <- fol_distances_list[[HH]] %>% 
-    filter(!(str_detect(follicle_1, "_R|_L") | str_detect(follicle_2, "_R|_L"))) %>% # TODO figure out what is follicle 13 and what is follicle 15 
-    mutate(
-      f_lo = pmin(follicle_1, follicle_2) %>% as.double(),
-      f_hi = pmax(follicle_1, follicle_2) %>% as.double()
-    ) %>% 
-    select(!c(follicle_1, follicle_2)) 
-  
-  # Join dataframes of N shared clones and distance
-  shared_full_dist <- shared_full_reorder %>% 
-    left_join(fol_distances_reorder, by = c("f_lo", "f_hi")) %>% 
-    select(!c(follicle_1, follicle_2)) %>% 
-    mutate(
-      n_shared_clones_fct = n_shared_clones %>% as.factor()
-    )
-  
-  # For fragments individually
-  if (!"fragment" %in% colnames(shared_full_dist)) {
-    shared_full_dist <- shared_full_dist %>% mutate(fragment = "All")
-  }
-  
-  shared_full_dist_plot <- shared_full_dist %>% filter(!is.na(fragment))
-  
-  # Plot
-  shared_full_dist_plot %>% 
-    ggplot(aes(x = distance_px, y = n_shared_clones_fct, color = fragment)) +
-    geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
-    geom_point(position = position_jitterdodge(jitter.width = 0, dodge.width = 0.75), alpha = 0.5) + 
-    theme_bw() + 
-    labs(
-      title = glue("{HH}: Pairwise distance and N shared clones between follicles"),  
-      x = "Distance between pairs of follicles",
-      y = "N shared clones between pairs of follciles"
-    )
-  
-  ggsave(glue("{outdir}/{HH}_pairwise_clonal_sharing_follicles_VS_distance.png"), width = 8, height = 8)
-
-}
-
-
 

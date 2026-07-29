@@ -14,7 +14,7 @@ source("10_broad_annotation/script/color_palette.R")
 # ------------------------------------------------------------------------------
 
 rds_files <- list.files("45_immcantation/out/rds") 
-resolve_LC_files <- grep("resolve_LC_3_definitions", rds_files, value = TRUE)
+resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 
 patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 1)) %>% unlist()
 patients
