@@ -523,18 +523,19 @@ lapply(c(10, 20), function(n_clones){
         ancestor_isotype = resolved_isotype_vec[ancestor]
       ) %>% 
       filter(!is.na(ancestor), !is.na(node_isotype), !is.na(ancestor_isotype)) %>% 
+      rowwise() %>% 
       mutate(
         ancestor_rank = match(ancestor_isotype, isotype_switch_order),
         node_rank = match(node_isotype, isotype_switch_order),
         switch_type = case_when(
-          node_isotype == ancestor_isotype ~ "none",
+          node_isotype %in% ancestor_isotypes ~ "none",   # descendant's isotype was already present at the ancestor -> no real switch
           node_rank > ancestor_rank ~ "sequential",
           node_rank < ancestor_rank ~ "reverse",
           TRUE ~ "unknown"
-        ),
-        clone = clone,
-        clone_nr = clone_nr
-      )
+        )
+      ) %>% 
+      ungroup() %>% 
+      mutate(clone = clone, clone_nr = clone_nr)
     
     switch_results_all <- bind_rows(switch_results_all, switch_df)
     

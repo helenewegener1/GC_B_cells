@@ -1,6 +1,6 @@
 ancestor_isotype	node_isotype	switch_type	n_clones	clone_nrs	clones
-IGHA1	IGHA2	sequential	4	1, 10, 11, 12	2197_1, 2835_1, 4252_1, 5340_1
 IGHA2	IGHA1	reverse	3	1, 10, 11	2197_1, 2835_1, 4252_1
+IGHA1	IGHA2	sequential	2	10, 11	2197_1, 2835_1
 IGHA1	IGHG1	reverse	2	5, 19	2335_1, 6058_1
 IGHA2	IGHM/D	reverse	2	1, 14	4252_1, 6680_1
 IGHA1	IGHM/D	reverse	1	16	10074_1
