@@ -1,0 +1,7 @@
+seq_unique,seq_name,L1_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1,Memory_Bcells,IGHM/D,HH117-SI-MILF-nonINF,1,1,2
+seq2,sequence_2,Memory_Bcells,IGHM/D,HH117-SI-MILF-nonINF,1,1,2
+seq3,sequence_3:sequence_5,Memory_Bcells,IGHM/D,HH117-SI-MILF-nonINF,1,1,2
+seq4,sequence_4:sequence_7,Memory_Bcells,IGHM/D,HH117-SI-MILF-nonINF,1,1,2
+seq5,sequence_6,Memory_Bcells,IGHM/D,HH117-SI-MILF-nonINF,1,1,2
+seq6,sequence_8,PCs,IGHM/D,HH117-SILP-INF,2,1,1

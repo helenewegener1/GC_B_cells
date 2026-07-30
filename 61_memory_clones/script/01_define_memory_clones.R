@@ -9,6 +9,11 @@ library(Biostrings)
 df_both <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 patients <- names(df_both)
 
+large_clone <- df_both$HH119 %>% 
+  dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
+  head(1) %>% 
+  pull(clone_subgroup_id_90_similarity)
+
 # ------------------------------------------------------------------------------
 # Define top PC clones 
 # ------------------------------------------------------------------------------
@@ -20,17 +25,26 @@ for (HH in patients){
   # HH <- "HH117"
   
   df_HH <- df_both[[HH]]
-    
-  site_clones <- df_HH %>% 
+  
+  # clones with more than one unique sequence -> can build a tree
+  clones_with_variation <- df_HH %>% 
+    filter(locus == "IGH", L1_annotation == "Memory_Bcells", clone_subgroup_id_90_similarity != large_clone) %>% 
+    group_by(clone_subgroup_id_90_similarity) %>% 
+    summarise(n_unique_seqs = n_distinct(sequence_alignment), .groups = "drop") %>% 
+    filter(n_unique_seqs > 1) %>% 
+    pull(clone_subgroup_id_90_similarity)
+  
+  HH_clones <- df_HH %>% 
     filter(
       locus == "IGH", 
-      L1_annotation == "Memory_Bcells"
+      L1_annotation == "Memory_Bcells", 
+      clone_subgroup_id_90_similarity %in% clones_with_variation
     ) %>% 
     dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
     head(20) %>% 
     pull(clone_subgroup_id_90_similarity)
   
-  mem_clones[[HH]] <- site_clones
+  mem_clones[[HH]] <- HH_clones
 
 }
 

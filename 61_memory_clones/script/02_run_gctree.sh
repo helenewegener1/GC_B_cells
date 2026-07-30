@@ -2,7 +2,7 @@
 set -e
 
 # Define directories 
-WD=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/61_PC_memory
+WD=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/61_memory_clones
 # DATA_DIR=${WD}/fasta/GC_clones
 # OUT_DIR=${WD}/out
 # PLOT_DIR=${WD}/plot
@@ -18,46 +18,47 @@ PLOT_DIR=${WD}/plot
 # sample_list=$(ls $DATA_DIR | cut -d "." -f1)
 sample_list=(
 
-  HH117_clone_nr_1_clone_6680_1
-  HH117_clone_nr_2_clone_1788_1
-  HH117_clone_nr_3_clone_4448_1
-  HH117_clone_nr_4_clone_2392_1
-  HH117_clone_nr_5_clone_2703_1
-  HH117_clone_nr_6_clone_9105_1
-  HH117_clone_nr_7_clone_3932_1
-  HH117_clone_nr_8_clone_4601_1
-  HH117_clone_nr_9_clone_5150_1
-  HH117_clone_nr_10_clone_5208_1
-  HH117_clone_nr_11_clone_522_1
-  HH117_clone_nr_12_clone_8608_1
-  HH117_clone_nr_13_clone_10202_1
-  HH117_clone_nr_14_clone_10223_1
-  HH117_clone_nr_15_clone_1502_1
-  HH117_clone_nr_16_clone_5243_1
-  HH117_clone_nr_17_clone_8213_1
-  HH117_clone_nr_18_clone_9573_1
-  HH117_clone_nr_19_clone_9628_1
-  HH117_clone_nr_20_clone_10056_1
+ # HH117_clone_nr_1_clone_6680_1
+ # HH117_clone_nr_2_clone_4448_1
+ # HH117_clone_nr_3_clone_2392_1
+ # HH117_clone_nr_4_clone_2703_1
+ # HH117_clone_nr_5_clone_9105_1
+ # HH117_clone_nr_6_clone_3932_1
+ # HH117_clone_nr_7_clone_4601_1
+ # HH117_clone_nr_8_clone_5150_1
+ # HH117_clone_nr_9_clone_5208_1
+ # HH117_clone_nr_10_clone_522_1
+ # HH117_clone_nr_11_clone_8608_1
+ # HH117_clone_nr_12_clone_10202_1
+ # HH117_clone_nr_13_clone_1502_1
+ # HH117_clone_nr_14_clone_5243_1
+ # HH117_clone_nr_15_clone_8213_1
+ # HH117_clone_nr_16_clone_9573_1
+ # HH117_clone_nr_17_clone_9628_1
+ # HH117_clone_nr_18_clone_10056_1
+ # HH117_clone_nr_19_clone_1061_1
+ # HH117_clone_nr_20_clone_1139_1
+  
   HH119_clone_nr_1_clone_19030_1
   HH119_clone_nr_2_clone_11649_1
   HH119_clone_nr_3_clone_17493_1
-  HH119_clone_nr_4_clone_21605_1
-  HH119_clone_nr_5_clone_28521_1
-  HH119_clone_nr_6_clone_5519_1
-  HH119_clone_nr_7_clone_16678_1
-  HH119_clone_nr_8_clone_16073_1
-  HH119_clone_nr_9_clone_17526_1
-  HH119_clone_nr_10_clone_18616_1
-  HH119_clone_nr_11_clone_7441_1
-  HH119_clone_nr_12_clone_13948_1
-  HH119_clone_nr_13_clone_16668_1
-  HH119_clone_nr_14_clone_9837_1
-  HH119_clone_nr_15_clone_10865_1
-  HH119_clone_nr_16_clone_24292_1
-  HH119_clone_nr_17_clone_13034_1
-  HH119_clone_nr_18_clone_10721_1
-  HH119_clone_nr_19_clone_16040_1
-  HH119_clone_nr_20_clone_17902_1
+  HH119_clone_nr_4_clone_28521_1
+  HH119_clone_nr_5_clone_5519_1
+  HH119_clone_nr_6_clone_16678_1
+  HH119_clone_nr_7_clone_16073_1
+  HH119_clone_nr_8_clone_17526_1
+  HH119_clone_nr_9_clone_18616_1
+  HH119_clone_nr_10_clone_7441_1
+  HH119_clone_nr_11_clone_13948_1
+  HH119_clone_nr_12_clone_16668_1
+  HH119_clone_nr_13_clone_9837_1
+  HH119_clone_nr_14_clone_10865_1
+  HH119_clone_nr_15_clone_24292_1
+  HH119_clone_nr_16_clone_13034_1
+  HH119_clone_nr_17_clone_10721_1
+  HH119_clone_nr_18_clone_16040_1
+  HH119_clone_nr_19_clone_17902_1
+  HH119_clone_nr_20_clone_25178_1
 
 )
 
