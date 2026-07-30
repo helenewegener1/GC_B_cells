@@ -1,0 +1,7 @@
+ancestor_celltype	node_celltype	n_clones	clone_nrs	clones
+GC_B_cells_SI-PP	PCs_SI-PP	8	2, 3, 5, 7, 11, 13, 18, 20	10141_1, 11748_1, 14825_1, 25753_1, 27055_1, 28685_1, 8071_1, 8356_1
+PCs_SI-PP	GC_B_cells_SI-PP	8	2, 3, 5, 7, 8, 11, 13, 20	10141_1, 11748_1, 14825_1, 27055_1, 28685_1, 8071_1, 8356_1, 8404_1
+PCs_SILP	GC_B_cells_SI-PP	5	2, 5, 7, 8, 19	14825_1, 26371_1, 27055_1, 8071_1, 8404_1
+PCs_SILP	PCs_SI-PP	3	2, 5, 8	14825_1, 27055_1, 8404_1
+PCs_SI-PP	Memory_Bcells_SI-PP	1	3	11748_1
+PCs_SILP	Memory_Bcells_SI-MILF	1	5	14825_1
