@@ -1,0 +1,9 @@
+seq_unique,seq_name,L1_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2:sequence_3:sequence_7:sequence_9:sequence_10:sequence_13:sequence_16:sequence_20:sequence_25:sequence_26:sequence_27:sequence_31:sequence_32:sequence_34,Memory_Bcells:PCs,IGHA2,HH119-CO-SMILF:HH119-COLP,1,1,2
+seq2,sequence_4:sequence_5:sequence_6:sequence_14:sequence_22:sequence_33,PCs,IGHA2,HH119-COLP,2,1,1
+seq3,sequence_8,PCs,IGHA2,HH119-COLP,2,1,1
+seq4,sequence_11:sequence_19:sequence_21:sequence_23:sequence_24:sequence_28:sequence_29:sequence_35:sequence_36,PCs,IGHA2:IGHA1,HH119-COLP,2,2,1
+seq5,sequence_12,PCs,IGHA2,HH119-COLP,2,1,1
+seq6,sequence_15:sequence_17,PCs,IGHA2,HH119-COLP,2,1,1
+seq7,sequence_18,PCs,IGHA2,HH119-COLP,2,1,1
+seq8,sequence_30,PCs,IGHA2,HH119-COLP,2,1,1

@@ -3,13 +3,6 @@ set -e
 
 # Define directories 
 WD=/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/60_PC_clones
-# DATA_DIR=${WD}/fasta/GC_clones
-# OUT_DIR=${WD}/out
-# PLOT_DIR=${WD}/plot
-
-# DATA_DIR=${WD}/fasta/gmm_threshold_GC_clones
-# OUT_DIR=${WD}/out_gmm_threshold
-# PLOT_DIR=${WD}/plot_gmm_threshold
 
 DATA_DIR=${WD}/fasta
 OUT_DIR=${WD}/out
@@ -46,18 +39,18 @@ sample_list=(
   HH119-COLP_clone_nr_6_clone_2415_1
   HH119-COLP_clone_nr_7_clone_14852_1
   HH119-COLP_clone_nr_8_clone_24807_1
-  HH119-COLP_clone_nr_9_clone_21731_1
-  HH119-COLP_clone_nr_10_clone_24782_1
+  HH119-COLP_clone_nr_9_clone_24782_1
+  HH119-COLP_clone_nr_10_clone_28532_1
   HH119-SILP_clone_nr_1_clone_27931_1
   HH119-SILP_clone_nr_2_clone_15801_1
   HH119-SILP_clone_nr_3_clone_4112_1
   HH119-SILP_clone_nr_4_clone_14426_1
   HH119-SILP_clone_nr_5_clone_24269_1
   HH119-SILP_clone_nr_6_clone_28233_1
-  HH119-SILP_clone_nr_7_clone_21605_1
-  HH119-SILP_clone_nr_8_clone_344_1
-  HH119-SILP_clone_nr_9_clone_24246_2
-  HH119-SILP_clone_nr_10_clone_19014_1
+  HH119-SILP_clone_nr_7_clone_344_1
+  HH119-SILP_clone_nr_8_clone_24246_2
+  HH119-SILP_clone_nr_9_clone_19014_1
+  HH119-SILP_clone_nr_10_clone_11471_1
 
 )
 
@@ -66,9 +59,6 @@ sample_list=(
 for sample in "${sample_list[@]}"; do
 
   echo "Processing $sample..."
-
-  # sample=HH117_clone_nr_10_clone_2587_1
-  # sample=HH117_clone_nr_6_clone_1278_1
 
   # Make sample sepecific outdir
   OUT_DIR_SAMPLE=${OUT_DIR}/$sample

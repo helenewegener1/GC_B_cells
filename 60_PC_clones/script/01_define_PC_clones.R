@@ -9,15 +9,20 @@ library(Biostrings)
 df_both <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 patients <- names(df_both)
 
+large_clone <- df_both$HH119 %>% 
+  dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
+  head(1) %>% 
+  pull(clone_subgroup_id_90_similarity)
+
 # ------------------------------------------------------------------------------
-# Define top PC clones 
+# Define top PC clones (excluding clones with no sequence variation)
 # ------------------------------------------------------------------------------
 
 PC_clones <- list()
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   
   df_HH <- df_both[[HH]]
   
@@ -25,18 +30,28 @@ for (HH in patients){
   
   for (site in LP_sites){
     
+    # site <- "HH119-SILP"
+    
+    # clones with more than one unique sequence -> can build a tree
+    clones_with_variation <- df_HH %>% 
+      filter(locus == "IGH", L1_annotation == "PCs", sample_clean == site, clone_subgroup_id_90_similarity != large_clone) %>% 
+      group_by(clone_subgroup_id_90_similarity) %>% 
+      summarise(n_unique_seqs = n_distinct(sequence_alignment), .groups = "drop") %>% 
+      filter(n_unique_seqs > 1) %>% 
+      pull(clone_subgroup_id_90_similarity)
+    
     site_clones <- df_HH %>% 
       filter(
         locus == "IGH", 
         L1_annotation == "PCs", 
-        sample_clean == site
+        sample_clean == site,
+        clone_subgroup_id_90_similarity %in% clones_with_variation
       ) %>% 
       dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
       head(10) %>% 
       pull(clone_subgroup_id_90_similarity)
     
     PC_clones[[site]] <- site_clones
-
   }
   
 }
@@ -58,14 +73,14 @@ seq_dir <- list()
 
 for (site in names(PC_clones)){
   
-  # site <- "HH117-SILP-INF"
+  # site <- "HH119-SILP"
   HH <- site %>% str_split_i("-", 1)
   df_HH <- df_both[[HH]]
   
   for (clone_nr in clone_nrs){
     
     # Get top "clone_nr" clone from given sample
-    # clone_nr <- 1
+    # clone_nr <- 7
     
     # rank those clones by total size (all cell types) and take top 10
     clone <- PC_clones[[site]][[clone_nr]]

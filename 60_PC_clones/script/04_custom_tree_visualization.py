@@ -20,9 +20,8 @@ os.environ["XDG_RUNTIME_DIR"] = "/tmp/runtime-runner"
 os.environ["MPLBACKEND"] = "agg"
 os.environ["MPLCONFIGDIR"] = "/home/projects/dtu_00062/people/helweg/projects/GC_B_cells/.matplotlib"
 
-
 samples_dict = {
-
+  
   "HH117-SILP-INF_clone_nr_10_clone_142_1": "CD SI-LP-INF: 10. largest PC clone",
   "HH117-SILP-INF_clone_nr_1_clone_8843_1": "CD SI-LP-INF: 1. largest PC clone",
   "HH117-SILP-INF_clone_nr_2_clone_9213_1": "CD SI-LP-INF: 2. largest PC clone",
@@ -43,7 +42,7 @@ samples_dict = {
   "HH117-SILP-nonINF_clone_nr_7_clone_4207_1": "CD SI-LP-nonINF: 7. largest PC clone",
   "HH117-SILP-nonINF_clone_nr_8_clone_5794_1": "CD SI-LP-nonINF: 8. largest PC clone",
   "HH117-SILP-nonINF_clone_nr_9_clone_6938_1": "CD SI-LP-nonINF: 9. largest PC clone",
-  "HH119-COLP_clone_nr_10_clone_24782_1": "CD CO-LP: 10. largest PC clone",
+  "HH119-COLP_clone_nr_10_clone_28532_1": "CD CO-LP: 10. largest PC clone",
   "HH119-COLP_clone_nr_1_clone_24419_1": "CD CO-LP: 1. largest PC clone",
   "HH119-COLP_clone_nr_2_clone_4664_1": "CD CO-LP: 2. largest PC clone",
   "HH119-COLP_clone_nr_3_clone_4528_1": "CD CO-LP: 3. largest PC clone",
@@ -52,15 +51,18 @@ samples_dict = {
   "HH119-COLP_clone_nr_6_clone_2415_1": "CD CO-LP: 6. largest PC clone",
   "HH119-COLP_clone_nr_7_clone_14852_1": "CD CO-LP: 7. largest PC clone",
   "HH119-COLP_clone_nr_8_clone_24807_1": "CD CO-LP: 8. largest PC clone",
-  "HH119-COLP_clone_nr_9_clone_21731_1": "CD CO-LP: 9. largest PC clone",
+  "HH119-COLP_clone_nr_9_clone_24782_1": "CD CO-LP: 9. largest PC clone",
   "HH119-SILP_clone_nr_1_clone_27931_1": "CD SI-LP: 1. largest PC clone",
   "HH119-SILP_clone_nr_2_clone_15801_1": "CD SI-LP: 2. largest PC clone",
   "HH119-SILP_clone_nr_3_clone_4112_1": "CD SI-LP: 3. largest PC clone",
   "HH119-SILP_clone_nr_4_clone_14426_1": "CD SI-LP: 4. largest PC clone",
   "HH119-SILP_clone_nr_5_clone_24269_1": "CD SI-LP: 5. largest PC clone",
   "HH119-SILP_clone_nr_6_clone_28233_1": "CD SI-LP: 6. largest PC clone",
-  "HH119-SILP_clone_nr_7_clone_21605_1": "CD SI-LP: 7. largest PC clone",
-
+  "HH119-SILP_clone_nr_7_clone_344_1": "CD SI-LP: 7. largest PC clone",
+  "HH119-SILP_clone_nr_8_clone_24246_2": "CD SI-LP: 8. largest PC clone",
+  "HH119-SILP_clone_nr_9_clone_19014_1": "CD SI-LP: 9. largest PC clone",
+  "HH119-SILP_clone_nr_10_clone_11471_1": "CD SI-LP: 10. largest PC clone",
+  
 }
 
 ########################################################################################
