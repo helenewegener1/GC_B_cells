@@ -130,6 +130,10 @@ df_plot %>%
   ggplot(aes(x = clone_size_group, y = n, color = sample_clean)) + 
   geom_point(alpha = 0.5, size = 2) + 
   geom_line(aes(group = sample_clean)) + 
+  scale_y_continuous(
+    breaks = scales::breaks_width(100),
+    limits = c(0.5, NA)
+  ) + 
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   labs(

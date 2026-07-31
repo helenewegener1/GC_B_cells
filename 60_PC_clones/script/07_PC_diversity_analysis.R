@@ -29,8 +29,8 @@ df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
 # df_heavy$manual_ADT_full_ID
 
 # Remove largest clone as it "takes all the signal"
-# df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "20693_1")
-# extra <- "_largest_removed"
+df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "20693_1")
+extra <- "_largest_removed"
 
 # Prep output
 outdir = glue("60_PC_clones/plot/07_diversity_analysis/{HH}{extra}")

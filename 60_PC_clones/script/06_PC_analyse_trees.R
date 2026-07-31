@@ -7,7 +7,7 @@ library(ggnewscale)
 # Load data
 # ------------------------------------------------------------------------------
 
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 seq_dir <- readRDS("60_PC_clones/out/rds/seq_dir.rds")
 
 patients <- names(resolve_LC_list_germlined)

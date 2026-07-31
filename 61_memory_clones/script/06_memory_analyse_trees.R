@@ -7,13 +7,12 @@ library(ggnewscale)
 # Load data
 # ------------------------------------------------------------------------------
 
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/resolve_LC_90_similarity_germlined.rds")
-seq_dir <- readRDS("60_PC_clones/out/rds/seq_dir.rds")
+resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+seq_dir <- readRDS("61_memory_clones/out/rds/seq_dir.rds")
 
 patients <- names(resolve_LC_list_germlined)
 
-COMPARTMENT <- "HH119-SILP" 
-HH <- COMPARTMENT %>% str_split_i("-", 1)
+HH <- "HH119"
 
 n_clones_begin_list <- list(
   "HH117" = 1, 
@@ -22,13 +21,13 @@ n_clones_begin_list <- list(
 
 n_clones_begin <- n_clones_begin_list[[HH]]
 
-outdir <- glue("60_PC_clones/06_analyse_trees/{HH}")
+outdir <- glue("61_memory_clones/06_analyse_trees/{HH}")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
 # Get top clones
 top_clones <- resolve_LC_list_germlined[[HH]] %>% 
   filter(
-    locus == "IGH" & L1_annotation == "PCs" & str_detect(sample_clean, "LP")
+    locus == "IGH" & L1_annotation == "Memory_Bcells"
   ) %>% 
   count(clone_subgroup_id_90_similarity, sort = TRUE) 
 
@@ -50,7 +49,7 @@ clone <- top_clones %>%
   pull(clone_subgroup_id_90_similarity)
 
 # Get clone files 
-clone_full_name <- glue("{COMPARTMENT}_clone_nr_{clone_nr}_clone_{clone}")
+clone_full_name <- glue("{HH}_clone_nr_{clone_nr}_clone_{clone}")
 
 sequence_ids <- seq_dir[[clone_full_name]]
 
@@ -65,8 +64,8 @@ df_clone <- resolve_LC_list_germlined[[HH]] %>%
 
 df_clone$sequence_alignment == sequence_ids
 
-tree_file <- glue("60_PC_clones/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
-idmap_file <- glue("60_PC_clones/out_idmap/idmap_{clone_full_name}.txt")
+tree_file <- glue("61_memory_clones/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
+idmap_file <- glue("61_memory_clones/out_idmap/idmap_{clone_full_name}.txt")
 
 # Load gctree
 tree <- read.tree(tree_file)

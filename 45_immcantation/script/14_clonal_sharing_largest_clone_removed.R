@@ -540,8 +540,8 @@ for (HH in patients){
       minor_breaks = scales::breaks_width(1)
     ) +
     scale_x_continuous(
-      breaks = scales::breaks_width(20),
-      minor_breaks = scales::breaks_width(10)
+      breaks = scales::breaks_width(10),
+      minor_breaks = scales::breaks_width(5)
     ) + 
     labs(
       title = glue("{HH}: Clonal sharing degree VS follicle size"),

@@ -171,6 +171,10 @@ for (n_min_cells in c(1, 2)){
       breaks = scales::breaks_width(10),
       minor_breaks = scales::breaks_width(5)
     ) +
+    scale_x_continuous(
+      breaks = scales::breaks_width(1),
+      minor_breaks = scales::breaks_width(1)
+    ) +
     theme(
       axis.text.y.right = element_blank(),
       axis.ticks.y.right = element_blank(),
@@ -212,7 +216,10 @@ for (n_min_cells in c(1, 2)){
       inherit.aes = FALSE
       # size = 3
     ) +
-    scale_y_continuous(labels = scales::percent) +
+    scale_y_continuous(
+      labels = scales::percent, 
+      breaks = scales::breaks_width(0.1)
+    ) +
     theme_bw() +
     labs(
       fill = "N follciles",
@@ -535,8 +542,8 @@ for (HH in patients){
       minor_breaks = scales::breaks_width(1)
     ) +
     scale_x_continuous(
-      breaks = scales::breaks_width(20),
-      minor_breaks = scales::breaks_width(10)
+      breaks = scales::breaks_width(10),
+      minor_breaks = scales::breaks_width(5)
     ) + 
     labs(
       title = glue("{HH}: Clonal sharing degree VS follicle size"),

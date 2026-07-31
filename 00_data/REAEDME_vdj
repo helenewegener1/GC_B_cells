@@ -1,0 +1,1 @@
+scp -r helweg@transfer.computerome.dk:/home/projects/dtu_00062/people/helweg/projects/packages/immcantation/scripts/germlines/human/vdj .

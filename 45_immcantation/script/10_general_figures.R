@@ -156,7 +156,10 @@ for (subset in names(B_cell_subsets)){
   df_plot %>% 
     ggplot(aes(x = patient_id, fill = has_bcr)) + 
     geom_bar(position = "fill") +
-    scale_y_continuous(labels = scales::percent) +
+    scale_y_continuous(
+      labels = scales::percent,
+      breaks = scales::breaks_width(0.1)
+    ) +
     scale_fill_manual(values = c("grey", "#7FB069")) + 
     geom_text(
       data = df_count,
@@ -525,7 +528,7 @@ for (subset in names(B_cell_subsets)){
     )
   
   png_string <- str_replace_all(subset, " ", "_")
-  ggsave(glue("{outdir5}/freq_of_clones_size_{png_string}.png"), width = 8)
+  ggsave(glue("{outdir5}/freq_of_clones_size_{png_string}.png"), width = 9)
   
 }
 
