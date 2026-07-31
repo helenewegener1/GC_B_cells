@@ -3,6 +3,8 @@ library(glue)
 library(ape)
 library(ggnewscale)
 
+# MAYBE NOT RELEVANT
+
 # ------------------------------------------------------------------------------
 # Load data
 # ------------------------------------------------------------------------------
@@ -30,7 +32,7 @@ top_clones <- resolve_LC_list_germlined[[HH]] %>%
   filter(
     locus == "IGH" & L1_annotation == "PCs" & str_detect(sample_clean, "LP")
   ) %>% 
-  count(clone_subgroup_id_90_similarity, sort = TRUE) 
+  dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) 
 
 
 # ==============================================================================
@@ -66,7 +68,7 @@ df_clone <- resolve_LC_list_germlined[[HH]] %>%
 df_clone$sequence_alignment == sequence_ids
 
 tree_file <- glue("60_PC_clones/plot/{clone_full_name}/{clone_full_name}.inference.1.nk")
-idmap_file <- glue("60_PC_clones/out_idmap/idmap_{clone_full_name}.txt")
+idmap_file <- glue("60_PC_clones/out/{clone_full_name}/idmap.txt")
 
 # Load gctree
 tree <- read.tree(tree_file)
@@ -497,7 +499,7 @@ lapply(c(10, 20), function(n_clones){
     
   }
   
-  switch_results_all %>% count(clone_nr, switch_type)
+  switch_results_all %>% dplyr::count(clone_nr, switch_type)
   
   # Plot result - Bar plot 
   switch_type_colors <- list("none" = "grey", "sequential" = "forestgreen", "reverse" = "purple")
@@ -507,7 +509,7 @@ lapply(c(10, 20), function(n_clones){
       clone_plot = glue("{clone_nr}\n({clone})") %>% fct_reorder(clone_nr), 
       switch_type_fct = factor(switch_type, levels = c("none", "sequential", "reverse"))
     ) %>% 
-    count(clone_plot, switch_type_fct, .drop = FALSE) %>%  # .drop = FALSE keeps zero-count combos
+    dplyr::count(clone_plot, switch_type_fct, .drop = FALSE) %>%  # .drop = FALSE keeps zero-dplyr::count combos
     ggplot(aes(x = clone_plot, y = n, fill = switch_type_fct)) + 
     geom_col(position = position_dodge2(preserve = "single"), width = 0.7) + 
     theme_bw() + 
@@ -541,7 +543,7 @@ lapply(c(10, 20), function(n_clones){
   
    plot_data <- switch_results_all %>% 
     filter(switch_type %in% c("sequential", "reverse")) %>% 
-    count(node_isotype, ancestor_isotype, switch_type) %>% 
+    dplyr::count(node_isotype, ancestor_isotype, switch_type) %>% 
     right_join(
       expand_grid(
         ancestor_isotype = isotype_switch_order,
@@ -683,12 +685,12 @@ lapply(c(10, 20), function(n_clones){
   
   celltype_results_all %>% 
     filter(gc_to_output) %>% 
-    count(clone_nr, clone, ancestor_celltype, node_celltype, sort = TRUE)
+    dplyr::count(clone_nr, clone, ancestor_celltype, node_celltype, sort = TRUE)
   
-  # ---- overall transition counts, any direction ----
+  # ---- overall transition dplyr::counts, any direction ----
   
   celltype_results_all %>% 
-    count(ancestor_celltype, node_celltype, sort = TRUE)
+    dplyr::count(ancestor_celltype, node_celltype, sort = TRUE)
   
   # Table
   celltype_transition_clones <- celltype_results_all %>% 
@@ -713,7 +715,7 @@ lapply(c(10, 20), function(n_clones){
   celltype_order <- df$L1_annotation_sample %>% unique() %>% sort()
   
   celltype_plot_data <- celltype_results_all %>% 
-    count(ancestor_celltype, node_celltype) %>% 
+    dplyr::count(ancestor_celltype, node_celltype) %>% 
     right_join(
       expand_grid(
         ancestor_celltype = celltype_order,
