@@ -197,65 +197,75 @@ df_overlap_plot <- df_overlap_plot %>%
   filter()
 
 # heatmap: raw N shared clones between isotype pairs 
-df_overlap_plot %>% 
-  ggplot(aes(x = isotype_a_plot, y = isotype_b_plot, fill = n_shared_clones)) + 
-  geom_tile(color = "white") + 
-  geom_text(aes(label = n_shared_clones), size = 3.5) + 
-  scale_fill_gradient(low = "white", high = "darkorange") + 
-  scale_x_discrete(limits = isotype_order_plot) + 
-  scale_y_discrete(limits = rev(isotype_order_plot)) + 
-  facet_wrap(~patient_id) + 
-  labs(
-    x = NULL, y = NULL, fill = "N shared\nclones",
-    title = "Clonal overlap between isotypes of memory B cell clones",
-    subtitle = glue("Number of clones containing both isotypes (at least {n_min_cells} cells each)"),
-    caption = "Number in parenthesis specifies the number of clones with given isotype"
-  ) + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+lapply(patients, function(HH){
+  # HH <- "HH117"
+  df_overlap_plot %>% 
+    filter(patient_id == HH) %>% 
+    ggplot(aes(x = isotype_a_plot, y = isotype_b_plot, fill = n_shared_clones)) + 
+    geom_tile(color = "white") + 
+    geom_text(aes(label = n_shared_clones), size = 3.5) + 
+    scale_fill_gradient(low = "white", high = "darkorange") + 
+    labs(
+      x = NULL, y = NULL, fill = "N shared\nclones",
+      title = glue("{HH}: Clonal overlap between isotypes in memory B cells"),
+      subtitle = glue("Number of clones containing both isotypes (at least {n_min_cells} cells each)"),
+      caption = "Number in parenthesis specifies the number of clones with given isotype"
+    ) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  ggsave(glue("{outdir}/{HH}_mem_isotype_overlap_N.png"))
+  
+})
 
-ggsave(glue("{outdir}/mem_isotype_overlap_N.png"), width = 13, height = 7)
 
 # heatmap: % overlap of smaller set
-df_overlap_plot %>%
-  ggplot(aes(x = isotype_a_plot, y = isotype_b_plot, fill = pct_overlap_smaller_set)) +
-  geom_tile(color = "white") +
-  geom_text(aes(label = round(pct_overlap_smaller_set, 1)), size = 3.5) +
-  scale_fill_gradient(low = "white", high = "steelblue", limits = c(0, 100)) +
-  scale_x_discrete(limits = isotype_order_plot) +
-  scale_y_discrete(limits = rev(isotype_order_plot)) +
-  facet_wrap(~patient_id) +
-  labs(
-    x = NULL, y = NULL, fill = "% overlap\n(smaller set)",
-    title = "Clonal overlap between isotypes of memory B cell clones",
-    subtitle = glue("Shared clones as a percentage of the smaller isotype's clone count (at least {n_min_cells} cells each)"),
-    caption = "Number in parenthesis specifies the number of clones with given isotype"
-  ) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+lapply(patients, function(HH){
+  
+  # HH <- "HH117"
+  df_overlap_plot %>%
+    filter(patient_id == HH) %>% 
+    ggplot(aes(x = isotype_a_plot, y = isotype_b_plot, fill = pct_overlap_smaller_set)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = round(pct_overlap_smaller_set, 1)), size = 3.5) +
+    scale_fill_gradient(low = "white", high = "steelblue", limits = c(0, 100)) +
+    facet_wrap(~patient_id) +
+    labs(
+      x = NULL, y = NULL, fill = "% overlap\n(smaller set)",
+      title = glue("{HH}: Clonal overlap between isotypes in memory B cells"),
+      subtitle = glue("Shared clones as a percentage of the smaller isotype's clone count (at least {n_min_cells} cells each)"),
+      caption = "Number in parenthesis specifies the number of clones with given isotype"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  ggsave(glue("{outdir}/{HH}_mem_isotype_overlap_pct_smaller_set.png"))
+  
+})
 
-ggsave(glue("{outdir}/mem_isotype_overlap_pct_smaller_set.png"), width = 13, height = 7)
 
 # heatmap: Morisita-Horn index (upper triangle only)
-df_overlap_plot %>% 
-  ggplot(aes(x = isotype_a_plot, y = isotype_b_plot, fill = morisita_horn)) + 
-  geom_tile(color = "white") + 
-  geom_text(aes(label = round(morisita_horn, 2)), size = 3.5) + 
-  scale_fill_gradient(low = "white", high = "forestgreen", limits = c(0, 1)) + 
-  scale_x_discrete(limits = isotype_order_plot) + 
-  scale_y_discrete(limits = rev(isotype_order_plot)) + 
-  facet_wrap(~patient_id) + 
-  labs(
-    x = NULL, y = NULL, fill = "MHI",
-    title = "Clonal overlap between PC isotypes of memory B cell clones",
-    subtitle = glue("Morisita-Horn index, weighting shared clones by relative cell abundance (at least {n_min_cells} cells each)"),
-    caption = "Number in parenthesis specifies the number of clones with given isotype"
-  ) + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-ggsave(glue("{outdir}/mem_isotype_overlap_MHI.png"), width = 13, height = 7)
-
+lapply(patients, function(HH){
+  
+  df_overlap_plot %>% 
+    filter(patient_id == HH) %>% 
+    ggplot(aes(x = isotype_a_plot, y = isotype_b_plot, fill = morisita_horn)) + 
+    geom_tile(color = "white") + 
+    geom_text(aes(label = round(morisita_horn, 2)), size = 3.5) + 
+    scale_fill_gradient(low = "white", high = "forestgreen", limits = c(0, 1)) + 
+    facet_wrap(~patient_id) + 
+    labs(
+      x = NULL, y = NULL, fill = "MHI",
+      title = glue("{HH}: Clonal overlap between memory B cells isotypes"),
+      subtitle = glue("Morisita-Horn index, weighting shared clones by relative cell abundance (at least {n_min_cells} cells each)"),
+      caption = "Number in parenthesis specifies the number of clones with given isotype"
+    ) + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  ggsave(glue("{outdir}/{HH}_mem_isotype_overlap_MHI.png"))
+  
+})
 # ------------------------------------------------------------------------------
 # Clonal diversity per isotype (Hill numbers, alakazam)
 # ------------------------------------------------------------------------------

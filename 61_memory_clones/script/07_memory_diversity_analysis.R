@@ -16,7 +16,7 @@ resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
-HH <- "HH117"
+HH <- "HH119"
 extra <- ""
 
 # Read rds
@@ -29,8 +29,8 @@ df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
 # df_heavy$manual_ADT_full_ID
 
 # Remove largest clone as it "takes all the signal"
-# df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "20693_1")
-# extra <- "_largest_removed"
+df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "21605_1")
+extra <- "_largest_removed"
 
 # Prep output
 outdir = glue("61_memory_clones/plot/07_diversity_analysis/{HH}{extra}")
