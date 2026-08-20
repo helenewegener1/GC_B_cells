@@ -430,6 +430,10 @@ df_plot %>%
     inter_fol_distance = "Median inter-follicular",
     intra_fol_distance = "Median intra-follicular"
   )) +
+  scale_y_continuous(
+    breaks = scales::breaks_width(10),
+    minor_breaks = scales::breaks_width(5)
+  ) + 
   labs(
     title = glue("Full sequence, top {n_clones} GC B cell clones"),
     subtitle = "P-values: paired Wilcoxon test, intra- vs. inter-follicular distance",
