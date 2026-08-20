@@ -1,0 +1,76 @@
+70_TCR_analysis
+================
+
+Downstream clone-level analysis for TCR data, mirroring the structure and
+plotting conventions of 60_PC_clones / 61_memory_clones (BCR), but adapted
+to what's biologically valid for T cells.
+
+Why this isn't a 1:1 copy of the BCR pipeline
+----------------------------------------------
+The BCR downstream stages (45_immcantation, 45_changeo, 48_GCtree,
+60_PC_clones, 61_memory_clones) exist to reconstruct germline sequences and
+somatic hypermutation (SHM), which is what makes lineage trees (GCtree),
+mutational load, and isotype-switch analyses meaningful for B cells.
+T cells don't undergo SHM or class switching, so there is no TCR equivalent
+of changeo/germline reconstruction or GCtree lineage trees. Clonal identity
+for TCR instead comes directly from scRepertoire's CTstrict (paired
+TRA + TRB CDR3 nucleotide sequence), which is already computed in
+20_VDJ/out/combined.TCR.filtered.rds (see 20_VDJ/script/TCR_make_combined.filtered.R
+and TCR_scRepetorie.R).
+
+So this folder reproduces the *analytical content* that carries over cleanly:
+general clone-size figures, diversity analysis (rarefaction/Hill numbers,
+Gini, D50/D20), and clonal sharing across compartments — using CTstrict as
+the clone identifier instead of clone_subgroup_id_90_similarity, and TRBV
+gene usage as the "isotype-analog" categorical variable (in place of isotype
+pie charts, since TCR has no isotypes).
+
+Scripts
+-------
+01_prep_TCR_clone_data.R   Flattens 20_VDJ/out/combined.TCR.filtered.rds into
+                            one row per cell, re-derives sample_clean /
+                            sample_clean_fol / patient_id using the same
+                            suffix-stripping rules as BCR_01_make_combined.filtered.R
+                            (so compartment names line up with the existing
+                            sample_clean_plot_colors palette), joins in
+                            L1_annotation from the integrated Seurat object,
+                            and filters to Tfh_cells. Writes RDS files to
+                            70_TCR_analysis/out/rds/.
+
+02_TCR_general_figures.R   N clones per compartment, clone-size frequency
+                            plot, TRBV gene usage barplot, APackOfTheClones /
+                            circle-packing views of clone sizes.
+
+03_TCR_diversity_analysis.R  Clonal abundance curve, Hill-number diversity
+                            curve, Shannon diversity per compartment, D50/D20
+                            dominance, Gini coefficient — single patient and
+                            combined, via alakazam (same functions as
+                            60_PC_clones/07_PC_diversity_analysis.R).
+
+04_TCR_clonal_sharing.R    How many compartments each clone is seen in,
+                            clonal-sharing proportions, and a pie-chart grid
+                            of TRBV usage per compartment-shared clone
+                            (isotype-pie analog), via
+                            60_PC_clones/08_PC_clonal_sharing.R.
+
+Before running
+--------------
+Every script has a NOTES/ASSUMPTIONS block at the top. In particular:
+
+- SEURAT_OBJ_PATH and the cell_id join logic in 01_prep_TCR_clone_data.R are
+  a best guess based on the join pattern used in
+  60_PC_clones/05_PC_general_figures.R (APackOfTheClones section) — verify
+  the barcode/cell_id convention against your actual Seurat object before
+  trusting the join.
+- CELL_TYPE_FILTER defaults to "Tfh_cells" (the T cell L1_annotation label
+  used elsewhere in this project, e.g. finer_annotation/ and
+  10_broad_annotation/script/color_palette.R). Change it if you want a
+  different T cell subset.
+- The site filter used for clonal sharing/diversity defaults to comparing
+  follicles within SI-PP (Tfh dynamics within Peyer's patch follicles), not
+  "LP" as in 60_PC_clones (which is specifically about PC dissemination to
+  the lamina propria). Adjust SITE_PATTERN at the top of 03/04 if you want a
+  different comparison.
+- CTgene's exact string format (which V/J genes end up in which position)
+  should be spot-checked once against a few real rows before trusting the
+  TRBV-extraction regex in 02/04.
