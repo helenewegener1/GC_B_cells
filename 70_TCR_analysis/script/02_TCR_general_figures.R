@@ -18,9 +18,7 @@ source("10_broad_annotation/script/color_palette.R")
 #   regex doesn't match.
 # ==============================================================================
 
-CELL_TYPE_FILTER <- "Tfh_cells"
-
-df_tcr <- readRDS(glue("70_TCR_analysis/out/rds/TCR_{CELL_TYPE_FILTER}.rds"))
+df_tcr <- readRDS("70_TCR_analysis/out/df_tcr_filtered.rds")
 
 df_tcr$CTgene %>% head()
 
@@ -40,33 +38,72 @@ df_tcr <- df_tcr %>%
 # N clones per compartment
 # ==============================================================================
 
-outdir1 <- glue("{outdir}/N_clones/")
+outdir1 <- glue("{outdir}/N_cells/")
 dir.create(outdir1, recursive = TRUE, showWarnings = FALSE)
 
-df_tcr %>%
-  filter(!is.na(CTstrict)) %>%
-  select(sample_clean_fol, CTstrict) %>%
-  distinct() %>%
-  count(sample_clean_fol) %>%
-  ggplot(aes(x = sample_clean_fol, y = n)) +
-  geom_col() +
-  geom_text(aes(label = n), size = 3, vjust = -0.5) +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(
-    title = glue("N TCR clones per compartment ({CELL_TYPE_FILTER})"),
-    y = "N clones",
-    x = "Compartment"
-  )
+for (HH in names(patient_names)) {
+  
+  df_tcr %>%
+    filter(patient_id == HH, !is.na(CTstrict)) %>%
+    mutate(
+      sample_clean_fol_plot = str_remove_all(sample_clean_fol, glue("{HH}-")) %>% str_remove_all("SI-PP_")
+    ) %>% 
+    count(sample_clean_fol_plot) %>%
+    ggplot(aes(x = sample_clean_fol_plot, y = n)) +
+    geom_col() +
+    geom_text(aes(label = n), size = 3, vjust = -0.5) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+      title = glue("{HH}: N Tfh cells with TCR per compartment"),
+      y = "N Tfh cells",
+      x = "Compartment"
+    ) 
+  
+  ggsave(glue("{outdir1}/{HH}_N_cells_per_sample.png"), width = 12, height = 6)
+  
+}
 
-ggsave(glue("{outdir1}/N_clones_per_sample.png"), width = 12, height = 6)
+
+# ==============================================================================
+# N clones per compartment
+# ==============================================================================
+
+outdir2 <- glue("{outdir}/N_clones/")
+dir.create(outdir2, recursive = TRUE, showWarnings = FALSE)
+
+for (HH in names(patient_names)) {
+  
+  df_tcr %>%
+    filter(patient_id == HH, !is.na(CTstrict)) %>%
+    mutate(
+      sample_clean_fol_plot = str_remove_all(sample_clean_fol, glue("{HH}-")) %>% str_remove_all("SI-PP_")
+    ) %>% 
+    select(sample_clean_fol_plot, CTstrict) %>%
+    distinct() %>% 
+    count(sample_clean_fol_plot) %>%
+    ggplot(aes(x = sample_clean_fol_plot, y = n)) +
+    geom_col() +
+    geom_text(aes(label = n), size = 3, vjust = -0.5) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(
+      title = glue("{HH}: N clones with TCR per compartment"),
+      y = "N clones",
+      x = "Compartment"
+    ) 
+  
+  ggsave(glue("{outdir2}/{HH}_N_clones_per_sample.png"), width = 12, height = 6)
+  
+}
+
 
 # ==============================================================================
 # Clone size frequency plot
 # ==============================================================================
 
-outdir2 <- glue("{outdir}/clone_size/")
-dir.create(outdir2, recursive = TRUE, showWarnings = FALSE)
+outdir3 <- glue("{outdir}/clone_size/")
+dir.create(outdir3, recursive = TRUE, showWarnings = FALSE)
 
 df_plot <- df_tcr %>%
   filter(!is.na(CTstrict)) %>%
@@ -97,39 +134,40 @@ df_plot %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(
-    title = glue("Frequency of TCR clone sizes ({CELL_TYPE_FILTER})"),
+    title = "Frequency of TCR clone sizes",
     x = "Clone size (N cells)",
     y = "N clones",
     color = "Compartment"
   )
 
-ggsave(glue("{outdir2}/freq_of_clone_size.png"), width = 10, height = 6)
+ggsave(glue("{outdir3}/freq_of_clone_size.png"), width = 10, height = 6)
 
 # ==============================================================================
 # TRBV gene usage (isotype-barplot analog)
 # ==============================================================================
 
-outdir3 <- glue("{outdir}/gene_usage/")
-dir.create(outdir3, recursive = TRUE, showWarnings = FALSE)
+# outdir4 <- glue("{outdir}/gene_usage/")
+# dir.create(outdir4, recursive = TRUE, showWarnings = FALSE)
+# 
 
-df_plot <- df_tcr %>%
-  filter(!is.na(CTstrict), !is.na(v_trb_call)) %>%
-  count(sample_clean, v_trb_call)
-
-df_plot %>%
-  ggplot(aes(x = sample_clean, y = n, fill = v_trb_call)) +
-  geom_col() +
-  scale_fill_viridis_d(option = "turbo") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(
-    title = glue("TRBV gene usage ({CELL_TYPE_FILTER})"),
-    x = "Compartment",
-    y = "N cells",
-    fill = "TRBV gene"
-  )
-
-ggsave(glue("{outdir3}/TRBV_usage_barplot.png"), width = 12, height = 6.5)
+# df_plot <- df_tcr %>%
+#   filter(!is.na(CTstrict), !is.na(v_trb_call)) %>%
+#   count(sample_clean, v_trb_call)
+# 
+# df_plot %>%
+#   ggplot(aes(x = sample_clean, y = n, fill = v_trb_call)) +
+#   geom_col() +
+#   scale_fill_viridis_d(option = "turbo") +
+#   theme_bw() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   labs(
+#     title = "TRBV gene usage",
+#     x = "Compartment",
+#     y = "N cells",
+#     fill = "TRBV gene"
+#   )
+# 
+# ggsave(glue("{outdir3}/TRBV_usage_barplot.png"), width = 12, height = 6.5)
 
 # ==============================================================================
 # APackOfTheClones - clone-size UMAP overlay

@@ -30,11 +30,7 @@ source("10_broad_annotation/script/color_palette.R")
 #    `table()` check).
 # ==============================================================================
 
-SEURAT_OBJ_PATH  <- "30_seurat_integration/out/seurat_integrated_10PCs.rds"  # TODO: confirm this is the object carrying final T cell L1_annotation
-CELL_TYPE_FILTER <- "Tfh_cells"                                              # L1_annotation value for the T cell population of interest
-
-outdir <- "70_TCR_analysis/out/rds"
-dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -48,16 +44,18 @@ names(combined.TCR.filtered) %>% head(20)
 # Flatten list -> one row per cell
 # ------------------------------------------------------------------------------
 
+# Bind row together and add column with sample_fol_name (name of list)
 df_tcr <- imap(combined.TCR.filtered, function(df, sample_fol_name) {
   df %>% mutate(sample_fol_name = sample_fol_name)
 }) %>%
   bind_rows()
 
-nrow(df_tcr)
-
 # Drop HTO Doublet / Negative calls (mirrors BCR pipeline convention)
 df_tcr <- df_tcr %>%
   filter(!str_detect(sample_fol_name, "Doublet|Negative"))
+
+nrow(df_tcr)
+table(df_tcr$sample_high_level)
 
 # ------------------------------------------------------------------------------
 # Clean sample names -> sample_clean / sample_clean_fol / patient_id
@@ -82,42 +80,38 @@ df_tcr$patient_id %>% table()
 # Join Seurat metadata for L1_annotation (Tfh_cells)
 # ------------------------------------------------------------------------------
 
-seurat_integrated <- readRDS(SEURAT_OBJ_PATH)
-
 meta <- seurat_integrated@meta.data %>%
   rownames_to_column("row_barcode") %>%
-  mutate(cell_id = glue("{sample}_{row_barcode}") %>% str_remove("_\\d$")) %>%  # TODO: verify against your barcode convention
-  select(cell_id, L1_annotation, any_of(c("finer_annotation")))
+  mutate(cell_id = glue("{sample}_{row_barcode}") %>% str_remove("_\\d+")) %>%  
+  select(cell_id, L1_annotation)
+
+# meta$cell_id %>% tail()
+meta %>%  
+  filter(str_detect(cell_id, "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH") & L1_annotation == "Tfh_cells")
 
 df_tcr <- df_tcr %>%
-  mutate(cell_id = glue("{sample_fol_name}_{barcode}") %>% str_remove("_\\d$"))  # TODO: verify this matches `meta$cell_id` above
+  mutate(cell_id = glue("{sample_high_level}_{barcode}") %>% str_remove("_\\d$"))  
+
+df_tcr %>% 
+  filter(str_detect(cell_id, "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"))
+
+# df_tcr$cell_id %>% tail()
 
 # Sanity check before trusting the join
+# 180 cells have TCR informtaion but is not found in seurat object --> these cells were probably filtered out during GEX QC.
 table(df_tcr$cell_id %in% meta$cell_id)
 
-df_tcr <- df_tcr %>%
-  left_join(meta, by = "cell_id")
+# df_tcr$cell_id[df_tcr$cell_id %in% meta$cell_id] # Checking which cells these are
 
-table(df_tcr$L1_annotation, useNA = "always")
-
+df_tcr_filtered <- df_tcr %>%
+  inner_join(meta, by = "cell_id") %>%  # Inner join to not keep the bad quality cells 
+  filter(L1_annotation == "Tfh_cells") # Only keep Tfh cells 
+  
 # ------------------------------------------------------------------------------
 # Filter to the T cell population of interest and export
 # ------------------------------------------------------------------------------
 
-df_tcr_filtered <- df_tcr %>%
-  filter(L1_annotation == CELL_TYPE_FILTER)
-
 nrow(df_tcr_filtered)
 
-saveRDS(df_tcr, glue("{outdir}/TCR_all_cells.rds"))
-saveRDS(df_tcr_filtered, glue("{outdir}/TCR_{CELL_TYPE_FILTER}.rds"))
+saveRDS(df_tcr_filtered, "70_TCR_analysis/out/df_tcr_filtered.rds")
 
-for (HH in unique(df_tcr_filtered$patient_id)) {
-
-  # HH <- "HH117"
-  saveRDS(
-    df_tcr_filtered %>% filter(patient_id == HH),
-    glue("{outdir}/{HH}_TCR_{CELL_TYPE_FILTER}.rds")
-  )
-
-}
