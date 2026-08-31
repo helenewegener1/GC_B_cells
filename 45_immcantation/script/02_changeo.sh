@@ -20,22 +20,22 @@ IMMCANTATION_OUT_BASE="/home/projects/dtu_00062/people/helweg/projects/GC_B_cell
 # 06_seurat_load/script/load_seurat_v9.R.
 mapfile -t POOL_DIRS < <(ls -1 "${CELLRANGER_BASE}")
 
-OCM_LABELS=()
+POOL_LABELS=()
 if [ "${#POOL_DIRS[@]}" -eq 1 ] && [ "${POOL_DIRS[0]}" == "res_${SAMPLE_NAME}" ]; then
     # Not OCM - single pool, keep the plain sample name
-    OCM_LABELS=("${SAMPLE_NAME}")
+    POOL_LABELS=("${SAMPLE_NAME}")
 else
     # OCM - one pool per detected subdir, labeled SAMPLE_pool
-    for OCM in "${POOL_DIRS[@]}"; do
-        OCM_LABELS+=("${SAMPLE_NAME}_${OCM}")
+    for POOL in "${POOL_DIRS[@]}"; do
+        POOL_LABELS+=("${SAMPLE_NAME}_${POOL}")
     done
 fi
 
-# --- Run Change-O for each OCM ---------------------------------------------
+# --- Run Change-O for each pool ---------------------------------------------
 for i in "${!POOL_DIRS[@]}"; do
 
     POOL_DIR="${POOL_DIRS[$i]}"
-    OUTNAME="${OCM_LABELS[$i]}"
+    OUTNAME="${POOL_LABELS[$i]}"
 
     CELLRANGER_OUT_PATH="${CELLRANGER_BASE}/${POOL_DIR}/vdj_b"
     FILTERED_CONTIGS_PATH="${CELLRANGER_OUT_PATH}/filtered_contig.fasta"
