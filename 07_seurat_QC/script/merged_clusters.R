@@ -104,6 +104,66 @@ merged_clusters_all <- list(
       "1" = c("1", "6"),
       "2" = c("4"),
       "3" = c("5")
+    ),
+    
+    # --- HH151 (OCM) samples ---
+    # Based on 07_seurat_QC/plot_v9/01_clusters/<sample>/*_clusters.png and the
+    # *_broad_{B_cell,T_cell,DC,plasmablast_plasma_cell}.png feature plots:
+    # clusters sharing the same broad-marker signature (CD19/CD79A/CD79B/MS4A1/
+    # CD40/CD74 for B cells; CD3D/E/G/CD4/TRBC1/CD2/CD7(/CD8) for T cells;
+    # JCHAIN/PRDM1/XBP1/MZB1 for plasmablast/plasma cells; HLA-II+LYZ for
+    # myeloid/DC) were merged into one cluster. Clusters negative across all
+    # four broad panels were kept separate rather than guessed into a category.
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Blue" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2"),   # B cell (Memory)
+      "1" = c("4"),        # T cell
+      "2" = c("3"),        # Plasmablast/PC
+      "3" = c("1")         # unclassified (negative on all broad panels)
+    ),
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "3"),   # B cell
+      "1" = c("1"),        # T cell
+      "2" = c("5"),        # Plasmablast/PC
+      "3" = c("2", "4")    # unclassified (negative on all broad panels)
+    ),
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Red" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("1", "2"),   # B cell
+      "1" = c("0"),        # T cell
+      "2" = c("3")         # Plasmablast/PC
+    ),
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Yellow" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "3"),   # B cell
+      "1" = c("2"),        # T cell
+      "2" = c("5"),        # Plasmablast/PC
+      "3" = c("1"),        # unclassified, near B cell cluster
+      "4" = c("4")         # unclassified, near T cell cluster
+    ),
+    
+    "HH151-SILP-INF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("2"),        # Myeloid/DC (HLA-II very high, LYZ+, CD4+)
+      "2" = c("3"),        # B cell (MS4A1+)
+      "3" = c("4"),        # T cell
+      "4" = c("5")         # unclassified
+    ),
+    
+    "HH151-SILP-nonINF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("2"),        # Myeloid/DC (HLA-II very high, LYZ+)
+      "2" = c("3"),        # unclassified CD4+ (CD3-negative, HLA-II-negative)
+      "3" = c("4"),        # T cell (CD8+)
+      "4" = c("5"),        # B cell
+      "5" = c("6")         # unclassified
     )
   ),
   
