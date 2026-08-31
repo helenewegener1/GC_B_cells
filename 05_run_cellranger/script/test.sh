@@ -9,8 +9,9 @@
 #PBS -N run_cellranger
 
 # Define working directory (which is the out dir here)
-WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out"
-SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
+WD="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/05_run_cellranger/out_test"
+# SAMPLE_DIR="/home/projects/dtu_00062/data/KU09/FASTQ_ku09_mkfastq/outs/fastq_path/HKL3YDSXF"
+SAMPLE_DIR="/home/projects/dtu_00062/data/KU10/FASTQ_KU10"
 #CONFIG_DIR="/home/people/helweg/ciir/people/helweg/projects/GC_B_cells/04_prep_config/out"
 
 module load tools
@@ -26,7 +27,7 @@ cd "$WD"
 # Run cellranger multi for all IDs
 # for ID in "${samples_array[@]}"; do
 
-ID="HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+ID="HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB"
     
 echo "--- Starting analysis for sample: ${ID} ---"
 # echo "${OUT_DIR}/${ID}_Multi_Analysis"

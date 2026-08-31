@@ -1,5 +1,3 @@
-setwd("~/ciir/people/helweg/projects/GC_B_cells/")
-
 library(tidyverse)
 library(Seurat)
 library(glue)
@@ -8,6 +6,7 @@ version <- "v9"
 
 # Samples
 samples <- list.files(glue("05_run_cellranger/out_{version}/")) %>% str_split_i("_", 2)
+# samples <- samples[1:16] # TMP!!!
 
 # Prep out list
 seurat_obj_list <- list()
@@ -15,54 +14,84 @@ seurat_obj_list <- list()
 for (sample in samples){
   
   # sample <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  # sample <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB"
+  # sample <- "HH151-SILP-INF-PC"
   # sample <- samples[[1]]
   
   # Define path to cellranger output
   # The files in the per_sample_outs directory have been demultiplexed to single samples.
   # Read more about output of cellrange multi: https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/outputs/cr-3p-outputs-cellplex
-  OUTS_DIR <- glue("05_run_cellranger/out_{version}/res_{sample}/outs/per_sample_outs/res_{sample}")
+  OUTS_DIR <- glue("05_run_cellranger/out_{version}/res_{sample}/outs/per_sample_outs")
+  
+  # Check for OCMs
+  dirs_in_outsdir <- list.dirs(OUTS_DIR, recursive = FALSE, full.names = FALSE)
+  if (length(dirs_in_outsdir) == 1 & dirs_in_outsdir[[1]] == glue("res_{sample}")){
+    # ocm = FALSE
+    GEX_DIRs <- list(glue("{OUTS_DIR}/res_{sample}"))
+  } else if (length(dirs_in_outsdir) > 1) {
+    # ocm = TRUE
+    GEX_DIRs <- glue("{OUTS_DIR}/{dirs_in_outsdir}")
+  }
   
   # Read GEX counts (the default method for 10x data)
-  gex.data <- Read10X(data.dir = glue("{OUTS_DIR}/count/sample_filtered_feature_bc_matrix"))
+  gex.data_list <- lapply(GEX_DIRs, function(GEX_DIR) Read10X(data.dir = glue("{GEX_DIR}/count/sample_filtered_feature_bc_matrix"))) %>% 
+    setNames(dirs_in_outsdir)
+  # gex.data <- Read10X(data.dir = glue("{GEX_DIR}/count/sample_filtered_feature_bc_matrix"))
   
   # Create the base Seurat object
   
-  ######################## If antibody data available ######################## 
-  if (length(gex.data) == 2 & "Gene Expression" %in% names(gex.data)){ 
+  for (i in 1:length(gex.data_list)){
     
+    gex.data <- gex.data_list[[i]]
+    gex.name <- names(gex.data_list)[[i]]
     
-    # Import Gene Expression (GEX) Data 
-    seurat_obj <- CreateSeuratObject(
-      counts = gex.data$`Gene Expression`,
-      project = "Multi_Analysis", 
-      min.cells = 3,
-      min.features = 200
-    )
+    ######################## If antibody data available ######################## 
+    if (length(gex.data) == 2 & "Gene Expression" %in% names(gex.data)){ 
+      
+      
+      # Import Gene Expression (GEX) Data 
+      seurat_obj <- CreateSeuratObject(
+        counts = gex.data$`Gene Expression`,
+        project = "Multi_Analysis", 
+        min.cells = 3,
+        min.features = 200
+      )
+      
+      # Import Antibody Capture (ADT) Data 
+      
+      # Extract the ADT count matrix from the list
+      adt_counts <- gex.data$`Antibody Capture`
+      
+      # Get the list of cell barcodes that exist in the GEX-based Seurat object
+      gex_cells <- colnames(seurat_obj)
+      
+      # Subset the ADT matrix to include ONLY those GEX cells
+      adt_counts_aligned <- adt_counts[, gex_cells]
+      
+      # Add ADT data as a new assay (e.g., "ADT")
+      seurat_obj[["ADT"]] <- CreateAssayObject(counts = adt_counts_aligned) 
+      
+      ################### If only gene expression data is available ################### 
+    } else { 
+      
+      # Import Gene Expression (GEX) Data 
+      seurat_obj <- CreateSeuratObject(
+        counts = gex.data,
+        project = "Multi_Analysis", 
+        min.cells = 3,
+        min.features = 200
+      )
+      
+    }
     
-    # Import Antibody Capture (ADT) Data 
+    # Update name if OCM 
+    if (gex.name != glue("res_{sample}")) {
+      list_name <- glue("{sample}_{gex.name}")
+    } else {
+      list_name <- sample
+    }
     
-    # Extract the ADT count matrix from the list
-    adt_counts <- gex.data$`Antibody Capture`
-    
-    # Get the list of cell barcodes that exist in the GEX-based Seurat object
-    gex_cells <- colnames(seurat_obj)
-    
-    # Subset the ADT matrix to include ONLY those GEX cells
-    adt_counts_aligned <- adt_counts[, gex_cells]
-    
-    # Add ADT data as a new assay (e.g., "ADT")
-    seurat_obj[["ADT"]] <- CreateAssayObject(counts = adt_counts_aligned) 
-    
-    ################### If only gene expression data is available ################### 
-  } else { 
-    
-    # Import Gene Expression (GEX) Data 
-    seurat_obj <- CreateSeuratObject(
-      counts = gex.data,
-      project = "Multi_Analysis", 
-      min.cells = 3,
-      min.features = 200
-    )
+    seurat_obj_list[[list_name]] <- seurat_obj
     
   }
   
@@ -153,7 +182,7 @@ for (sample in samples){
   # Be mindful of the barcode naming convention differences between GEX and VDJ outputs!
 
   # Add seurat object to list 
-  seurat_obj_list[[sample]] <- seurat_obj
+  # seurat_obj_list[[sample]] <- seurat_obj
   
 }
 
