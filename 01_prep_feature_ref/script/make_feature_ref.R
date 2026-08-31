@@ -202,7 +202,7 @@ write.csv(HH153_pool1_meta_clean, "01_prep_feature_ref/out/feature_ref_HH153_poo
 
 rm(HH153_pool1_meta, HH153_pool1_meta_clean)
 
-############################### HH153 - Pool 1 ################################# 
+############################### HH153 - Pool 2 ################################# 
 
 # Load data
 HH153_pool2_meta <- xlsx::read.xlsx("00_data/HH153_PP_hashtag_info.xlsx", 

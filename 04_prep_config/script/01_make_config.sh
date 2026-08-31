@@ -86,25 +86,23 @@ for BATCH in "${BATCHES[@]}"; do
       # 3b. Conditional substitution: Replace FEATURE_REF using 'sed -i' on the new file
       if [ "${ADT_STATUS}" == "Yes" ]; then
 
-        # Check for the most specific case first: HH119 and Pool2
-        if [[ "${ID}" == *"HH119"* ]] && [[ "${ID}" == *"Pool2"* ]]; then
-          FEATURE_SUFFIX="HH119_pool_2"
+        # Extract the sample code (e.g. HH117, HH119, HH151, HH153) from the ID
+        HH_CODE=$(echo "${ID}" | grep -oE 'HH[0-9]+' | head -n1)
 
-        # Check for generic HH119 (implies Pool 1 if Pool 2 was not matched)
-        elif [[ "${ID}" == *"HH119"* ]]; then
+        # Extract an explicit pool number if the ID carries one (e.g. "Pool2" -> 2)
+        POOL_NUM=$(echo "${ID}" | grep -oE 'Pool[0-9]+' | grep -oE '[0-9]+')
+
+        if [ -n "${POOL_NUM}" ]; then
+          # Explicitly pool-tagged sample (e.g. HH153-Pool1, HH153-Pool2, HH119-Pool2)
+          FEATURE_SUFFIX="${HH_CODE}_pool_${POOL_NUM}"
+
+        elif [ "${HH_CODE}" == "HH119" ]; then
+          # Legacy naming quirk: HH119's pool 1 FASTQs aren't explicitly tagged "Pool1"
           FEATURE_SUFFIX="HH119_pool_1"
 
-        # Check for HH117
-        elif [[ "${ID}" == *"HH117"* ]]; then
-          FEATURE_SUFFIX="HH117"
-
-        # Check for HH151 (OCM + hashtag - one shared feature ref for the run)
-        elif [[ "${ID}" == *"HH151"* ]]; then
-          FEATURE_SUFFIX="HH151"
-
-        # Check for HH153 (OCM + hashtag - one shared feature ref for the run)
-        elif [[ "${ID}" == *"HH153"* ]]; then
-          FEATURE_SUFFIX="HH153"
+        elif [ -n "${HH_CODE}" ]; then
+          # Single, non-pooled feature reference (e.g. HH117, HH151)
+          FEATURE_SUFFIX="${HH_CODE}"
         fi
 
         # Execute in-place replacement if a reference suffix was determined
@@ -125,3 +123,4 @@ done
 
 echo "--------------------------------------------------------"
 echo "Analysis complete. Customized config files are in the '${CONFIG_DIR}' directory."
+
