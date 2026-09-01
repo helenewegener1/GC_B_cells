@@ -164,6 +164,40 @@ merged_clusters_all <- list(
       "3" = c("4"),        # T cell (CD8+)
       "4" = c("5"),        # B cell
       "5" = c("6")         # unclassified
+    ),
+    
+    "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "3", "4"),   # B cell
+      "1" = c("2"),                  # T cell
+      "2" = c("5"),                  # Plasmablast/PC
+      "3" = c("6")                   # Myeloid/DC (HLA-II+, LYZ+)
+    ),
+    
+    "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "2", "5"),   # B cell
+      "1" = c("4"),                  # T cell
+      "2" = c("6"),                  # Plasmablast/PC
+      "3" = c("3")                   # unclassified (negative on all broad panels)
+    ),
+    
+    "HH153-SILP-INF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("2"),        # Myeloid/DC (HLA-II very high)
+      "2" = c("3"),        # T cell
+      "3" = c("4")         # unclassified
+    ),
+    
+    "HH153-SILP-nonINF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("3", "7"),   # Myeloid/DC (HLA-II+, LYZ+, ITGAX+)
+      "2" = c("4"),        # T cell
+      "3" = c("6"),        # B cell (MS4A1+)
+      "4" = c("2"),        # unclassified
+      "5" = c("5")         # unclassified
     )
   ),
   
