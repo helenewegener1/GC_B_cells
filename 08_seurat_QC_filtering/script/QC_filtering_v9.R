@@ -347,7 +347,245 @@ seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
 # Clean up
 rm(seurat_obj, seurat_obj_filtered)
 
-rm(seurat_obj_list)
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[14]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[15]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[16]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[17]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[18]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[19]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[20]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[21]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[22]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
+
+################################################################################
+
+sample_name <- names(seurat_obj_list)[[23]]
+seurat_obj <- seurat_obj_list[[sample_name]]
+
+Idents(seurat_obj) <- "orig.ident"
+
+# Filter on doublets and calculate QC metrics + plot pre_filter plots
+seurat_obj <- pre_filter_pipeline(seurat_obj)
+
+# Filter cells based on QC plots
+filtering_expr <- expr(nFeature_RNA > 400 & nFeature_RNA < 8000 & percent.mt < 20)
+seurat_obj_filtered <- subset(seurat_obj, subset = !!filtering_expr)
+
+# Plot QC metrics in violin plots after filtering
+plot_qc(seurat_obj = seurat_obj_filtered, sample_name = sample_name, 
+        version = "filtered", filtering = rlang::expr_text(filtering_expr))
+
+# Save filtered seurat object
+seurat_obj_QC_filtered_list[[sample_name]] <- seurat_obj_filtered
+
+# Clean up
+rm(seurat_obj, seurat_obj_filtered)
 
 ########################################## Export list of filtered Seurat objects ##########################################
 
