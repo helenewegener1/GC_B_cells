@@ -1,4 +1,4 @@
-getwd()
+setwd("~/gcb/")
 
 library(SeuratObject)
 library(Seurat)
@@ -10,8 +10,10 @@ library(readxl)
 library(purrr) # map funciton 
 library(tidyr)
 
+version <- "v9"
+
 # Load data
-seurat_obj_QC_filtered_singlets_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list.rds")
+seurat_obj_QC_filtered_singlets_list <- readRDS(glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_singlets_list_{version}.rds"))
 
 sample_names <- names(seurat_obj_QC_filtered_singlets_list)
 
@@ -140,7 +142,7 @@ rm(seurat_obj_QC_filtered_singlets_list)
 ################################################################################ 
 
 # Load data
-seurat_obj_QC_filtered_all_list <- readRDS("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_list.rds")
+seurat_obj_QC_filtered_all_list <- readRDS(glue("08_seurat_QC_filtering/out/seurat_obj_QC_filtered_list_{version}.rds"))
 
 # Prep to save clustered seurat objects
 seurat_obj_clustered_all_list <- rep(0, length(seurat_obj_QC_filtered_all_list)) %>% as.list()
@@ -214,19 +216,26 @@ saveRDS(seurat_obj_clustered_all_list, "09_seurat_QC_clusters/out/seurat_obj_clu
 
 # Sheet names in excel can only be 31 chars
 sheet_names <- list(
-  "HH117-SILP-INF-PC"                                = "HH117_SILP_INF_PC",
-  "HH117-SILP-nonINF-PC"                             = "HH117_SILP_nonINF_PC",
-  "HH117-SI-MILF-INF-HLADR-AND-CD19"                 = "HH117_MILF_INF_HLA_CD19",
-  "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = "HH117_MILF_nonINF_HLA_CD19",
-  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = "HH117_PP_nonINF_HLA_CD19_GC_TFH",
-  "HH119-COLP-PC"                                   = "HH119_COLP_PC",
-  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"        = "HH119_SMILF_CD19_GC_PB_TFH",
-  "HH119-SILP-PC"                                   = "HH119_SILP_PC",
-  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"         = "HH119_MILF_CD19_GC_PB_TFH",
-  "HH119-SI-PP-CD19-Pool1"                           = "HH119_PP_CD19_P1",
-  "HH119-SI-PP-CD19-Pool2"                           = "HH119_PP_CD19_P2",
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"              = "HH119_PP_GC_PB_TFH_P1",
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = "HH119_PP_GC_PB_TFH_P2"
+  "HH117-SILP-INF-PC"                                = "HH117_SILP_INF",
+  "HH117-SILP-nonINF-PC"                             = "HH117_SILP_nonINF",
+  "HH117-SI-MILF-INF-HLADR-AND-CD19"                 = "HH117_MILF_INF",
+  "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = "HH117_MILF_nonINF",
+  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = "HH117_PP_nonINF",
+  "HH119-COLP-PC"                                    = "HH119_COLP",
+  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"        = "HH119_SMILF",
+  "HH119-SILP-PC"                                    = "HH119_SILP",
+  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"         = "HH119_MILF",
+  "HH119-SI-PP-CD19-Pool1"                           = "HH119_SI_PP_CD19_P1",
+  "HH119-SI-PP-CD19-Pool2"                           = "HH119_SI_PP_CD19_P2",
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"              = "HH119_SI_PP_P1",
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = "HH119_SI_PP_P2",
+  "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB"     = "HH151-SI-PP-nonINF",
+  "HH151-SILP-INF-PC"                                = "HH151-SILP-INF",
+  "HH151-SILP-nonINF-PC"                             = "HH151-SILP-nonINF", 
+  "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = "HH153-SI-PP-nonINF_P1",
+  "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = "HH153-SI-PP-nonINF_P2",
+  "HH153-SILP-INF-PC"                                  = "HH153-SILP-INF",
+  "HH153-SILP-nonINF-PC"                               = "HH153-SILP-nonINF"
 )
 
 seurat_obj_singlets_clustered_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
@@ -293,7 +302,14 @@ dc_clusters <- list(
   "HH119-SI-PP-CD19-Pool1"                           = NULL,
   "HH119-SI-PP-CD19-Pool2"                           = NULL,
   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"              = NULL,
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL
+  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL,
+  # "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB"     = 
+  # "HH151-SILP-INF-PC"                                = 
+  # "HH151-SILP-nonINF-PC"                             = 
+  # "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = 
+  # "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = 
+  # "HH153-SILP-INF-PC"                                  = 
+  # "HH153-SILP-nonINF-PC"                               = 
 )
 
 
