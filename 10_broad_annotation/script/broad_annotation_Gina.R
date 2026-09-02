@@ -9,8 +9,6 @@ library(ggplot2)
 # seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
 seurat_obj_singlets_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
 
-# TODO: Removing contaminating clusters in this flow OR at an earlier point. Just before integration.
-
 # Initialize filtered list
 seurat_obj_singlets_annotated_list <- rep(0, length(seurat_obj_singlets_list)) %>% as.list()
 names(seurat_obj_singlets_annotated_list) <- names(seurat_obj_singlets_list)
