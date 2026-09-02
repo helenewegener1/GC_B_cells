@@ -1,5 +1,3 @@
-getwd()
-
 library(SeuratObject)
 library(DropletUtils)
 library(Seurat)
@@ -16,9 +14,9 @@ library(gtools)
 # Load data
 # ---------------------------------------------------------------------------
 
-seurat_obj_annotation <- readRDS("10_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
+seurat_obj_list <- readRDS("10_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
 
-sample_names <- names(seurat_obj_annotation)
+sample_names <- names(seurat_obj_list)
 
 # Exclude DCs
 seurat_obj_nonDC_list <- list()
@@ -27,7 +25,7 @@ for (sample_name in sample_names){
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
   # sample_name <- "HH119-SILP-PC"
-  seurat_obj <- seurat_obj_annotation[[sample_name]]
+  seurat_obj <- seurat_obj_list[[sample_name]]
   
   # Check cell types 
   celltypes_unique <- seurat_obj$celltype_broad %>% unique()
@@ -40,7 +38,7 @@ for (sample_name in sample_names){
   
 }
 
-rm(seurat_obj_annotation)
+rm(seurat_obj_list)
 
 # ---------------------------------------------------------------------------
 # Plot log_10 counts for each ADT for each sample to define zero points
@@ -68,6 +66,7 @@ for (sample_name in sample_names){
   
   # Follicols 
   fols <- rownames(seurat_obj[["ADT"]]$data)
+  fol_id <- fols[[1]] %>% str_remove("\\d+") %>% str_remove("_") %>% str_remove("-")
 
   # CLR normalization of ADT
   # seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "CLR")
@@ -84,7 +83,7 @@ for (sample_name in sample_names){
     
     # fol <- "Fol-3"
     seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>%
-      pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "counts") %>% 
+      pivot_longer(cols = starts_with(fol_id), names_to = "ADT", values_to = "counts") %>% 
       filter(ADT == fol) %>%
       ggplot(aes(x = log10(counts))) + # log counts
       geom_density() +
@@ -107,7 +106,7 @@ for (sample_name in sample_names){
   
   # All together
   seurat_obj[["ADT"]]$counts %>% t() %>% as.data.frame() %>% 
-    pivot_longer(cols = starts_with("Fol"), names_to = "ADT", values_to = "counts") %>% 
+    pivot_longer(cols = starts_with(fol_id), names_to = "ADT", values_to = "counts") %>% 
     ggplot(aes(x = log(counts), fill = ADT)) + 
     geom_density(alpha = 0.5) + 
     facet_wrap(vars(ADT)) + 
@@ -133,7 +132,7 @@ source("11_ADT_demultiplex/script/ADT_zero_points.R")
 # Demultiplexing
 # ---------------------------------------------------------------------------
 
-# seurat_obj_ADT <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT.rds")
+# seurat_obj_ADT <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT.rds") 
 sample_names_ADT <- names(seurat_obj_ADT)
 
 seurat_obj_ADT_demultiplexed <- list()
