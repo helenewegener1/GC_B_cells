@@ -638,6 +638,376 @@ seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
 ################################################################################
 
 
+################################################################################
+sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Blue"
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "Naïve_memory_B_cells", # main memory-like B cell body (CD44/KLF2/CXCR4/CD83+); small embedded satellite w/ AICDA/MKI67/TOP2A+ too minor to split
+  "1" = "Naïve_memory_B_cells", # naive (SELL/FCER2/IL4R/IGHM/IGHD/CD200+)
+  "2" = "Naïve_memory_B_cells", # BANK1/TCL1A/PAX5+
+  "3" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+  "4" = "Tfh_like_cells"        # CD3+, PDCD1/ICOS/CD40LG/SH2D1A/CD84/RORA+
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green"
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+, GC markers negative
+  "1" = "Tfh_like_cells",       # CD3+, BCL6/PDCD1/ICOS/MAF/IL21/SH2D1A/SLAMF6/CD84+
+  "2" = "Contamination_γδT_cell", # CD3 moderate but Tfh-negative, RORA very high (bystander gut T cells)
+  "3" = "GC_B_cells",           # AICDA/MKI67/TOP2A/MEF2B/LMO2/SERPINA9/MME+
+  "4" = "Naïve_memory_B_cells", # B cell, GC markers negative
+  "5" = "PCs_PBs"               # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Red"
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+
+  "1" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+
+  "2" = "Contamination_ambiguous", # negative across B/T/DC/plasmablast broad panels and GC panel; CD83 (activation) only
+  "3" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+  "4" = "Tfh_like_cells"        # CD3+, PDCD1/ICOS/CD40LG/MAF/SH2D1A/CD84/RORA+
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Yellow"
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+
+  "1" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD74+
+  "2" = "Tfh_like_cells",       # CD3+, PDCD1/ICOS/CD40LG/MAF/SH2D1A/CD84/RORA+
+  "3" = "GC_B_cells",           # AICDA/MEF2B/MKI67/TOP2A/SERPINA9/LMO2+
+  "4" = "Contamination_ambiguous", # negative across B/T/DC/plasmablast/GC/TFH panels
+  "5" = "PCs_PBs"               # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH151-SILP-INF-PC"
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+ (dominant, PC-sorted tissue)
+  "1" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+  "2" = "DCs_MNPs",             # HLA-II+++, LYZ+++, ITGAX/CD86+
+  "3" = "Contamination_ambiguous", # negative across B/T/DC/plasmablast/GC/TFH panels
+  "4" = "Contamination_γδT_cell"   # CD3/CD4/CD8+, RORA/CD84+ but Tfh-negative (bystander gut T cells)
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH151-SILP-nonINF-PC" 
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "PCs_PBs", 
+  "1" = "PCs_PBs", 
+  "2" = "DCs_MNPs", 
+  "3" = "Contamination_ambiguous", 
+  "4" = "Naïve_memory_B_cells", 
+  "5" = "Contamination_γδT_cell", 
+  "6" = "Contamination_ambiguous"
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" 
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "GC_B_cells", 
+  "1" = "PCs_PBs", 
+  "2" = "Naïve_memory_B_cells", 
+  "3" = "Contamination_ambiguous", 
+  "4" = "Tfh_like_cells", 
+  "5" = "Naïve_memory_B_cells", 
+  "6" = "Contamination_ambiguous"
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" 
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "GC_B_cells", 
+  "1" = "Naïve_memory_B_cells", 
+  "2" = "Naïve_memory_B_cells", 
+  "3" = "Tfh_like_cells", 
+  "4" = "Contamination_ambiguous", 
+  "5" = "Contamination_ambiguous"
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH153-SILP-INF-PC" 
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "PCs_PBs", 
+  "1" = "PCs_PBs", 
+  "2" = "Contamination_ambiguous", 
+  "3" = "DCs_MNPs", 
+  "4" = "DCs_MNPs", 
+  "5" = "Contamination_ambiguous"
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
+################################################################################
+sample_name <- "HH153-SILP-nonINF-PC" 
+
+seurat_obj <- seurat_obj_singlets_list[[sample_name]]
+
+# Map clusters to cell types
+cluster_to_celltype <- c(
+  "0" = "PCs_PBs", 
+  "1" = "PCs_PBs", 
+  "2" = "DCs_MNPs", 
+  "3" = "PCs_PBs", 
+  "4" = "Contamination_ambiguous", 
+  "5" = "Tfh_like_cells", 
+  "6" = "Contamination_ambiguous"
+)
+
+celltype_broad <- cluster_to_celltype[
+  as.character(seurat_obj$seurat_clusters)
+] %>% as.data.frame()
+
+rownames(celltype_broad) <- colnames(seurat_obj)
+
+# Add broad cell type annotations
+seurat_obj <- AddMetaData(seurat_obj, celltype_broad, "celltype_broad")
+
+# Check that mapping when correctly
+table(seurat_obj$seurat_clusters, seurat_obj$celltype_broad)
+
+# See DimPlot
+n_cells <- ncol(seurat_obj)
+DimPlot(seurat_obj, group.by = "celltype_broad", label = TRUE, cols = celltype_colors) + NoLegend() + 
+  labs(subtitle = sample_name, 
+       caption = glue("N cells: {n_cells}"))
+ggsave(glue("10_broad_annotation/plot/{sample_name}.png"), width = 8, height = 8)
+
+# Export
+seurat_obj_singlets_annotated_list[[sample_name]] <- seurat_obj
+
 # Export seurat object list 
 saveRDS(seurat_obj_singlets_annotated_list, "10_broad_annotation/out/seurat_obj_singlets_annotated_list.rds")
 
