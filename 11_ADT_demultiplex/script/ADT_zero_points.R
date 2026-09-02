@@ -101,28 +101,85 @@ ADT_zero_point_log10 <- list(
     "Fol-32" = 1.9,
     "Fol-33" = 1.9,
     "Fol-34" = 2
-  )
+  ),
   
-  # "" = c(
-  #   "Fol-1" = ,
-  #   "Fol-2" = ,
-  #   "Fol-3" = ,
-  #   "Fol-4" = ,
-  #   "Fol-5" = ,
-  #   "Fol-6" = ,
-  #   "Fol-7" = ,
-  #   "Fol-8" = , 
-  #   "Fol-9" = ,
-  #   "Fol-10" = ,
-  #   "Fol-11" = ,
-  #   "Fol-12" = , 
-  #   "Fol-13" = , 
-  #   "Fol-14" = ,
-  #   "Fol-15" = ,
-  #   "Fol-16" = ,
-  #   "Fol-17" = ,
-  #   "Fol-18" = 
-  # )
+  "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Blue" = c(
+    "HT1" = 2.4,
+    "HT2" = 2.6,
+    "HT4" = 2.0,
+    "HT6" = 2.5,
+    "HT8" = 1.3,
+    "HT11" = 0.7,
+    "HT18" = 1.1,
+    "HT21" = 0.8,
+    "HT22" = 0.6,
+    "HT23" = 0.7
+  ),
+  
+  "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green" = c(
+    "HT1" = 2.5,
+    "HT2" = 2.5,
+    "HT4" = 2.7,
+    "HT6" = 2.5,
+    "HT8" = 4,
+    "HT11" = 0.7,
+    "HT18" = 0.7,
+    "HT21" = 0.7,
+    "HT22" = 0.5,
+    "HT23" = 0.5
+  ),
+  
+  "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Red" = c(
+    "HT1" = 0.4,
+    "HT2" = 1,
+    "HT4" = 0.6,
+    "HT6" = 0.4,
+    "HT8" = 0.8,
+    "HT11" = 1.2,
+    "HT18" = 2,
+    "HT21" = 2.1,
+    "HT22" = 1.7,
+    "HT23" = 1
+  ),
+  
+  "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Yellow" = c(
+    "HT1" = 1,
+    "HT2" = 0.2,
+    "HT4" = 0.5,
+    "HT6" = 0.4,
+    "HT8" = 0.7,
+    "HT11" = 2.4,
+    "HT18" = 2.3,
+    "HT21" = 2,
+    "HT22" = 1.9,
+    "HT23" = 1.9
+  ),
+  
+  "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = c(
+    "Fol-1" = 1,
+    "Fol-2" = 2.65,
+    "Fol-3" = 2.45,
+    "Fol-4" = 2.5,
+    "Fol-5" = 2.7,
+    "Fol-6" = 2.5,
+    "Fol-7" = 2.3,
+    "Fol-8" = 2.5,
+    "Fol-9" = 2.9,
+    "Fol-10" = 2
+  ),
+  
+  "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = c(
+    "HT1" = 3.15,
+    "HT2" = 2.4,
+    "HT4" = 2.7,
+    "HT6" = 2.5,
+    "HT8" = 2.5,
+    "HT11" = 2.5,
+    "HT18" = 2.35,
+    "HT21" = 2.5,
+    "HT22" = 3.1,
+    "HT23" = 2.7
+  )
   
   
   

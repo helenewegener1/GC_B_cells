@@ -132,6 +132,12 @@ source("11_ADT_demultiplex/script/ADT_zero_points.R")
 # Demultiplexing
 # ---------------------------------------------------------------------------
 
+# HH151 with OCMs
+HH151_meta_data <- read_excel("00_data/HH151_PP_ocm_hashtag_info.xlsx")
+HH151_meta_data_clean <- HH151_meta_data %>% 
+  mutate(Follicle = glue("Fol-{Follicle}")) %>% 
+  select(Follicle, OCM, Hashtag)
+
 # seurat_obj_ADT <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT.rds") 
 sample_names_ADT <- names(seurat_obj_ADT)
 
@@ -143,6 +149,7 @@ for (sample_name in sample_names_ADT){
   
   # Define object of sample
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+  # sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green"
   seurat_obj <- seurat_obj_ADT[[sample_name]]
   
   # Get raw ADT counts 
@@ -158,6 +165,26 @@ for (sample_name in sample_names_ADT){
   ## <1 → below noise (background)
   zero_point <- ADT_zero_point[[sample_name]]
   ADT_counts_t_corrected <- sweep(ADT_counts_t, 2, zero_point[colnames(ADT_counts_t)], FUN = "/")
+  
+  # Translate hashtags to follicles in OCM samples
+  if (str_detect(sample_name, "HH151")){
+    
+    # Define and filter for pool 
+    ocm_pool <- sample_name %>% str_split_i("_", -1)
+    
+    HH151_ocm_pool <- HH151_meta_data_clean %>% 
+      filter(OCM == ocm_pool)
+    
+    # Translate 
+    hashtag_to_fol <- HH151_ocm_pool %>% pull(Follicle) %>% as.list()
+    names(hashtag_to_fol) <- HH151_ocm_pool$Hashtag
+    hashtag_to_fol <- unlist(hashtag_to_fol)
+    
+    # Update ADT_counts_t_corrected and drop irrelevant columns
+    colnames(ADT_counts_t_corrected) <- hashtag_to_fol[colnames(ADT_counts_t_corrected)]
+    ADT_counts_t_corrected <- ADT_counts_t_corrected[,hashtag_to_fol]
+      
+  }
   
   # Make long format and calculate log ratios
   ADT_demultiplexed <- ADT_counts_t_corrected %>%
@@ -272,8 +299,21 @@ for (sample_name in sample_names_ADT){
 }
 
 # ---------------------------------------------------------------------------
+# Make and export final list of seurat objects 
+# ---------------------------------------------------------------------------
+
+not_ADT_samples <- names(seurat_obj_nonDC_list)[!names(seurat_obj_nonDC_list) %in% names(seurat_obj_ADT_demultiplexed)]
+
+seurat_obj_ADT_demultiplexed_all <- c(seurat_obj_nonDC_list[not_ADT_samples], seurat_obj_ADT_demultiplexed)
+
+saveRDS(seurat_obj_ADT_demultiplexed_all, "11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
+
+# ---------------------------------------------------------------------------
 # Demultiplexing stats 
 # ---------------------------------------------------------------------------
+
+# seurat_obj_ADT_demultiplexed_all <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
+# seurat_obj_ADT_demultiplexed <- seurat_obj_ADT_demultiplexed_all[names(ADT_zero_point)]
 
 source("11_ADT_demultiplex/script/functions.R")
 
@@ -282,7 +322,7 @@ sample_names_ADT <- names(seurat_obj_ADT_demultiplexed)
 for (sample_name in sample_names_ADT) {
   
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  # sample_name <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
+  # sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green"
   seurat_obj <- seurat_obj_ADT_demultiplexed[[sample_name]]
   
   # ------------------------------
@@ -353,17 +393,17 @@ for (sample_name in sample_names_ADT) {
   seurat_obj.subset <- ScaleData(seurat_obj.subset, features = rownames(seurat_obj.subset), verbose = FALSE)
   seurat_obj.subset <- RunPCA(seurat_obj.subset, features = rownames(seurat_obj.subset), approx = FALSE)
   seurat_obj.subset <- RunUMAP(seurat_obj.subset, dims = 1:8, perplexity = 100)
-  seurat_obj.subset <- RunTSNE(seurat_obj.subset, dims = 1:8, perplexity = 100)
+  # seurat_obj.subset <- RunTSNE(seurat_obj.subset, dims = 1:8, perplexity = 100)
   
   DimPlot(seurat_obj.subset, reduction = "umap", group.by = "manual_ADT_ID", label = TRUE) + NoLegend() + labs(subtitle = sample_name)
   ggsave(glue("{outdir_umap}/UMAP_ADT_ID.png"), width = 9, height = 7)
   DimPlot(seurat_obj.subset, reduction = "umap", group.by = "manual_ADT_class") + labs(subtitle = sample_name)
   ggsave(glue("{outdir_umap}/UMAP_ADT_class.png"), width = 9, height = 7)
   
-  DimPlot(seurat_obj.subset, reduction = "tsne", group.by = "manual_ADT_ID", label = TRUE) + NoLegend() + labs(subtitle = sample_name)
-  ggsave(glue("{outdir_umap}/tSNE_ADT_ID.png"), width = 9, height = 7)
-  DimPlot(seurat_obj.subset, reduction = "tsne", group.by = "manual_ADT_class") + labs(subtitle = sample_name)
-  ggsave(glue("{outdir_umap}/tSNE_ADT_class.png"), width = 9, height = 7)
+  # DimPlot(seurat_obj.subset, reduction = "tsne", group.by = "manual_ADT_ID", label = TRUE) + NoLegend() + labs(subtitle = sample_name)
+  # ggsave(glue("{outdir_umap}/tSNE_ADT_ID.png"), width = 9, height = 7)
+  # DimPlot(seurat_obj.subset, reduction = "tsne", group.by = "manual_ADT_class") + labs(subtitle = sample_name)
+  # ggsave(glue("{outdir_umap}/tSNE_ADT_class.png"), width = 9, height = 7)
   
   # ------------------------------
   # Rigde plot 
@@ -377,37 +417,28 @@ for (sample_name in sample_names_ADT) {
   # Compare to HTODemux
   # ------------------------------
 
-  # Demultiplexing with HTODemux
-  seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "CLR")
-  seurat_obj <- HTODemux(seurat_obj, assay = "ADT", positive.quantile = 0.999)
-  seurat_obj$HTODemux_ADT_ID <- lapply(seurat_obj@meta.data$ADT_classification, function(x) {ifelse(str_detect(x, "_"), "Doublet", x)}) %>% unlist()
-  # seurat_obj$HTODemux_ADT_ID %>% table()
-  
-  # Compare demultiplexing in heatmap
-  seurat_obj[[]] %>% 
-    count(manual_ADT_ID, HTODemux_ADT_ID) %>% 
-    ggplot(aes(x = HTODemux_ADT_ID, y = manual_ADT_ID, fill = n)) +
-    geom_tile() +
-    geom_text(aes(label = n), color = "black") +
-    scale_fill_gradient(low = "lightgrey", high = "red") +
-    theme_minimal() + 
-    labs(
-      subtitle = sample_name
-    )
-  
-  ggsave(glue("11_ADT_demultiplex/plot/{sample_name}/compare_manual_HTODemux.png"), width = 10, height = 6.5)
-  
+  # # Demultiplexing with HTODemux
+  # seurat_obj <- NormalizeData(seurat_obj, assay = "ADT", normalization.method = "CLR")
+  # seurat_obj <- HTODemux(seurat_obj, assay = "ADT", positive.quantile = 0.999)
+  # seurat_obj$HTODemux_ADT_ID <- lapply(seurat_obj@meta.data$ADT_classification, function(x) {ifelse(str_detect(x, "_"), "Doublet", x)}) %>% unlist()
+  # # seurat_obj$HTODemux_ADT_ID %>% table()
+  # 
+  # # Compare demultiplexing in heatmap
+  # seurat_obj[[]] %>% 
+  #   dplyr::count(manual_ADT_ID, HTODemux_ADT_ID) %>% 
+  #   ggplot(aes(x = HTODemux_ADT_ID, y = manual_ADT_ID, fill = n)) +
+  #   geom_tile() +
+  #   geom_text(aes(label = n), color = "black") +
+  #   scale_fill_gradient(low = "lightgrey", high = "red") +
+  #   theme_minimal() + 
+  #   labs(
+  #     subtitle = sample_name
+  #   )
+  # 
+  # ggsave(glue("11_ADT_demultiplex/plot/{sample_name}/compare_manual_HTODemux.png"), width = 10, height = 6.5)
+
 }
 
-# ---------------------------------------------------------------------------
-# Make and export final list of seurat objects 
-# ---------------------------------------------------------------------------
-
-not_ADT_samples <- names(seurat_obj_nonDC_list)[!names(seurat_obj_nonDC_list) %in% names(seurat_obj_ADT_demultiplexed)]
-
-seurat_obj_ADT_demultiplexed_all <- c(seurat_obj_nonDC_list[not_ADT_samples], seurat_obj_ADT_demultiplexed)
-
-saveRDS(seurat_obj_ADT_demultiplexed_all, "11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_all.rds")
 
 # ---------------------------------------------------------------------------
 # Stats - cells per follicle
