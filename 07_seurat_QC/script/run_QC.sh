@@ -17,4 +17,5 @@ module load R/4.5.0
 # Rscript /home/people/helweg/ciir/people/helweg/projects/GC_B_cells/07_seurat_QC/script/QC_v8.R
 # Rscript /home/people/helweg/ciir/people/helweg/projects/GC_B_cells/07_seurat_QC/script/QC_v9.R
 
-Rscript /home/people/helweg/ciir/people/helweg/projects/GC_B_cells/07_seurat_QC/script/02_QC_v9.R
+Rscript /home/people/helweg/ciir/people/helweg/projects/GC_B_cells/07_seurat_QC/script/01_QC.R
+# Rscript /home/people/helweg/ciir/people/helweg/projects/GC_B_cells/07_seurat_QC/script/02_QC.R

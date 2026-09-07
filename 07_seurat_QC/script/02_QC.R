@@ -217,8 +217,8 @@ for (sample_name in sample_names){
 
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
   # sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green"
-  # print("---------------------------------------------------------------")
-  # print(sample_name)
+  print("---------------------------------------------------------------")
+  print(sample_name)
   #
   # ############################ Ambiant RNA with decontX ############################
   # print("----- ----- ----- ----- ----- ----- ----- ----- ----- ----- ----- -----")
@@ -228,14 +228,14 @@ for (sample_name in sample_names){
   
   if (str_detect(sample_name, c("Blue", "Green", "Red", "Yello")) %>% any()){
     pool <- str_split_i(sample_name, "_", 2)
-    raw_counts <- Read10X(data.dir = glue("05_run_cellranger/out_{version}/res_{sample_name_file}/out/multi/count/raw_feature_bc_matrix"))
+    raw_counts <- Read10X(data.dir = glue("05_run_cellranger/out_{version}/res_{sample_name_file}/outs/multi/count/raw_feature_bc_matrix"))
     cell_counts <- Read10X(data.dir = glue("05_run_cellranger/out_{version}/res_{sample_name_file}/outs/per_sample_outs/{pool}/count/sample_filtered_feature_bc_matrix"))
   } else {
     raw_counts <- Read10X(data.dir = glue("05_run_cellranger/out_{version}/res_{sample_name_file}/outs/multi/count/raw_feature_bc_matrix"))
     cell_counts <- Read10X(data.dir = glue("05_run_cellranger/out_{version}/res_{sample_name_file}/outs/per_sample_outs/res_{sample_name_file}/count/sample_filtered_feature_bc_matrix"))
     
   }
-
+  
   if (is.null(names(raw_counts))){
 
     sce <- decontX(cell_counts, background = raw_counts)

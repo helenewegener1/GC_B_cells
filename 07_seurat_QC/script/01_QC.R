@@ -21,6 +21,7 @@ library(purrr)
 library(patchwork)
 library(png)
 library(grid)
+library(writexl)
 
 version <- "v9"
 
@@ -51,9 +52,7 @@ broad_markers <- update_marker_names(broad_markers, seurat_obj)
 
 ########################### Define major cell types ############################
 
-# Prep to save clustered seurat objects
-seurat_obj_clustered_list <- rep(0, length(seurat_obj_list)) %>% as.list()
-names(seurat_obj_clustered_list) <- names(seurat_obj_list)
+
 
 # N PCs
 # n_pcs <- list(
@@ -72,95 +71,118 @@ names(seurat_obj_clustered_list) <- names(seurat_obj_list)
 #   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = 
 # )
 
-# sample_names <- names(seurat_obj_list)
-seurat_obj_clustered_list_old <- readRDS(glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
+sample_names <- names(seurat_obj_list)
+# seurat_obj_clustered_list_old <- readRDS(glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
 
-sample_names <- names(seurat_obj_list)[!(names(seurat_obj_list) %in% names(seurat_obj_clustered_list_old))]
+# sample_names <- names(seurat_obj_list)[!(names(seurat_obj_list) %in% names(seurat_obj_clustered_list_old))]
 
-res <- 0.1
+# Prep to save clustered seurat objects
+seurat_obj_clustered_list <- rep(0, length(sample_names)) %>% as.list()
+names(seurat_obj_clustered_list) <- sample_names
+
+res <- 0.3
 n_dims <- 10
 
-for (sample_name in sample_names){
+for (res in c(0.1, 0.3)){
   
-  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  # sample_name <- "HH119-COLP-PC"
-  # sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green"  
-  
-  print(glue("--- Processing: {sample_name} ---"))
-  
-  # Get seurat object 
-  seurat_obj <- seurat_obj_list[[sample_name]]
-  
-  # Create directory for plots of specific sample
-  out_dir <- glue("07_seurat_QC/plot_{version}/01_clusters/{sample_name}")
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-  
-  # Seurat workflow so I can UMAP
-  seurat_obj <- NormalizeData(seurat_obj, verbose = FALSE)
-  seurat_obj <- FindVariableFeatures(seurat_obj, verbose = FALSE)
-  seurat_obj <- ScaleData(seurat_obj, verbose = FALSE)
-  seurat_obj <- RunPCA(seurat_obj, verbose = FALSE)
-  
-  ElbowPlot(seurat_obj) + labs(title = sample_name) #to determine dimentions used for following steps in doublet detection. Adjust dims. 
-  ggsave(glue("{out_dir}/{sample_name}_elbow.png"), width = 9, height = 5.5)
-
-  seurat_obj <- FindNeighbors(seurat_obj, dims = 1:n_dims, verbose = FALSE)
-  seurat_obj <- FindClusters(seurat_obj, resolution = res, verbose = FALSE)
-  seurat_obj <- RunUMAP(seurat_obj, dims = 1:n_dims, verbose = FALSE)
-
-  n_cells <- ncol(seurat_obj)
-
-  # Plot
-  DimPlot(seurat_obj, reduction = 'umap', label = TRUE) + NoLegend() + 
-    labs(title = glue("Seurat clusters {version}"),
-         subtitle = sample_name, 
-         caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
-  ggsave(glue("{out_dir}/{sample_name}_clusters.png"), width = 8, height = 8)
-  
-  ####################### FeaturePlot with broad_markers ####################### 
-  for (markers in names(broad_markers)){
+  for (sample_name in sample_names){
     
-    FeaturePlot(seurat_obj, features = broad_markers[[markers]], ncol = 3) + 
-      plot_annotation(title = glue("{markers} - {version}"),
-                      subtitle = sample_name,
-                      caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+    # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+    # sample_name <- "HH119-COLP-PC"
+    # sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green"  
     
-    # Adjust heigh of plot to number of markers
-    n_markers <- broad_markers[[markers]] %>% length()
-    height <- (n_markers/3) * 4
+    print(glue("--- Processing: {sample_name} ---"))
     
-    ggsave(glue("{out_dir}/{sample_name}_broad_{markers}.png"), width = 14, height = height)
+    # Get seurat object 
+    seurat_obj <- seurat_obj_list[[sample_name]]
+    
+    # Create directory for plots of specific sample
+    out_dir <- glue("07_seurat_QC/plot_{version}/01_clusters/{sample_name}")
+    dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+    
+    # Seurat workflow so I can UMAP
+    seurat_obj <- NormalizeData(seurat_obj, verbose = FALSE)
+    seurat_obj <- FindVariableFeatures(seurat_obj, verbose = FALSE)
+    seurat_obj <- ScaleData(seurat_obj, verbose = FALSE)
+    seurat_obj <- RunPCA(seurat_obj, verbose = FALSE)
+    
+    ElbowPlot(seurat_obj) + labs(title = sample_name) #to determine dimentions used for following steps in doublet detection. Adjust dims. 
+    ggsave(glue("{out_dir}/{sample_name}_elbow.png"), width = 9, height = 5.5)
+    
+    seurat_obj <- FindNeighbors(seurat_obj, dims = 1:n_dims, verbose = FALSE)
+    seurat_obj <- FindClusters(seurat_obj, resolution = res, verbose = FALSE)
+    seurat_obj <- RunUMAP(seurat_obj, dims = 1:n_dims, verbose = FALSE)
+    
+    n_cells <- ncol(seurat_obj)
+    
+    # Plot
+    DimPlot(seurat_obj, reduction = 'umap', label = TRUE) + NoLegend() + 
+      labs(title = glue("Seurat clusters {version}"),
+           subtitle = sample_name, 
+           caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+    ggsave(glue("{out_dir}/{sample_name}_clusters_res{res}.png"), width = 8, height = 8)
+    
+    ####################### FeaturePlot with broad_markers ####################### 
+    for (markers in names(broad_markers)){
+      
+      FeaturePlot(seurat_obj, features = broad_markers[[markers]], ncol = 3) + 
+        plot_annotation(title = glue("{markers} - {version}"),
+                        subtitle = sample_name,
+                        caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+      
+      # Adjust heigh of plot to number of markers
+      n_markers <- broad_markers[[markers]] %>% length()
+      height <- (n_markers/3) * 4
+      
+      ggsave(glue("{out_dir}/{sample_name}_broad_{markers}.png"), width = 14, height = height)
+      
+    }
+    
+    ############################################################################## 
+    
+    ##################### FeaturePlot with detailed_markers ######################
+    for (markers in names(detailed_markers)){
+      
+      FeaturePlot(seurat_obj, features = detailed_markers[[markers]], ncol = 3) + 
+        plot_annotation(title = glue("{markers} - {version}"),
+                        subtitle = sample_name,
+                        caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
+      
+      # Adjust heigh of plot to number of markers
+      n_markers <- detailed_markers[[markers]] %>% length()
+      height <- (n_markers/3) * 4
+      
+      ggsave(glue("{out_dir}/{sample_name}_detailed_{markers}.png"), width = 14, height = height)
+      
+    }
+    
+    ############################## DEG per cluster ###############################
+    
+    # Create directory for DEGs excel file 
+    deg_out_dir <- glue("07_seurat_QC/out/DEG_tables/")
+    dir.create(deg_out_dir, showWarnings = FALSE, recursive = TRUE)
+    
+    Idents(seurat_obj) <- "seurat_clusters"
+    markers <- FindAllMarkers(seurat_obj, min.pct = 0.1, logfc.threshold = 0.25, verbose = FALSE)
+    
+    sheet_list <- split(markers, markers$cluster)
+    names(sheet_list) <- glue("cluster_{names(sheet_list)}")
+    
+    write_xlsx(sheet_list, glue("{deg_out_dir}/{sample_name}_DEG_res{res}.xlsx"))
+    
+    ##############################################################################
+    
+    # Save object
+    seurat_obj_clustered_list[[sample_name]] <- seurat_obj
     
   }
-  
-  ############################################################################## 
-  
-  ##################### FeaturePlot with detailed_markers ######################
-  for (markers in names(detailed_markers)){
-    
-    FeaturePlot(seurat_obj, features = detailed_markers[[markers]], ncol = 3) + 
-      plot_annotation(title = glue("{markers} - {version}"),
-                      subtitle = sample_name,
-                      caption = glue("N cells: {n_cells}\nN dim: {n_dims}\nresolution: {res}"))
-    
-    # Adjust heigh of plot to number of markers
-    n_markers <- detailed_markers[[markers]] %>% length()
-    height <- (n_markers/3) * 4
-    
-    ggsave(glue("{out_dir}/{sample_name}_detailed_{markers}.png"), width = 14, height = height)
-    
-  }
-  
-  ##############################################################################
-  
-  # Save object
-  seurat_obj_clustered_list[[sample_name]] <- seurat_obj
   
 }
 
-
 # Combine 
-seurat_obj_clustered_list_combined <- c(seurat_obj_clustered_list_old, seurat_obj_clustered_list)
+# seurat_obj_clustered_list_combined <- c(seurat_obj_clustered_list_old, seurat_obj_clustered_list)
+# names(seurat_obj_clustered_list_combined)
+seurat_obj_clustered_list_combined <- seurat_obj_clustered_list
 
 saveRDS(seurat_obj_clustered_list_combined, glue("07_seurat_QC/out/seurat_obj_clustered_list_{version}.rds"))
 
@@ -168,7 +190,7 @@ saveRDS(seurat_obj_clustered_list_combined, glue("07_seurat_QC/out/seurat_obj_cl
 for (sample_name in sample_names){
 
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  n_clusters <- seurat_obj_clustered_list[[sample_name]]$seurat_clusters %>% levels() %>% length()
+  n_clusters <- seurat_obj_clustered_list_combined[[sample_name]]$seurat_clusters %>% levels() %>% length()
 
   print(sample_name)
   print(glue("N clusters: {n_clusters}"))
