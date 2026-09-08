@@ -18,6 +18,8 @@ sample_names <- names(seurat_obj_singlets_list)
 # Defining color scheme for each cell type for streamlined plotting
 source("10_broad_annotation/script/color_palette.R")
 
+# ANNOTATIONS ARE BASED ON RESLOLUTION 0.XXX
+
 ################################################################################
 sample_name <- "HH119-SI-PP-CD19-Pool1" 
 
