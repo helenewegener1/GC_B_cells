@@ -56,3 +56,7 @@ tmp
 .DS_Store
 .Rproj.user
 .Rhistory
+60_PC_clones/bonsai_input/
+*.tsv.gz
+*.rds
+*.h5ad
