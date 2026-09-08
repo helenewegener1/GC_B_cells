@@ -286,117 +286,117 @@ rm(seurat_obj_singlets_clustered_list)
 #   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL
 # )
 
-# Singlets
-seurat_obj_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
-
-dc_clusters <- list(
-  "HH117-SILP-INF-PC"                                = NULL,
-  "HH117-SILP-nonINF-PC"                             = NULL,
-  "HH117-SI-MILF-INF-HLADR-AND-CD19"                 = c("1"),
-  "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = c("1", "3", "5", "6"),
-  "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c("6"),
-  "HH119-COLP-PC"                                    = NULL,
-  "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"        = NULL,
-  "HH119-SILP-PC"                                    = NULL,
-  "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"         = NULL,
-  "HH119-SI-PP-CD19-Pool1"                           = NULL,
-  "HH119-SI-PP-CD19-Pool2"                           = NULL,
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"              = NULL,
-  "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL,
-  # "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB"     = 
-  # "HH151-SILP-INF-PC"                                = 
-  # "HH151-SILP-nonINF-PC"                             = 
-  # "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = 
-  # "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = 
-  # "HH153-SILP-INF-PC"                                  = 
-  # "HH153-SILP-nonINF-PC"                               = 
-)
-
-
-# Prep to save seurat objects without DCs
-seurat_obj_nonDC_list <- rep(0, length(seurat_obj_list)) %>% as.list()
-names(seurat_obj_nonDC_list) <- names(seurat_obj_list)
-
-sample_names <- names(seurat_obj_list)
-
-for (sample_name in sample_names){
-  
-  # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  # sample_name <- "HH117-SILP-INF-PC"
-  seurat_obj <- seurat_obj_list[[sample_name]]
-  
-  if (is.null(dc_clusters[[sample_name]])){
-    seurat_obj_nonDC_list[[sample_name]] <- seurat_obj
-    next
-  }
-  
-  # Create a new logical column
-  seurat_obj$DC_bool <- ifelse(seurat_obj$seurat_clusters %in% dc_clusters[[sample_name]], TRUE, FALSE)
-  table(seurat_obj$DC_bool)
-  n_cells <- seurat_obj %>% ncol()
-  n_DCs <- sum(seurat_obj$DC_bool)
-  
-  # Plot
-  # DimPlot(seurat_obj, group.by = "seurat_clusters", label = TRUE) + NoLegend() + 
-  #   labs(title = "DCs not removed",
-  #        subtitle = sample_name,
-  #        caption = glue("N cells: {n_cells}")) 
-  # ggsave(glue("{out_dir}/{sample_name}_clusters.png"), width = 8, height = 8)
-  
-  out_dir <- glue("09_seurat_QC_clusters/plot/singlets_DCs_removed/{sample_name}")
-  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
-  
-  DimPlot(seurat_obj, group.by = "DC_bool", label = TRUE, cols = c("grey", "orange")) + 
-    NoLegend() + 
-    labs(caption = glue("N cells: {n_cells}\nN DCs: {n_DCs}"))
-  ggsave(glue("{out_dir}/{sample_name}_DC_bool.png"), width = 8, height = 8)
-  
-  # # Split object in DCs and non-DCs
-  # # First, DCs
-  # seurat_obj_DC_list <- list()
-  # 
-  # seurat_obj_DC <- subset(seurat_obj, subset = DC_bool == TRUE)
-  # seurat_obj_DC[["ADT"]] <- NULL
-  # 
-  # seurat_obj_DC_list[[sample_name]] <- seurat_obj_DC
-  
-  # Then, other
-  seurat_obj_nonDC <- subset(seurat_obj, subset = DC_bool == FALSE)
-  seurat_obj_nonDC <- NormalizeData(seurat_obj_nonDC, verbose = FALSE)
-  seurat_obj_nonDC <- FindVariableFeatures(seurat_obj_nonDC, verbose = FALSE)
-  seurat_obj_nonDC <- ScaleData(seurat_obj_nonDC, verbose = FALSE)
-  
-  DefaultAssay(seurat_obj_nonDC)
-  seurat_obj_nonDC <- RunPCA(seurat_obj_nonDC, verbose = FALSE)
-  ElbowPlot(seurat_obj_nonDC)
-  
-  n_dim <- 10
-  res = 0.1
-  
-  seurat_obj_nonDC <- FindNeighbors(seurat_obj_nonDC,  dims = 1:n_dim, verbose = FALSE)
-  seurat_obj_nonDC <- FindClusters(seurat_obj_nonDC, resolution = res, verbose = FALSE)
-  seurat_obj_nonDC <- RunUMAP(seurat_obj_nonDC, reduction = "pca", dims = 1:n_dim, verbose = FALSE)
-  
-  # Plot
-  n_cells <- ncol(seurat_obj_nonDC)
-  DimPlot(seurat_obj_nonDC, group.by = "seurat_clusters", label = TRUE) + NoLegend() + 
-    labs(title = glue("DCs removed"),
-         subtitle = sample_name, 
-         caption = glue("N cells: {n_cells}\nN dim: {n_dim}\nResolution: {res}"))
-  ggsave(glue("{out_dir}/{sample_name}_clusters_DCs_removed.png"), width = 8, height = 8)
-  
-  # Save seurat object without DCs in list
-  seurat_obj_nonDC_list[[sample_name]] <- seurat_obj_nonDC
-
-}
-
-names(seurat_obj_nonDC_list)
-
-# Save lists of DC and nonDC seurat objects 
-# saveRDS(seurat_obj_DC_list, "09_seurat_QC_clusters/out/seurat_obj_DC_list.rds")
-saveRDS(seurat_obj_nonDC_list, "09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
-
-# seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
-
-################################## Annotation ##################################
-
+# # Singlets
+# seurat_obj_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_clustered_list_singlets.rds")
+# 
+# dc_clusters <- list(
+#   "HH117-SILP-INF-PC"                                = NULL,
+#   "HH117-SILP-nonINF-PC"                             = NULL,
+#   "HH117-SI-MILF-INF-HLADR-AND-CD19"                 = c("1"),
+#   "HH117-SI-MILF-nonINF-HLADR-AND-CD19"              = c("1", "3", "5", "6"),
+#   "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = c("6"),
+#   "HH119-COLP-PC"                                    = NULL,
+#   "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH"        = NULL,
+#   "HH119-SILP-PC"                                    = NULL,
+#   "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"         = NULL,
+#   "HH119-SI-PP-CD19-Pool1"                           = NULL,
+#   "HH119-SI-PP-CD19-Pool2"                           = NULL,
+#   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"              = NULL,
+#   "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"              = NULL,
+#   # "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB"     = 
+#   # "HH151-SILP-INF-PC"                                = 
+#   # "HH151-SILP-nonINF-PC"                             = 
+#   # "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = 
+#   # "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = 
+#   # "HH153-SILP-INF-PC"                                  = 
+#   # "HH153-SILP-nonINF-PC"                               = 
+# )
+# 
+# 
+# # Prep to save seurat objects without DCs
+# seurat_obj_nonDC_list <- rep(0, length(seurat_obj_list)) %>% as.list()
+# names(seurat_obj_nonDC_list) <- names(seurat_obj_list)
+# 
+# sample_names <- names(seurat_obj_list)
+# 
+# for (sample_name in sample_names){
+#   
+#   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
+#   # sample_name <- "HH117-SILP-INF-PC"
+#   seurat_obj <- seurat_obj_list[[sample_name]]
+#   
+#   if (is.null(dc_clusters[[sample_name]])){
+#     seurat_obj_nonDC_list[[sample_name]] <- seurat_obj
+#     next
+#   }
+#   
+#   # Create a new logical column
+#   seurat_obj$DC_bool <- ifelse(seurat_obj$seurat_clusters %in% dc_clusters[[sample_name]], TRUE, FALSE)
+#   table(seurat_obj$DC_bool)
+#   n_cells <- seurat_obj %>% ncol()
+#   n_DCs <- sum(seurat_obj$DC_bool)
+#   
+#   # Plot
+#   # DimPlot(seurat_obj, group.by = "seurat_clusters", label = TRUE) + NoLegend() + 
+#   #   labs(title = "DCs not removed",
+#   #        subtitle = sample_name,
+#   #        caption = glue("N cells: {n_cells}")) 
+#   # ggsave(glue("{out_dir}/{sample_name}_clusters.png"), width = 8, height = 8)
+#   
+#   out_dir <- glue("09_seurat_QC_clusters/plot/singlets_DCs_removed/{sample_name}")
+#   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+#   
+#   DimPlot(seurat_obj, group.by = "DC_bool", label = TRUE, cols = c("grey", "orange")) + 
+#     NoLegend() + 
+#     labs(caption = glue("N cells: {n_cells}\nN DCs: {n_DCs}"))
+#   ggsave(glue("{out_dir}/{sample_name}_DC_bool.png"), width = 8, height = 8)
+#   
+#   # # Split object in DCs and non-DCs
+#   # # First, DCs
+#   # seurat_obj_DC_list <- list()
+#   # 
+#   # seurat_obj_DC <- subset(seurat_obj, subset = DC_bool == TRUE)
+#   # seurat_obj_DC[["ADT"]] <- NULL
+#   # 
+#   # seurat_obj_DC_list[[sample_name]] <- seurat_obj_DC
+#   
+#   # Then, other
+#   seurat_obj_nonDC <- subset(seurat_obj, subset = DC_bool == FALSE)
+#   seurat_obj_nonDC <- NormalizeData(seurat_obj_nonDC, verbose = FALSE)
+#   seurat_obj_nonDC <- FindVariableFeatures(seurat_obj_nonDC, verbose = FALSE)
+#   seurat_obj_nonDC <- ScaleData(seurat_obj_nonDC, verbose = FALSE)
+#   
+#   DefaultAssay(seurat_obj_nonDC)
+#   seurat_obj_nonDC <- RunPCA(seurat_obj_nonDC, verbose = FALSE)
+#   ElbowPlot(seurat_obj_nonDC)
+#   
+#   n_dim <- 10
+#   res = 0.1
+#   
+#   seurat_obj_nonDC <- FindNeighbors(seurat_obj_nonDC,  dims = 1:n_dim, verbose = FALSE)
+#   seurat_obj_nonDC <- FindClusters(seurat_obj_nonDC, resolution = res, verbose = FALSE)
+#   seurat_obj_nonDC <- RunUMAP(seurat_obj_nonDC, reduction = "pca", dims = 1:n_dim, verbose = FALSE)
+#   
+#   # Plot
+#   n_cells <- ncol(seurat_obj_nonDC)
+#   DimPlot(seurat_obj_nonDC, group.by = "seurat_clusters", label = TRUE) + NoLegend() + 
+#     labs(title = glue("DCs removed"),
+#          subtitle = sample_name, 
+#          caption = glue("N cells: {n_cells}\nN dim: {n_dim}\nResolution: {res}"))
+#   ggsave(glue("{out_dir}/{sample_name}_clusters_DCs_removed.png"), width = 8, height = 8)
+#   
+#   # Save seurat object without DCs in list
+#   seurat_obj_nonDC_list[[sample_name]] <- seurat_obj_nonDC
+# 
+# }
+# 
+# names(seurat_obj_nonDC_list)
+# 
+# # Save lists of DC and nonDC seurat objects 
+# # saveRDS(seurat_obj_DC_list, "09_seurat_QC_clusters/out/seurat_obj_DC_list.rds")
+# saveRDS(seurat_obj_nonDC_list, "09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
+# 
+# # seurat_obj_nonDC_list <- readRDS("09_seurat_QC_clusters/out/seurat_obj_nonDC_list.rds")
+# 
+# ################################## Annotation ##################################
+# 

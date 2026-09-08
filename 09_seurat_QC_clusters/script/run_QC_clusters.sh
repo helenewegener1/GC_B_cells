@@ -4,8 +4,8 @@
 #PBS -l gpus=0
 #PBS -l mem=128GB
 #PBS -l walltime=24:00:00
-#PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/09_seurat_QC_clusters/script/run_QC.err
-#PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/09_seurat_QC_clusters/script/run_QC.log
+#PBS -e /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/09_seurat_QC_clusters/script/run_QC_clusters.err
+#PBS -o /home/projects/dtu_00062/people/helweg/projects/GC_B_cells/09_seurat_QC_clusters/script/run_QC_clusters.log
 #PBS -N run_QC
 
 module load tools
