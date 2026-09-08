@@ -159,7 +159,7 @@ for (res in c(0.1, 0.3)){
     ############################## DEG per cluster ###############################
     
     # Create directory for DEGs excel file 
-    deg_out_dir <- glue("07_seurat_QC/out/DEG_tables/")
+    deg_out_dir <- glue("07_seurat_QC/DEG_tables/")
     dir.create(deg_out_dir, showWarnings = FALSE, recursive = TRUE)
     
     Idents(seurat_obj) <- "seurat_clusters"
