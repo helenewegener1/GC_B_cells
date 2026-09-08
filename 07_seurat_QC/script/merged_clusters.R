@@ -1,4 +1,5 @@
-merged_clusters_all <- list(
+# Resolution 0.1
+merged_clusters_all_res01 <- list(
   
   "v9" = list(
     "HH117-SILP-INF-PC" = list( 
@@ -313,3 +314,321 @@ merged_clusters_all <- list(
   
   
 )
+
+# Resolution 0.3
+merged_clusters_all_res03 <- list(
+  
+  "v9" = list(
+    "HH117-SILP-INF-PC" = list( 
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "3", "4", "5"),
+      "1" = c("1"),
+      "2" = c("6")
+    ),
+    
+    "HH117-SILP-nonINF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "5", "3"),
+      "1" = c("2", "4", "6")
+    ),
+    
+    "HH117-SI-MILF-INF-HLADR-AND-CD19" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "2", "5", "8", "9"),
+      "1" = c("3", "6", "10"),
+      "2" = c("4"),
+      "3" = c("7")
+    ),
+    
+    "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0"),
+      "1" = c("1", "3", "5", "7"),
+      "2" = c("2"),
+      "3" = c("4"),
+      "6" = c("6"),
+      "5" = c("8")
+    ),
+    
+    "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),
+      "1" = c("2"),
+      "2" = c("3", "4", "10"),
+      "3" = c("5"),
+      "4" = c("6", "7", "8", "9")
+    ),
+    
+    "HH119-COLP-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "2", "3", "5"),
+      "1" = c("4"),
+      "2" = c("6") 
+    ),
+    
+    "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "3", "4", "6", "8"),
+      "1" = c("1", "5"),
+      "2" = c("7"),
+      "3" = c("9")
+    ),
+    
+    "HH119-SILP-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "2", "3", "4"),
+      "1" = c("7", "8"),
+      "2" = c("5"),
+      "3" = c("6"),
+      "4" = c("9"),
+      "5" = c("10")
+    ),
+    
+    "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "6"),
+      "1" = c("2", "8"),
+      "2" = c("3", "5", "7"),
+      "3" = c("4", "9")
+    ),
+    
+    "HH119-SI-PP-CD19-Pool1" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "5", "9"),
+      "1" = c("2", "3", "4", "7"),
+      "2" = c("6"),
+      "3" = c("8")
+    ),
+    
+    "HH119-SI-PP-CD19-Pool2" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "4", "8"),
+      "1" = c("2", "3", "5", "6"),
+      "2" = c("7"),
+      "3" = c("9") 
+    ),
+    
+    "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "3", "5", "7"),
+      "1" = c("1", "6"),
+      "2" = c("4", "9"),
+      "3" = c("8 ")
+    ),
+    
+    "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "3", "4", "7"),
+      "1" = c("2", "8", "9"),
+      "2" = c("5"),
+      "3" = c("6")
+    ),
+    
+    # --- HH151 (OCM) samples ---
+    # Based on 07_seurat_QC/plot_v9/01_clusters/<sample>/*_clusters.png and the
+    # *_broad_{B_cell,T_cell,DC,plasmablast_plasma_cell}.png feature plots:
+    # clusters sharing the same broad-marker signature (CD19/CD79A/CD79B/MS4A1/
+    # CD40/CD74 for B cells; CD3D/E/G/CD4/TRBC1/CD2/CD7(/CD8) for T cells;
+    # JCHAIN/PRDM1/XBP1/MZB1 for plasmablast/plasma cells; HLA-II+LYZ for
+    # myeloid/DC) were merged into one cluster. Clusters negative across all
+    # four broad panels were kept separate rather than guessed into a category.
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Blue" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2"),   # B cell (Memory)
+      "1" = c("4"),        # T cell
+      "2" = c("3"),        # Plasmablast/PC
+      "3" = c("1")         # unclassified (negative on all broad panels)
+    ),
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Green" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "3"),   # B cell
+      "1" = c("1"),        # T cell
+      "2" = c("5"),        # Plasmablast/PC
+      "3" = c("2", "4")    # unclassified (negative on all broad panels)
+    ),
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Red" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("1", "2"),   # B cell
+      "1" = c("0"),        # T cell
+      "2" = c("3")         # Plasmablast/PC
+    ),
+    
+    "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Yellow" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "3"),   # B cell
+      "1" = c("2"),        # T cell
+      "2" = c("5"),        # Plasmablast/PC
+      "3" = c("1"),        # unclassified, near B cell cluster
+      "4" = c("4")         # unclassified, near T cell cluster
+    ),
+    
+    "HH151-SILP-INF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("2"),        # Myeloid/DC (HLA-II very high, LYZ+, CD4+)
+      "2" = c("3"),        # B cell (MS4A1+)
+      "3" = c("4"),        # T cell
+      "4" = c("5")         # unclassified
+    ),
+    
+    "HH151-SILP-nonINF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("2"),        # Myeloid/DC (HLA-II very high, LYZ+)
+      "2" = c("3"),        # unclassified CD4+ (CD3-negative, HLA-II-negative)
+      "3" = c("4"),        # T cell (CD8+)
+      "4" = c("5"),        # B cell
+      "5" = c("6")         # unclassified
+    ),
+    
+    "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool1" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "3", "4"),   # B cell
+      "1" = c("2"),                  # T cell
+      "2" = c("5"),                  # Plasmablast/PC
+      "3" = c("6")                   # Myeloid/DC (HLA-II+, LYZ+)
+    ),
+    
+    "HH153-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB-Pool2" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "2", "5"),   # B cell
+      "1" = c("4"),                  # T cell
+      "2" = c("6"),                  # Plasmablast/PC
+      "3" = c("3")                   # unclassified (negative on all broad panels)
+    ),
+    
+    "HH153-SILP-INF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("2"),        # Myeloid/DC (HLA-II very high)
+      "2" = c("3"),        # T cell
+      "3" = c("4")         # unclassified
+    ),
+    
+    "HH153-SILP-nonINF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1"),   # Plasmablast/PC (dominant, PC-sorted tissue)
+      "1" = c("3", "7"),   # Myeloid/DC (HLA-II+, LYZ+, ITGAX+)
+      "2" = c("4"),        # T cell
+      "3" = c("6"),        # B cell (MS4A1+)
+      "4" = c("2"),        # unclassified
+      "5" = c("5")         # unclassified
+    )
+  ),
+  
+  "v8" = list(
+    
+    "HH117-SILP-INF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "3", "4"),
+      "1" = c("1"),
+      "2" = c("5")
+    ),
+    
+    "HH117-SILP-nonINF-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2"),
+      "1" = c("1", "3")
+    ),
+    
+    "HH117-SI-MILF-INF-HLADR-AND-CD19" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "4", "6"),
+      "1" = c("1"),
+      "2" = c("3"),
+      "3" = c("5")
+    ),
+    
+    "HH117-SI-MILF-nonINF-HLADR-AND-CD19" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0"),
+      "1" = c("1", "3", "5", "6"),
+      "2" = c("2"),
+      "3" = c("4"),
+      "4" = c("7"),
+      "5" = c("8")
+    ),
+    
+    "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0"),
+      "1" = c("1"),
+      "2" = c("2", "3"),
+      "3" = c("4"),
+      "4" = c("5", "6", "7")
+    ),
+    
+    "HH119-COLP-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0"),
+      "1" = c("1"),
+      "2" = c("2")
+    ),
+    
+    "HH119-CO-SMILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "4"),
+      "1" = c("1"),
+      "2" = c("3"),
+      "3" = c("5")
+    ),
+    
+    "HH119-SILP-PC" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "2"),
+      "1" = c("3"),
+      "2" = c("4"),
+      "3" = c("5"),
+      "4" = c("6"),
+      "5" = c("7")
+    ),
+    
+    "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "6"),
+      "1" = c("2", "7"),
+      "2" = c("3", "5"),
+      "3" = c("4")
+    ),
+    
+    "HH119-SI-PP-CD19-Pool1" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "5"),
+      "1" = c("2", "3", "4"),
+      "2" = c("6"),
+      "3" = c("7")
+    ),
+    
+    "HH119-SI-PP-CD19-Pool2" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "1", "3"),
+      "1" = c("2", "4"),
+      "2" = c("5"),
+      "3" = c("6")
+    ),
+    
+    "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "3", "5"),
+      "1" = c("1", "6"),
+      "2" = c("4"),
+      "3" = c("7")
+    ),
+    
+    "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2" = list(
+      # new_cluster = c(old clusters)
+      "0" = c("0", "2", "3"),
+      "1" = c("1", "6"),
+      "2" = c("4"),
+      "3" = c("5")
+    )
+    
+  )
+  
+  
+  
+)
+
