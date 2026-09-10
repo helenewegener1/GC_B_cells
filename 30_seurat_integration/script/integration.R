@@ -1,3 +1,5 @@
+setwd("~/gcb/")
+
 # Load libraries 
 
 # library(reticulate)
@@ -26,8 +28,8 @@ source("10_broad_annotation/script/color_palette.R")
 integration_var <- "patient"
 
 # Load data
-# seurat_obj_list <- readRDS("30_prep_integration/out/seurat_obj_prepped_list.rds")
-seurat_obj_list <- readRDS("20_VDJ/out/seurat_obj_BCR_list.rds")
+seurat_obj_list <- readRDS("13_add_metadata/out/seurat_obj_prepped_list.rds")
+# seurat_obj_list <- readRDS("20_VDJ/out/seurat_obj_BCR_list.rds")
 
 ############################# RNA integration prep #############################
 
@@ -48,7 +50,7 @@ DefaultAssay(seurat_merged) <- "RNA"
 
 ############################### Seurat workflow ################################
 
-res <- 0.2
+res <- 0.3
 
 seurat_merged <- NormalizeData(seurat_merged, verbose = FALSE)
 seurat_merged <- FindVariableFeatures(seurat_merged, verbose = FALSE)
@@ -290,7 +292,7 @@ celltype_counts %>%
     fill = "Cell Type"
   )
 
-ggsave("31_seurat_integration/plot/N_cells/N_cells_celltypes_post_integration.png", width = 12, height = 7)
+ggsave("30_seurat_integration/plot/N_cells/N_cells_celltypes_post_integration.png", width = 12, height = 7)
 
 ############################ Investigate clusters  #############################
 
