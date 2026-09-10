@@ -18,7 +18,7 @@ sample_names <- names(seurat_obj_singlets_list)
 # Defining color scheme for each cell type for streamlined plotting
 source("10_broad_annotation/script/color_palette.R")
 
-# ANNOTATIONS ARE BASED ON RESLOLUTION 0.XXX
+# ANNOTATIONS ARE BASED ON RESLOLUTION 0.3
 
 ################################################################################
 sample_name <- "HH119-SI-PP-CD19-Pool1" 
@@ -31,10 +31,12 @@ cluster_to_celltype <- c(
   "1" = "Naïve_memory_B_cells",
   "2" = "GC_B_cells",
   "3" = "GC_B_cells",
-  "4" = "Naïve_memory_B_cells",
-  "5" = "GC_B_cells",
-  "6" = "PCs_PBs",
-  "7" = "Contamination_ambiguous"#(T_cell-MNP signature) 
+  "4" = "GC_B_cells",
+  "5" = "PCs_PBs",
+  "6" = "Naïve_memory_B_cells",
+  "7" = "Naïve_memory_B_cells", 
+  "8" = "Contamination_ambiguous", # T cell & MNP signature
+  "9" = "Naïve_memory_B_cells"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -76,10 +78,12 @@ cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells",
   "1" = "Naïve_memory_B_cells",
   "2" = "GC_B_cells",
-  "3" = "Naïve_memory_B_cells",
+  "3" = "GC_B_cells",
   "4" = "GC_B_cells",
-  "5" = "PCs_PBs"
-  #"6" = "Plasma_cells"/ I don't have a 6th cluster 
+  "5" = "Naïve_memory_B_cells", 
+  "6" = "Naïve_memory_B_cells", 
+  "7" = "GC_B_cells", 
+  "8" = "PCs_PBs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -121,10 +125,14 @@ cluster_to_celltype <- c(
   "0" = "GC_B_cells",
   "1" = "Tfh_like_cells",
   "2" = "GC_B_cells",
-  "3" = "PCs_PBs",
-  "4" = "GC_B_cells",
-  "5" = "Tfh_like_cells",
-  "6" = "GC_B_cells" # yes, there might be some contamination here but we keep for now
+  "3" = "GC_B_cells",
+  "4" = "PCs_PBs",
+  "5" = "GC_B_cells",
+  "6" = "Tfh_like_cells", 
+  "7" = "Naïve_memory_B_cells", # contaminating and not completely sure
+  "8" = "GC_B_cells", 
+  "9" = "PCs_PBs", 
+  "10" = "PCs_PBs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -169,8 +177,11 @@ cluster_to_celltype <- c(
   "3" = "GC_B_cells",
   "4" = "GC_B_cells",
   "5" = "Naïve_memory_B_cells",
-  "6" = "PCs_PBs",
-  "7" = "Tfh_like_cells"
+  "6" = "GC_B_cells", # a bit unsure about this cluster but likely GCB
+  "7" = "GC_B_cells", 
+  "8" = "PCs_PBs", 
+  "9" = "Tfh_like_cells", 
+  "10" = "Tfh_like_cells"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -213,9 +224,13 @@ cluster_to_celltype <- c(
   "1" = "Naïve_memory_B_cells",
   "2" = "Naïve_memory_B_cells",
   "3" = "Naïve_memory_B_cells",
-  "4" = "PCs_PBs",
-  "5" = "Tfh_like_cells",
-  "6" = "Naïve_memory_B_cells"
+  "4" = "Naïve_memory_B_cells",
+  "5" = "Naïve_memory_B_cells",
+  "6" = "Naïve_memory_B_cells", 
+  "7" = "PCs_PBs", 
+  "8" = "Naïve_memory_B_cells", 
+  "9" = "Tfh_like_cells", 
+  "10" = "PCs_PBs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -256,7 +271,13 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs",
-  "2" = "Contamination_stroma"
+  "2" = "PCs_PBs", 
+  "3" = "PCs_PBs",
+  "4" = "PCs_PBs",
+  "5" = "PCs_PBs",
+  "6" = "Contamination_stroma", 
+  "7" = "Contamination_mast_cells", 
+  "8" = "PCs_PBs" 
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -299,10 +320,13 @@ cluster_to_celltype <- c(
   "1" = "Naïve_memory_B_cells",
   "2" = "Tfh_like_cells",
   "3" = "GC_B_cells",
-  "4" = "GC_B_cells",
-  "5" = "PCs_PBs",
-  "6" = "Naïve_memory_B_cells", 
-  "7" = "Tfh_like_cells"
+  "4" = "PCs_PBs",
+  "5" = "GC_B_cells",
+  "6" = "GC_B_cells", 
+  "7" = "Naïve_memory_B_cells", 
+  "8" = "Tfh_like_cells",
+  "9" = "PCs_PBs",
+  "10" = "Naïve_memory_B_cells"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -344,10 +368,12 @@ cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs",
   "2" = "PCs_PBs",
-  "3" = "GC_B_cells",
-  "4" = "Contamination_mast_cells",
-  "5" = "Contamination_MNPs",
-  "6" = "Contamination_γδT_cell"
+  "3" = "PCs_PBs",
+  "4" = "PCs_PBs",
+  "5" = "Naïve_memory_B_cells_&_GC_B_cells",
+  "6" = "Contamination_mast_cells", 
+  "7" = "Contamination_MNPs", # DCs or macrophage contamination
+  "8" = "Contamination_T_cells" 
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -380,15 +406,17 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 # Map clusters to cell types
 cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells", 
-  "1" = "Tfh_like_cells",
-  "2" = "GC_B_cells",
+  "1" = "GC_B_cells",
+  "2" = "Tfh_like_cells",
   "3" = "GC_B_cells",
-  "4" = "PCs_PBs",
-  "5" = "Naïve_memory_B_cells",
+  "4" = "Naïve_memory_B_cells",
+  "5" = "PCs_PBs",
   "6" = "DCs_MNPs",
   "7" = "Naïve_memory_B_cells",
-  "8" = "GC_B_cells",
-  "9" = "DCs_MNPs"
+  "8" = "Tfh_like_cells",
+  "9" = "GC_B_cells",
+  "10" = "PCs_PBs", 
+  "11" = "DCs_MNPs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -428,11 +456,15 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 # Map clusters to cell types
 cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
-  "1" = "DCs_MNPs",
-  "2" = "Naïve_memory_B_cells",
-  "3" = "PCs_PBs",
-  "4" = "Contamination_stroma",
-  "5" = "PCs_PBs"
+  "1" = "PCs_PBs",
+  "2" = "DCs_MNPs",
+  "3" = "Naïve_memory_B_cells",
+  "4" = "DCs_MNPs",
+  "5" = "PCs_PBs", 
+  "6" = "Contamination_ambiguous", # stroma & epithelial signature
+  "7" = "PCs_PBs", 
+  "8" = "PCs_PBs", 
+  "9" = "DCs_MNPs"
   
 )
 
@@ -473,13 +505,15 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 # Map clusters to cell types
 cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells", 
-  "1" = "DCs_MNPs",
-  "2" = "PCs_PBs",
-  "3" = "DCs_MNPs",
+  "1" = "Naïve_memory_B_cells",
+  "2" = "DCs_MNPs",
+  "3" = "PCs_PBs",
   "4" = "DCs_MNPs",
   "5" = "DCs_MNPs",
-  "6" = "GC_B_cells",
-  "7" = "Contamination_stroma"
+  "6" = "DCs_MNPs",
+  "7" = "DCs_MNPs", 
+  "8" = "GC_B_cells", 
+  "9" = "Contamination_stroma"
   
 )
 
@@ -524,7 +558,9 @@ cluster_to_celltype <- c(
   "2" = "PCs_PBs",
   "3" = "PCs_PBs",
   "4" = "PCs_PBs",
-  "5" = "Contamination_mast_cells"
+  "5" = "PCs_PBs", 
+  "6" = "Contamination_mast_cells", 
+  "7" = "PCs_PBs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -566,8 +602,11 @@ cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs",
   "2" = "PCs_PBs",
-  "3" = "PCs_PBs" #cluster 3 possibly contamination or early PBs
- 
+  "3" = "PCs_PBs" , 
+  "4" = "PCs_PBs", 
+  "5" = "PCs_PBs", 
+  "6" = "PCs_PBs", # maybe contaminating B cells
+
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -645,11 +684,11 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "Naïve_memory_B_cells", # main memory-like B cell body (CD44/KLF2/CXCR4/CD83+); small embedded satellite w/ AICDA/MKI67/TOP2A+ too minor to split
-  "1" = "Naïve_memory_B_cells", # naive (SELL/FCER2/IL4R/IGHM/IGHD/CD200+)
-  "2" = "Naïve_memory_B_cells", # BANK1/TCL1A/PAX5+
-  "3" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
-  "4" = "Tfh_like_cells"        # CD3+, PDCD1/ICOS/CD40LG/SH2D1A/CD84/RORA+
+  "0" = "Naïve_memory_B_cells", 
+  "2" = "Naïve_memory_B_cells", 
+  "3" = "Tfh_like_cells_&_GC_B_cells",   # To few cells for the cluster to split, hence mixing       
+  "4" = "Naïve_memory_B_cells",        
+  "5" = "PCs_PBs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -681,12 +720,16 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+, GC markers negative
-  "1" = "Tfh_like_cells",       # CD3+, BCL6/PDCD1/ICOS/MAF/IL21/SH2D1A/SLAMF6/CD84+
-  "2" = "Contamination_γδT_cell", # CD3 moderate but Tfh-negative, RORA very high (bystander gut T cells)
-  "3" = "GC_B_cells",           # AICDA/MKI67/TOP2A/MEF2B/LMO2/SERPINA9/MME+
-  "4" = "Naïve_memory_B_cells", # B cell, GC markers negative
-  "5" = "PCs_PBs"               # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+  "0" = "Tfh_like_cells", 
+  "1" = "Tfh_like_cells",       
+  "2" = "Naïve_memory_B_cells", 
+  "3" = "Naïve_memory_B_cells",           
+  "4" = "GC_B_cells", 
+  "5" = "Naïve_memory_B_cells",               
+  "6" = "GC_B_cells", 
+  "7" = "Naïve_memory_B_cells", 
+  "8" = "PCs_PBs", 
+  "9" = "Contamination_ambiguous" # Probably both Myeloid/DCs and mast cells
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -718,11 +761,11 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+
-  "1" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+
-  "2" = "Contamination_ambiguous", # negative across B/T/DC/plasmablast broad panels and GC panel; CD83 (activation) only
-  "3" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
-  "4" = "Tfh_like_cells"        # CD3+, PDCD1/ICOS/CD40LG/MAF/SH2D1A/CD84/RORA+
+  "0" = "Naïve_memory_B_cells", # somewhere there might be some GCB cells but so so few
+  "1" = "Naïve_memory_B_cells", 
+  "2" = "Naïve_memory_B_cells", 
+  "3" = "PCs_PBs",              
+  "4" = "Tfh_like_cells"        
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -754,12 +797,15 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD40/CD74+
-  "1" = "Naïve_memory_B_cells", # CD19/CD79A/MS4A1/CD74+
-  "2" = "Tfh_like_cells",       # CD3+, PDCD1/ICOS/CD40LG/MAF/SH2D1A/CD84/RORA+
-  "3" = "GC_B_cells",           # AICDA/MEF2B/MKI67/TOP2A/SERPINA9/LMO2+
-  "4" = "Contamination_ambiguous", # negative across B/T/DC/plasmablast/GC/TFH panels
-  "5" = "PCs_PBs"               # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
+  "0" = "Naïve_memory_B_cells", 
+  "1" = "Naïve_memory_B_cells", 
+  "2" = "Tfh_like_cells",       
+  "3" = "Naïve_memory_B_cells",           
+  "4" = "Naïve_memory_B_cells", 
+  "5" = "Tfh_like_cells",               
+  "6" = "GC_B_cells", 
+  "7" = "PCs_PBs", 
+  "8" = "Contamination_MNPs" # DCs or macrophage contamination
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -791,11 +837,15 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+ (dominant, PC-sorted tissue)
-  "1" = "PCs_PBs",              # JCHAIN/PRDM1/XBP1/MZB1/IRF4+
-  "2" = "DCs_MNPs",             # HLA-II+++, LYZ+++, ITGAX/CD86+
-  "3" = "Contamination_ambiguous", # negative across B/T/DC/plasmablast/GC/TFH panels
-  "4" = "Contamination_γδT_cell"   # CD3/CD4/CD8+, RORA/CD84+ but Tfh-negative (bystander gut T cells)
+  "0" = "PCs_PBs",              
+  "1" = "PCs_PBs",              
+  "2" = "PCs_PBs",             
+  "3" = "PCs_PBs", 
+  "4" = "PCs_PBs",    
+  "5" = "Contamination_MNPs", # DCs or macrophage contamination 
+  "6" = "Contamination_mast_cells", 
+  "7" = "PCs_PBs", 
+  "8" = "Contamination_T_cells"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -829,11 +879,14 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs", 
-  "2" = "DCs_MNPs", 
-  "3" = "Contamination_ambiguous", 
-  "4" = "Naïve_memory_B_cells", 
-  "5" = "Contamination_γδT_cell", 
-  "6" = "Contamination_ambiguous"
+  "2" = "PCs_PBs", 
+  "3" = "PCs_PBs", 
+  "4" = "Contamination_MNPs", # DCs or macrophage contamination 
+  "5" = "Contamination_mast_cells", 
+  "6" = "PCs_PBs", 
+  "7" = "Contamination_T_cells",
+  "8" = "PCs_PBs", 
+  "9" = "Contamination_stroma"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -865,13 +918,20 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 
 # Map clusters to cell types
 cluster_to_celltype <- c(
-  "0" = "GC_B_cells", 
-  "1" = "PCs_PBs", 
-  "2" = "Naïve_memory_B_cells", 
-  "3" = "Contamination_ambiguous", 
-  "4" = "Tfh_like_cells", 
-  "5" = "Naïve_memory_B_cells", 
-  "6" = "Contamination_ambiguous"
+  "0" = "Naïve_memory_B_cells", 
+  "1" = "GC_B_cells", 
+  "2" = "Tfh_like_cells", 
+  "3" = "GC_B_cells", 
+  "4" = "GC_B_cells", 
+  "5" = "GC_B_cells", 
+  "6" = "GC_B_cells", 
+  "7" = "GC_B_cells",
+  "8" = "Tfh_like_cells", 
+  "9" = "GC_B_cells", 
+  "10" = "Naïve_memory_B_cells", 
+  "11" = "PCs_PBs", 
+  "12" = "Contamination_MNPs" # DCs or macrophage contamination 
+  
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -904,11 +964,14 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 # Map clusters to cell types
 cluster_to_celltype <- c(
   "0" = "GC_B_cells", 
-  "1" = "Naïve_memory_B_cells", 
+  "1" = "GC_B_cells", 
   "2" = "Naïve_memory_B_cells", 
   "3" = "Tfh_like_cells", 
-  "4" = "Contamination_ambiguous", 
-  "5" = "Contamination_ambiguous"
+  "4" = "GC_B_cells", 
+  "5" = "GC_B_cells", 
+  "6" = "Tfh_like_cells", 
+  "7" = "Contamination_MNPs", # DCs or macrophage contamination 
+  "8" = "PCs_PBs"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -942,10 +1005,12 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs", 
-  "2" = "Contamination_ambiguous", 
-  "3" = "DCs_MNPs", 
-  "4" = "DCs_MNPs", 
-  "5" = "Contamination_ambiguous"
+  "2" = "PCs_PBs", 
+  "3" = "Contamination_stroma", 
+  "4" = "Contamination_epithelial_cells", 
+  "5" = "Contamination_ambiguous",  # T cell and MNPs signature
+  "6" = "Contamination_ambiguous", # T cell and MNPs signature
+  "7" = "Contamination_mast_cells"
 )
 
 celltype_broad <- cluster_to_celltype[
@@ -979,11 +1044,18 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs", 
-  "2" = "DCs_MNPs", 
-  "3" = "PCs_PBs", 
-  "4" = "Contamination_ambiguous", 
-  "5" = "Tfh_like_cells", 
-  "6" = "Contamination_ambiguous"
+  "2" = "PCs_PBs", 
+  "3" = "Contamination_mast_cells", 
+  "4" = "Contamination_stroma", 
+  "5" = "Contamination_ambiguous", # B cell and myeloid signature
+  "6" = "Contamination_T_cells", 
+  "7" = "Contamination_MNPs", # DCs or macrophage contamination 
+  "8" = "Contamination_MNPs", # DCs or macrophage contamination 
+  "9" = "Contamination_mast_cells", 
+  "10" = "Contamination_epithelial_cells", 
+  "11" = "PCs_PBs", 
+  "12" = "Contamination_glial_cells" # not sure about this one
+  
 )
 
 celltype_broad <- cluster_to_celltype[
