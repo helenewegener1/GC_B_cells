@@ -602,10 +602,10 @@ cluster_to_celltype <- c(
   "0" = "PCs_PBs", 
   "1" = "PCs_PBs",
   "2" = "PCs_PBs",
-  "3" = "PCs_PBs" , 
+  "3" = "PCs_PBs", 
   "4" = "PCs_PBs", 
   "5" = "PCs_PBs", 
-  "6" = "PCs_PBs", # maybe contaminating B cells
+  "6" = "PCs_PBs" # maybe contaminating B cells
 
 )
 
@@ -685,6 +685,7 @@ seurat_obj <- seurat_obj_singlets_list[[sample_name]]
 # Map clusters to cell types
 cluster_to_celltype <- c(
   "0" = "Naïve_memory_B_cells", 
+  "1" = "Naïve_memory_B_cells", 
   "2" = "Naïve_memory_B_cells", 
   "3" = "Tfh_like_cells_&_GC_B_cells",   # To few cells for the cluster to split, hence mixing       
   "4" = "Naïve_memory_B_cells",        

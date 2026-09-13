@@ -61,11 +61,11 @@ main_celltypes[[1]] <- "hotpink"
 L1_colors <- c(
   
   "Tfh_cells"                  = "#E8608A",
-  "Naive_Bcells"               = "#D4C420",
-  "Memory_Bcells"              = "#2AAAC8",
+  "Naive_B_cells"               = "#D4C420",
+  "Memory_B_cells"              = "#2AAAC8",
   "GC_B_cells"                 = "#E08C20",
   "PCs"                        = "#C42030",
-  "Unconventional_Bcells"      = "#8855CC",
+  "Unconventional_B_cells"      = "#8855CC",
   
   # "Tfh_cells"                  = "#F2A0BC",
   # "Naive_Bcells"               = "#E0D875",
