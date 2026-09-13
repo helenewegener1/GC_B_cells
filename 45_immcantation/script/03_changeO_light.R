@@ -22,7 +22,6 @@ packageVersion("shazam")
 # Following this Immcantation flow:
 # https://immcantation.readthedocs.io/en/latest/getting_started/10x_tutorial.html
 
-
 # ------------------------------------------------------------------------------
 # Get sample names
 # ------------------------------------------------------------------------------
@@ -34,7 +33,7 @@ sample_names <- files[1:length(files)-1]
 # Read all samples, adding sample_id and subject_id
 bcr_data_tmp <- lapply(sample_names, function(s) {
   # s <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH"
-  f <- file.path(base_path, s, paste0(s, "_heavy_germ-pass.tsv"))
+  f <- file.path(base_path, s, paste0(s, "_light_germ-pass.tsv"))
   db <- airr::read_rearrangement(f)
   db$sample_id <- s
   db$subject_id <- sub("-(SI|SILP|CO|COLP).*", "", s)  # extracts HH117 or HH119
@@ -54,46 +53,49 @@ bcr_data <- list(
 
 patients <- names(bcr_data)
 
-cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data[[HH]]), "sequences\n"))
+}
 
 # ------------------------------------------------------------------------------
 # Check V/D/J gene call consistency
 # ------------------------------------------------------------------------------
-# 
-# # Filter out inconsistent sequences:
-# # Filter out contigs that differ in heavy/light/kappa/lambda chain across V, J and C gene. 
-# 
-# bcr_data_filt <- lapply(bcr_data, function(x) {
-#   
-#   df <- x %>% 
-#     filter(grepl("^IGHV", v_call) & grepl("^IGHJ", j_call))
-#   
-#     # Filter out contigs that differ in heavy/light/kappa/lambda chain across V, J and C gene. 
-#     # dplyr::filter(
-#     #   (grepl("^IGHV", v_call) & grepl("^IGHJ", j_call) & grepl("^IGH[MGADE]", c_call)) |
-#     #     (grepl("^IGKV", v_call) & grepl("^IGKJ", j_call) & grepl("^IGKC", c_call)) |
-#     #     (grepl("^IGLV", v_call) & grepl("^IGLJ", j_call) & grepl("^IGLC", c_call))
-#     # )
-#   
-#   return(df)
-#   
-# }
-# )
-# 
-# # Rows in the data after filtering V/J/C calls inconsistent with the respective locus
-# cat(paste("HH117:", nrow(bcr_data_filt$HH117), "sequences\n"))
-# cat(paste("HH119:", nrow(bcr_data_filt$HH119), "sequences\n"))
-# 
-# bcr_data$HH117[!(bcr_data$HH117$sequence_id %in% bcr_data_filt$HH117$sequence_id), ] %>% 
-#   select(v_call, j_call, c_call)
+
+# Filter out inconsistent sequences:
+# Filter out contigs that differ in heavy/light/kappa/lambda chain across V, J and C gene.
+
+bcr_data_filt <- lapply(bcr_data, function(x) {
+  
+  df <- x %>%
+    # filter(grepl("^IGHV", v_call) & grepl("^IGHJ", j_call))
+    
+    # Filter out contigs that differ in heavy/light/kappa/lambda chain across V, J and C gene.
+    dplyr::filter(
+      (grepl("^IGHV", v_call) & grepl("^IGHJ", j_call) & grepl("^IGH[MGADE]", c_call)) |
+        (grepl("^IGKV", v_call) & grepl("^IGKJ", j_call) & grepl("^IGKC", c_call)) |
+        (grepl("^IGLV", v_call) & grepl("^IGLJ", j_call) & grepl("^IGLC", c_call))
+    )
+  
+  return(df)
+  
+}
+)
+
+# Rows in the data after filtering V/J/C calls inconsistent with the respective locus
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data_filt[[HH]]), "sequences\n"))
+}
 
 # ------------------------------------------------------------------------------
 # Remove non-productive sequences
 # ------------------------------------------------------------------------------
 
-bcr_data$HH117$productive %>% table()
-bcr_data$HH119$productive %>% table()
+bcr_data_filt$HH117$productive %>% table(useNA = "always")
+bcr_data_filt$HH119$productive %>% table(useNA = "always")
+
+for (HH in patients){
+  cat(paste(HH, "-", table(bcr_data_filt[[HH]]$productive, useNA = "always"), "sequences\n"))
+}
 
 # bcr_data <- lapply(bcr_data, function(x) {
 # 
@@ -110,57 +112,48 @@ bcr_data$HH119$productive %>% table()
 # cat(paste("HH119:", nrow(bcr_data_filt$HH119), "sequences\n"))
 
 # ------------------------------------------------------------------------------
-# Handle multiple heavy chains 
+# Handle multiple light chains 
 # ------------------------------------------------------------------------------
 
-min_second_umi_noise <- 3  # from the flat bottom band in the plot; adjust if you want it tighter/looser
-
-bcr_data_qc <- lapply(bcr_data, function(x) {
-  
-  # x <- bcr_data[["HH117"]]
+# Filter cells based on multiple light chain
+bcr_data_qc <- lapply(bcr_data_filt, function(x) {
   
   df <- x %>%
     group_by(cell_id) %>%
     arrange(desc(umi_count), .by_group = TRUE) %>%
     mutate(
-      n_heavy = n(),
-      same_rearrangement = n_distinct(v_call, j_call, junction) == 1,
-      # only IGHM+IGHD specifically counts as benign co-expression
-      is_md_pair = n_heavy == 2 & all(c_call %in% c("IGHM", "IGHD")) & n_distinct(c_call) == 2,
+      n_light = n(),
       dominant = case_when(
-        n_heavy == 1 ~ TRUE,
-        same_rearrangement & is_md_pair ~ c_call == "IGHM",
-        # everything else with 2 heavy contigs (different rearrangements, or same rearrangement but not IGHM/IGHD) -> same ratio/noise logic
-        n_heavy == 2 & umi_count[2] <= min_second_umi_noise ~ row_number() == 1,
-        n_heavy == 2 & umi_count[2] > min_second_umi_noise & umi_count[1] >= 2 * umi_count[2] ~ row_number() == 1,
-        TRUE ~ FALSE
+        n_light == 1 ~ TRUE,                          # only one light chain, keep it
+        umi_count[1] >= 2 * umi_count[2] ~ row_number() == 1,  # dominant contig has 2x UMIs
+        TRUE ~ FALSE                                  # ambiguous, drop all contigs for this cell
       )
     ) %>%
     filter(dominant) %>%
-    select(-n_heavy, -same_rearrangement, -is_md_pair, -dominant) %>%
-    ungroup() %>% 
-    mutate(
-      c_call_grouped = if_else(c_call %in% c("IGHM", "IGHD"), "IGHM/D", c_call)
-    )
+    select(-n_light, -dominant) %>%
+    ungroup()
   
   return(df)
   
-})
+}
+)
 
 # Rows in the data before filtering 
-cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data[[HH]]), "sequences\n"))
+}
 
 # Rows in the data after filtering 
-cat(paste("HH117:", nrow(bcr_data_qc$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data_qc[[HH]]), "sequences\n"))
+}
+
 
 # ------------------------------------------------------------------------------
 # Add cell type annotation 
 # ------------------------------------------------------------------------------
 
 seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
-patients <- names(bcr_data_qc)
 
 # Make pattern to make sample_clean column (redundant information removed)
 markers <- c("HLADR", "CD19", "GC", "TFH", "PB", "MEM", "PC")
@@ -177,7 +170,7 @@ pattern <- sprintf(
 bcr_data_qc_annot <- lapply(patients, function(HH) {
   
   # Define data
-  # HH <- "HH117"
+  # HH <- "HH153"
   
   # -------------------
   # Standardize cell IDs
@@ -199,6 +192,8 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   df$sample_clean <- df$sample_id %>% 
     str_remove(pattern)
   df$cell_id_noFol <- gsub("_Fol-\\d+", "", df$cell_id)
+  df$sample_clean_fol <- df$sample_id %>% 
+    str_remove(pattern)
   
   # Get barcode suffix
   sample_suffix_map <- seurat_obj[[]] %>%
@@ -236,14 +231,13 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   # Remove cells without GEX data
   # -------------------
   
-  # df <- df %>% filter(!is.na(celltype_broad))
+  df <- df %>% filter(!is.na(L1_annotation))
   
   # -------------------
   # Remove negative follicles and doublets 
   # -------------------
   
   df <- df %>% filter(!(manual_ADT_class %in% c("Negative", "Doublet")))
-  # df <- df %>% mutate(ifelse(manual_ADT_class %in% c("Negative", "Doublet"), NA, manual_ADT_class)) # We want this 
   
   # -------------------
   # Add patient information 
@@ -252,28 +246,20 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   df$patient_id <- HH
   
   # -------------------
-  # Remove TFH cells and GC B cells from the LP and contamination 
+  # Remove TFH cells and GC B cells from the LP
   # -------------------
   
-  # LP_samples <- grep("LP", df$sample_clean, value = TRUE) %>% unique()
-  # 
-  # # table(df$L1_annotation == "Tfh_cells")
-  # # table(df$L1_annotation == "GC_B_cells" & df$sample_clean %in% LP_samples)
-  # 
-  # # df <- df %>% filter(
-  # #   (celltype_broad != "Tfh_like_cells") & !(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
-  # # )
-  # # nrow(df)
-  # 
-  # df <- df %>% 
-  #   mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
-  #   filter(
-  #     (L1_annotation != "Tfh_cells"), 
-  #     !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), 
-  #     (str_detect(L1_annotation, "Contamination", negate = TRUE))
-  #   )
-  # 
-  # nrow(df)
+  LP_samples <- grep("LP", df$sample_clean, value = TRUE) %>% unique()
+  
+  # table(df$celltype_broad == "Tfh_like_cells")
+  # table(df$celltype_broad == "GC_B_cells" & df$sample_clean %in% LP_samples)
+  
+  df <- df %>% 
+    filter(
+      (L1_annotation != "Tfh_cells"), 
+      !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), 
+      (str_detect(L1_annotation, "Contamination", negate = TRUE))
+    )
   
   # -------------------
   # Return final df
@@ -286,53 +272,94 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
 
 
 # Rows in the data after subsetting with seurat object  
-cat(paste("HH117:", nrow(bcr_data_qc_annot$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data_qc_annot[[HH]]), "sequences\n"))
+}
+
+# ------------------------------------------------------------------------------
+# Export bcr_data_qc_annot
+# ------------------------------------------------------------------------------
+
+saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_light_bcr_data_qc_annot.rds")
+# bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/03_light_bcr_data_qc_annot.rds")
+
 
 # ------------------------------------------------------------------------------
 # Summary of filtering
 # ------------------------------------------------------------------------------
 
-# Rows in the data before filtering 
-cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
-
-# Rows in the data after filtering 
-cat(paste("HH117:", nrow(bcr_data_qc$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
-
-# Rows in the data after subsetting with seurat object  
-cat(paste("HH117:", nrow(bcr_data_qc_annot$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
-
-# ------------------------------------------------------------------------------
-# Look at BCR in contamination (Tfh cells)
-# ------------------------------------------------------------------------------
-
 for (HH in patients){
-  
-  # HH <- "HH117"
-  df <- bcr_data_qc_annot[[HH]]
-  
-  table(df$L1_annotation, useNA = "always")
-  table(df$L1_annotation == "Tfh_cells")
-  
-  df %>% filter(L1_annotation == "Tfh_cells") %>% 
-    dplyr::count(junction_length, v_call, j_call, c_call, sort = TRUE) %>% 
-    # filter(n > 1) %>% 
-    mutate(
-      JL_V_J_C_call = paste(junction_length, v_call, j_call, c_call, sep = "_")
-    ) %>% 
-    select(JL_V_J_C_call, n) %>% 
-    ggplot(aes(y = JL_V_J_C_call, x = n)) + 
-    geom_col() + 
-    theme_bw() + 
-    labs(
-      title = glue("{HH}: Tfh cells BCR characteristics")
-    ) 
-  
-  ggsave(glue("45_immcantation/plot/09_BCR_contamination/{HH}_N_Tfh_with_BCR.png"), width = 10, height = 6)
-  
+  cat(paste(HH, "-", nrow(bcr_data[[HH]]), "sequences pre-filt\n")) # Rows in the data before filtering
+  cat(paste(HH, "-", nrow(bcr_data_qc[[HH]]), "sequences post-filt\n")) # Rows in the data after filtering
+  cat(paste(HH, "-", nrow(bcr_data_qc_annot$HH119), "sequences post-seurat-filt\n")) # Rows in the data after subsetting with seurat object
+  cat("\n")
 }
 
+# ------------------------------------------------------------------------------
+# Export bcr_data_qc_annot per sample
+# ------------------------------------------------------------------------------
 
+patients <- names(bcr_data_qc_annot)
+
+for (HH in patients) {
+  
+  # HH <- "HH151"
+  # get the cloned data for this patient
+  bcr_data_qc_annot_HH <- bcr_data_qc_annot[[HH]]
+  
+  # split back by sample and write one file per sample
+  for (s in unique(bcr_data_qc_annot_HH$sample_id)) {
+    
+    # s <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Yellow"
+    
+    sample_db <- bcr_data_qc_annot_HH %>% filter(sample_id == s)
+    sample_db$cell_id <- sample_db$cell_id %>% str_split_i("_", -1)
+    
+    outfile <- glue("45_immcantation/out/{s}/{s}_light_germ-pass_QC.tsv")
+    
+    airr::write_rearrangement(sample_db, outfile)
+    
+  }
+}
+
+# ------------------------------------------------------------------------------
+# Summary follicles and cell types
+# ------------------------------------------------------------------------------
+
+# source("10_broad_annotation/script/color_palette.R")
+# patients <- names(bcr_data_qc_annot)
+# 
+# lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   
+#   bcr_data_qc_annot[[HH]] %>% 
+#     ggplot(aes(x = sample_clean, fill = celltype_broad)) + 
+#     geom_bar() + 
+#     scale_fill_manual(values = celltype_colors) + 
+#     theme_bw() + 
+#     labs(
+#       x = "", 
+#       y = "Count", 
+#       title = glue ("{HH}: N cells across samples")
+#     ) + 
+#     theme(axis.text.x = element_text(angle = 45, hjust = 1))
+#   
+#   ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_samples.png"), width = 12, height = 7)
+#   
+#   bcr_data_qc_annot[[HH]] %>% 
+#     filter(!is.na(manual_ADT_ID)) %>% 
+#     ggplot(aes(x = manual_ADT_ID, fill = celltype_broad)) + 
+#     geom_bar() + 
+#     scale_fill_manual(values = celltype_colors) + 
+#     theme_bw() + 
+#     labs(
+#       x = "", 
+#       y = "Count", 
+#       title = glue("{HH}: N cells across follicles of SI-PP")
+#     ) + 
+#     theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+#   
+#   ggsave(glue("45_immcantation/plot/{HH}_N_cells_across_follicles.png"), width = 14, height = 7)
+#   
+# })

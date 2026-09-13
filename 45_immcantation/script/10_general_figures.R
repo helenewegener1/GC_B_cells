@@ -31,7 +31,7 @@ grep("clone", colnames(resolve_LC_list$HH117), value = TRUE)
 # nrow(df_heavy)
 
 # Load seurat object
-seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
+# seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
 
 outdir <- glue("45_immcantation/plot/10_general_figures")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
@@ -56,13 +56,39 @@ resolve_LC_list <- lapply(patients, function(HH){
   
 }) %>% setNames(patients)
 
+# B cell subsets
+B_cell_subsets <- list(
+  "all B cells" = c("GC_B_cells", "Memory_B_cells", "Naive_B_cells", "PCs", "Unconventional_Bcells"), 
+  "GC B cells" = "GC_B_cells",
+  "Memory B cells" = "Memory_B_cells",
+  "PCs" = "PCs"
+)
+
+# Condition 
+patient_to_condition <- seurat_integrated[[]] %>% 
+  select(patient, condition) %>% 
+  distinct() %>% 
+  rename(patient_id = patient)
+rownames(patient_to_condition) <- NULL
+
+# Make pattern to make sample_clean column (redundant information removed)
+markers <- c("HLADR", "CD19", "GC", "TFH", "PB", "MEM", "PC")
+tails   <- c("Green", "Red", "Yellow", "Blue", "Pool\\d+")
+
+pattern <- sprintf(
+  "-(?:%s)(?:-AND-(?:%s))*(?:[-_](?:%s))?$",
+  paste(markers, collapse = "|"),
+  paste(markers, collapse = "|"),
+  paste(tails,   collapse = "|")
+)
+
 # ==============================================================================
 # Export BCR meta data to Gina 
 # ==============================================================================
 
 # meta_4_Gina_list <- lapply(patients, function(HH){
 # 
-#   # HH <- "HH119"
+#   # HH <- "HH151"
 # 
 #   seurat_obj <- subset(seurat_integrated, patient == HH)
 #   resolve_LC_HH <- resolve_LC_list[[HH]] %>% filter(locus == "IGH")
@@ -80,7 +106,7 @@ resolve_LC_list <- lapply(patients, function(HH){
 # 
 #   # Wrangle IDs
 #   seurat_ids <- seurat_obj %>% colnames()
-#   LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_")
+#   LC_ids <- resolve_LC_HH$cell_id_seurat %>% str_remove(".*?_") %>% str_remove("Green_|Red_|Yellow_|Blue_")
 # 
 #   # # IDs test
 #   # seurat_ids_sub <- seurat_ids %>% str_split_i("_", 2)
@@ -97,12 +123,13 @@ resolve_LC_list <- lapply(patients, function(HH){
 # 
 #   # Prep for merge
 #   resolve_LC_HH_meta <- resolve_LC_HH %>%
-#     mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_")) %>%
+#     mutate(cell_id_seurat_clean = str_remove(cell_id_seurat, ".*?_") %>% str_remove("Green_|Red_|Yellow_|Blue_")) %>%
 #     select(cell_id_seurat_clean, c_call, clone_subgroup_id_90_similarity)
 # 
 #   # Merge and create final meta data for Gina
 #   meta_4_Gina <- seurat_obj[[]] %>%
-#     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample, L1_annotation) %>%
+#     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample, L1_annotation, sample_clean, patient, condition) %>%
+#     rename(patient_id = patient) %>% 
 #     rownames_to_column("cell_id_seurat_clean") %>%
 #     left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
 #     column_to_rownames("cell_id_seurat_clean")
@@ -117,7 +144,8 @@ resolve_LC_list <- lapply(patients, function(HH){
 # 
 # }) %>% setNames(patients)
 # 
-# saveRDS(meta_4_Gina_list %>% bind_rows(), "45_immcantation/out/rds/10_meta_4_Gina_list.rds")
+# meta <- meta_4_Gina_list %>% bind_rows()
+# saveRDS(meta, "45_immcantation/out/rds/10_meta_4_Gina_list.rds")
 
 meta <- readRDS("45_immcantation/out/rds/10_meta_4_Gina_list.rds")
 
@@ -132,13 +160,6 @@ meta <- readRDS("45_immcantation/out/rds/10_meta_4_Gina_list.rds")
 outdir1 <- glue("{outdir}/bcr_available/")
 dir.create(outdir1, recursive = TRUE, showWarnings = FALSE)
 
-B_cell_subsets <- list(
-  "all B cells" = c("GC_Bcells", "Memory_Bcells", "Naive_Bcells", "PCs", "Unconventional_Bcells"), 
-  "GC B cells" = "GC_Bcells",
-  "Memory B cells" = "Memory_Bcells",
-  "PCs" = "PCs"
-)
-
 for (subset in names(B_cell_subsets)){
   
   # subset <- "all B cells"
@@ -146,12 +167,11 @@ for (subset in names(B_cell_subsets)){
   df_plot <- meta %>% 
     filter(L1_annotation %in% B_cell_subsets[[subset]]) %>% 
     mutate(
-      has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE),
-      patient_id = str_split_i(sample, "-", 1)
-    ) 
+      has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE)
+    )
   
   df_count <- df_plot %>% 
-    dplyr::count(patient_id) 
+    dplyr::count(patient_id, condition) 
   
   df_plot %>% 
     ggplot(aes(x = patient_id, fill = has_bcr)) + 
@@ -167,6 +187,7 @@ for (subset in names(B_cell_subsets)){
       inherit.aes = FALSE,
       size = 3.5
     ) +
+    facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
     theme_bw() + 
     labs(
       title = glue("Percentage of {subset} that have BCR data available"), 
@@ -187,13 +208,6 @@ for (subset in names(B_cell_subsets)){
 outdir2 <- glue("{outdir}/N_B_cells/")
 dir.create(outdir2, recursive = TRUE, showWarnings = FALSE)
 
-B_cell_subsets <- list(
-  "all B cells" = c("GC_Bcells", "Memory_Bcells", "Naive_Bcells", "PCs", "Unconventional_Bcells"), 
-  "GC B cells" = "GC_Bcells",
-  "Memory B cells" = "Memory_Bcells",
-  "PCs" = "PCs"
-)
-
 # all cells 
 for (subset in names(B_cell_subsets)){
   
@@ -203,8 +217,7 @@ for (subset in names(B_cell_subsets)){
   df_plot <- meta %>% 
     filter(L1_annotation %in% B_cell_subsets[[subset]]) %>% 
     mutate(
-      has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE),
-      patient_id = str_split_i(sample, "-", 1)
+      has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE)
     )
   
   df_plot %>% 
@@ -217,7 +230,8 @@ for (subset in names(B_cell_subsets)){
       x = "Patient ID", 
       y = "N cells", 
       fill = "Has BCR data"
-    ) 
+    ) + 
+    facet_grid(cols = vars(condition), scales = "free_x", space = "free_x")
   
   png_string <- str_replace_all(subset, " ", "_")
   ggsave(glue("{outdir2}/N_{png_string}.png"))
@@ -235,7 +249,7 @@ for (subset in names(B_cell_subsets)){
       L1_annotation %in% B_cell_subsets[[subset]]
     ) %>% 
     mutate(
-      sample_plot = sample %>% str_remove_all("-HLADR-AND-CD19|-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-AND-GC-AND-TFH"),
+      sample_plot = sample %>% str_remove(pattern),
       has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE)
     )
   
@@ -250,6 +264,10 @@ for (subset in names(B_cell_subsets)){
       y = "N cells",
       fill = "Has BCR data"
     ) +
+    scale_y_continuous(
+      breaks = scales::breaks_width(5000),
+      minor_breaks = scales::breaks_width(1000)
+    ) + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
   
   png_string <- str_replace_all(subset, " ", "_")
@@ -267,14 +285,18 @@ dir.create(outdir3, recursive = TRUE, showWarnings = FALSE)
 # N GC B cells in PPs
 df_plot <- meta %>% 
   filter(
-    L1_annotation == "GC_Bcells"
+    L1_annotation == "GC_B_cells"
   ) %>% 
   mutate(
-    sample_plot = sample %>% str_remove_all("-HLADR-AND-CD19|-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-AND-GC-AND-TFH"),
+    sample_plot = sample %>% str_remove(pattern),
     has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE)
-  ) %>% 
+  ) 
+
+PP_samples <- grep("SI-PP", df_plot$sample_plot %>% unique(), value = TRUE) 
+
+df_plot <- df_plot %>%
   filter(
-    sample_plot %in% c("HH117-SI-PP-nonINF", "HH119-SI-PP")
+    sample_plot %in% PP_samples
   )
 
 df_plot %>% 
@@ -282,6 +304,7 @@ df_plot %>%
   geom_bar() +
   scale_fill_manual(values = c("grey", "#7FB069")) + 
   theme_bw() + 
+  facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
   labs(
     title = glue("N GC B cells in Peyer's patches"), 
     subtitle = "ACTUALLY not quite correct since I filter out BCR data for PP cells that is NA in ADT", 
@@ -296,15 +319,15 @@ ggsave(glue("{outdir3}/N_GC_B_cells_in_PP.png"))
 # ADT avail
 df_plot <- meta %>% 
   filter(
-    L1_annotation == "GC_Bcells"
+    L1_annotation == "GC_B_cells"
   ) %>% 
   mutate(
-    sample_plot = sample %>% str_remove_all("-HLADR-AND-CD19|-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-AND-GC-AND-TFH"),
+    sample_plot = sample %>% str_remove(pattern),
     has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE),
     has_ADT = ifelse(manual_ADT_class == "Singlet", TRUE, FALSE)
   ) %>% 
   filter(
-    sample_plot %in% c("HH117-SI-PP-nonINF", "HH119-SI-PP")
+    sample_plot %in% PP_samples
   )
 
 df_plot %>% 
@@ -319,6 +342,7 @@ df_plot %>%
     y = "N cells",
     fill = "Has ADT data"
   ) +
+  facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
 ggsave(glue("{outdir3}/N_GC_B_cells_in_PP_ADT.png"))
@@ -326,26 +350,24 @@ ggsave(glue("{outdir3}/N_GC_B_cells_in_PP_ADT.png"))
 # N cells per follicle across patients
 df_plot <- meta %>% 
   filter(
-    L1_annotation == "GC_Bcells"
+    L1_annotation == "GC_B_cells"
   ) %>% 
   mutate(
-    sample_plot = sample %>% str_remove_all("-HLADR-AND-CD19|-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-AND-GC-AND-TFH"),
+    sample_plot = sample %>% str_remove(pattern),
     has_ADT = ifelse(manual_ADT_class == "Singlet", TRUE, FALSE),
     has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE)
   ) %>% 
   filter(
-    sample_plot %in% c("HH117-SI-PP-nonINF", "HH119-SI-PP"),
+    sample_plot %in% PP_samples,
     has_ADT
   ) %>% 
   mutate(
     follicle = manual_ADT_ID %>% str_split_i("-", 2) %>% as.integer()
   )
 
-PP_samples <- df_plot$sample_plot %>% unique()
-
 for (PP_sample in PP_samples) {
   
-  # PP_sample <- "HH119-SI-PP"
+  # PP_sample <- "HH151-SI-PP-nonINF"
 
   df_plot %>% 
     filter(sample_plot == PP_sample) %>% 
@@ -384,23 +406,24 @@ dir.create(outdir4, recursive = TRUE, showWarnings = FALSE)
 # N GC B cells in PPs
 df_plot <- meta %>% 
   mutate(
-    sample_plot = sample %>% str_remove_all("-HLADR-AND-CD19|-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-AND-GC-AND-TFH"),
+    sample_plot = sample %>% str_remove(pattern),
     follicle = manual_ADT_ID %>% str_split_i("-", 2) %>% as.integer()
   ) %>% 
   filter(
-    L1_annotation == "GC_Bcells",
-    sample_plot %in% c("HH117-SI-PP-nonINF", "HH119-SI-PP"),
+    L1_annotation == "GC_B_cells",
+    sample_plot %in% PP_samples,
     !is.na(manual_ADT_ID), 
     !is.na(clone_subgroup_id_90_similarity)
-  ) 
+  )
 
 df_plot %>% 
-  select(sample_plot, clone_subgroup_id_90_similarity) %>% 
+  select(condition, sample_plot, clone_subgroup_id_90_similarity) %>% 
   distinct() %>% 
-  dplyr::count(sample_plot) %>% 
+  dplyr::count(condition, sample_plot) %>% 
   ggplot(aes(x = sample_plot, y = n)) + 
   geom_col() + 
   theme_bw() + 
+  facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
   labs(
     title = "N clones for PP samples", 
     y = "N clones"
@@ -449,13 +472,6 @@ for (PP_sample in PP_samples) {
 outdir5 <- glue("{outdir}/clone_size/")
 dir.create(outdir5, recursive = TRUE, showWarnings = FALSE)
 
-B_cell_subsets <- list(
-  "all B cells" = c("GC_Bcells", "Memory_Bcells", "Naive_Bcells", "PCs", "Unconventional_Bcells"), 
-  "GC B cells" = "GC_Bcells",
-  "Memory B cells" = "Memory_Bcells",
-  "PCs" = "PCs"
-)
-
 # all cells 
 for (subset in names(B_cell_subsets)){
 
@@ -465,10 +481,9 @@ for (subset in names(B_cell_subsets)){
   # Freqency of clone size
   df_plot <- meta %>% 
     mutate(
-      sample_plot = sample %>% str_remove_all("-HLADR-AND-CD19|-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-AND-GC-AND-TFH"),
+      sample_plot = sample %>% str_remove(pattern),
       follicle = manual_ADT_ID %>% str_split_i("-", 2) %>% as.integer(),
-      has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE),
-      patient_id = sample %>% str_split_i("-", 1)
+      has_bcr = ifelse(!is.na(clone_subgroup_id_90_similarity), TRUE, FALSE)
     ) %>% 
     filter(
       has_bcr,
@@ -537,27 +552,26 @@ for (subset in names(B_cell_subsets)){
 # ==============================================================================
 
 outdir_1 <- glue("{outdir}/Follicle_cell_types")
-dir.create(outdir_1, recursive = TRUE)
+dir.create(outdir_1, recursive = TRUE, showWarnings = FALSE)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH117"
-  p <- patient_names[[HH]]
+  # HH <- "HH153"
+  # p <- patient_names[[HH]]
   
-  seurat_obj <- subset(seurat_integrated, patient == HH)
+  meta_HH <- meta %>% filter(patient_id == HH)
   
   # Define LP samples
-  LP_samples <- grep("LP", seurat_obj[[]]$sample_clean, value = TRUE) %>% unique()
+  LP_samples <- grep("LP", meta_HH$sample_clean, value = TRUE) %>% unique()
   
   # How many Tfh cells with BCR?
-  seurat_obj[[]] %>% filter((!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells")) 
+  meta_HH %>% filter(!is.na(clone_subgroup_id_90_similarity) & L1_annotation == "Tfh_cells") %>% nrow()
   
   # Clean meta data and prep for plotting 
-  seurat_meta_clean <- seurat_obj[[]] %>%  
-    mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
+  meta_HH_clean <- meta_HH %>%  
     filter(
       (str_detect(L1_annotation, "Contamination", negate = TRUE)), # Remove contamination
-      !(!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells"), # Remove Tfh cells with BCR
+      !(!is.na(clone_subgroup_id_90_similarity) & L1_annotation == "Tfh_cells"), # Remove Tfh cells with BCR
       !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), # Remove GC B cells in LP samples
     ) %>% mutate(
       sample_clean_plot = sample_clean %>% str_remove_all(glue("{HH}-")),
@@ -569,6 +583,7 @@ lapply(patients, function(HH){
   # HH_fol_sample_clean <- seurat_meta_clean %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
   
   # Count
+  width <- 13
   if (HH == "HH117"){
     width <- 12 
   } else if (HH == "HH119"){
@@ -577,7 +592,7 @@ lapply(patients, function(HH){
   png(glue("{outdir_1}/{HH}_N_cells_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
   
   print(
-    seurat_meta_clean %>% 
+    meta_HH_clean %>% 
       filter(!is.na(manual_ADT_ID)) %>% 
       mutate(
         manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
@@ -598,7 +613,7 @@ lapply(patients, function(HH){
         x = "Follicle number", 
         y = "Count", 
         # title = glue ("{p}: {HH_fol_sample_clean} follicles"),
-        title = glue ("{p}\nPeyer's patch follicles"),
+        title = glue ("{HH}: Peyer's patch follicles"),
         fill = "Cell type"
       ) + 
       theme(
@@ -626,7 +641,7 @@ lapply(patients, function(HH){
 # 
 # # Clean meta data and prep for plotting 
 # seurat_meta_clean <- seurat_integrated[[]] %>%  
-#   mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
+#   mutate(L1_annotation = ifelse(L1_annotation == "GC_B_cells", "GC_B_cells", L1_annotation)) %>% 
 #   filter(
 #     (str_detect(L1_annotation, "Contamination", negate = TRUE)), # Remove contamination
 #     !(!is.na(bcr_productive_contig_1) & !is.na(bcr_productive_contig_2) & L1_annotation == "Tfh_cells"), # Remove Tfh cells with BCR
@@ -689,12 +704,12 @@ lapply(patients, function(HH){
 # ==============================================================================
 
 outdir_2 <- glue("{outdir}/Follicle_GC_B_cells_isotypes")
-dir.create(outdir_2, recursive = TRUE)
+dir.create(outdir_2, recursive = TRUE, showWarnings = FALSE)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH119"
-  p <- patient_names[[HH]]
+  # HH <- "HH153"
+  # p <- patient_names[[HH]]
   
   plot_df <- resolve_LC_list[[HH]] %>% 
     filter(
@@ -714,6 +729,7 @@ lapply(patients, function(HH){
   # Isotype
   
   ## Freq
+  width <- 13
   if (HH == "HH117"){
     width <- 12 
   } else if (HH == "HH119"){
@@ -745,7 +761,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{p}\nGC B cells from Peyer's patch follicles"),
+        title = glue("{HH}: GC B cells from Peyer's patch follicles"),
         fill = "Isotype"
       ) + 
       theme(
@@ -808,7 +824,8 @@ plot_df <- resolve_LC_list %>%
     ),
     clone_size_group = factor(clone_size_group, levels = c("Singletons", "2-5", "6-10", "11-20", "21-50", "51-100", "100+"))
   ) %>% 
-  dplyr::count(patient_id, clone_size_group)
+  dplyr::count(patient_id, clone_size_group) %>% 
+  left_join(patient_to_condition, by = "patient_id")
   # select(patient_id, clone_subgroup_id_90_similarity, clone_size_group) %>%
   # distinct() %>%
   # count(patient_id)
@@ -818,6 +835,7 @@ plot_df %>%
   geom_col() + 
   scale_fill_viridis_d(option = "plasma", direction = -1) +
   theme_bw() + 
+  facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
   labs(
     title = "N GC B cell clones per patient",
     subtitle = "Cells where follicle could not be determined are included",

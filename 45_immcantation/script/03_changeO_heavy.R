@@ -50,11 +50,16 @@ bcr_data_tmp <- lapply(sample_names, function(s) {
 # split by patient
 bcr_data <- list(
   "HH117" = bcr_data_tmp %>% filter(subject_id == "HH117"),
-  "HH119" = bcr_data_tmp %>% filter(subject_id == "HH119")
+  "HH119" = bcr_data_tmp %>% filter(subject_id == "HH119"),
+  "HH151" = bcr_data_tmp %>% filter(subject_id == "HH151"),
+  "HH153" = bcr_data_tmp %>% filter(subject_id == "HH153")
 )
 
-cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
+patients <- names(bcr_data)
+
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data[[HH]]), "sequences\n"))
+}
 
 # ------------------------------------------------------------------------------
 # Check V/D/J gene call consistency
@@ -91,8 +96,10 @@ cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
 # Remove non-productive sequences
 # ------------------------------------------------------------------------------
 
-bcr_data$HH117$productive %>% table()
-bcr_data$HH119$productive %>% table()
+for (HH in patients){
+  print(paste(HH, "-", bcr_data[[HH]]$productive %>% table()))
+}
+
 
 # bcr_data <- lapply(bcr_data, function(x) {
 # 
@@ -115,7 +122,7 @@ bcr_data$HH119$productive %>% table()
 # Visualize UMIs of multiple contigs (heavy chains)
 lapply(patients, function(HH){
   
-  # HH <- "HH119"
+  # HH <- "HH153"
   
   umi_pairs <- bcr_data[[HH]] %>% 
     group_by(cell_id) %>% 
@@ -180,28 +187,52 @@ bcr_data_qc <- lapply(bcr_data, function(x) {
 })
 
 # Rows in the data before filtering 
-cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data[[HH]]), "sequences\n"))
+}
 
 # Rows in the data after filtering 
-cat(paste("HH117:", nrow(bcr_data_qc$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data_qc[[HH]]), "sequences\n"))
+}
 
 # ------------------------------------------------------------------------------
 # Add cell type annotation 
 # ------------------------------------------------------------------------------
 
-seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
-patients <- names(bcr_data_qc)
+# Add annotations to integrated seurat object 
+# seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
+# seurat_metadata <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_metadata.rds")
+# 
+# seurat_integrated %>% ncol()
+# seurat_metadata %>% nrow()
+# table(seurat_metadata$L1_annotation)
+# 
+# seurat_integrated[[]] <- seurat_metadata
+# 
+# saveRDS(seurat_integrated, "30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
+seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
 
-seurat_integrated[[]] %>% filter(patient == "HH117") %>% nrow()
-seurat_integrated[[]] %>% filter(patient == "HH119") %>% nrow()
+for (HH in patients){
+  print(paste(HH, "-", seurat_integrated[[]] %>% filter(patient == HH) %>% nrow()))
+}
+
+# Make pattern to make sample_clean column (redundant information removed)
+markers <- c("HLADR", "CD19", "GC", "TFH", "PB", "MEM", "PC")
+tails   <- c("Green", "Red", "Yellow", "Blue", "Pool\\d+")
+
+pattern <- sprintf(
+  "-(?:%s)(?:-AND-(?:%s))*(?:[-_](?:%s))?$",
+  paste(markers, collapse = "|"),
+  paste(markers, collapse = "|"),
+  paste(tails,   collapse = "|")
+)
 
 # Filter cells based on multiple heavy chain
 bcr_data_qc_annot <- lapply(patients, function(HH) {
   
   # Define data
-  # HH <- "HH117"
+  # HH <- "HH151"
   
   # -------------------
   # Standardize cell IDs
@@ -211,7 +242,7 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   seurat_obj <- subset(seurat_integrated, patient == HH)
   
   # Check cell_ids/barcodes
-  rownames(seurat_obj) %>% head()
+  colnames(seurat_obj) %>% head()
   df$cell_id %>% head()
   
   # Add sample name to seurat_obj
@@ -220,12 +251,13 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   seurat_obj$cell_id_seurat %>% head()
   
   # Add more meta data 
-  df$sample_clean <- df$sample_id %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
+  df$sample_clean <- df$sample_id %>% 
+    str_remove(pattern)
   df$cell_id_noFol <- gsub("_Fol-\\d+", "", df$cell_id)
   
   # Get barcode suffix
   sample_suffix_map <- seurat_obj[[]] %>%
-    mutate(barcode_suffix = str_split_i(cell_id_seurat, "_", 3)) %>%
+    mutate(barcode_suffix = str_split_i(cell_id_seurat, "_", -1)) %>%
     select(sample_id, barcode_suffix) %>%
     distinct()
   
@@ -253,30 +285,20 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   seurat_meta <- seurat_obj[[]] %>% 
     select(cell_id_seurat, celltype_broad, L1_annotation, manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID)
   
-  df <- df %>% left_join(seurat_meta, by = "cell_id_seurat")
+  df <- df %>% inner_join(seurat_meta, by = "cell_id_seurat")
   
   # -------------------
   # Remove cells without GEX data
   # -------------------
   
-  df <- df %>% filter(!is.na(celltype_broad))
-  
+  df <- df %>% filter(!is.na(L1_annotation))
+
   # -------------------
   # Remove negative follicles and doublets 
   # -------------------
   
   df <- df %>% filter(!(manual_ADT_class %in% c("Negative", "Doublet")))
   # df <- df %>% mutate(ifelse(manual_ADT_class %in% c("Negative", "Doublet"), NA, manual_ADT_class)) # We want this 
-  
-  # -------------------
-  # Combine pools of HH119-SI-PP
-  # -------------------
-  
-  if (HH == "HH119"){
-    
-    df$sample_clean <- df$sample_clean %>% str_remove_all("-CD19-Pool1|-CD19-Pool2|-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2")
-    
-  }
   
   # -------------------
   # Add patient information 
@@ -299,7 +321,6 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   # nrow(df)
   
   df <- df %>% 
-    mutate(L1_annotation = ifelse(L1_annotation == "GC_Bcells", "GC_B_cells", L1_annotation)) %>% 
     filter(
       (L1_annotation != "Tfh_cells"), 
       !(L1_annotation == "GC_B_cells" & sample_clean %in% LP_samples), 
@@ -316,43 +337,55 @@ bcr_data_qc_annot <- lapply(patients, function(HH) {
   
 }) %>% 
   setNames(patients)
-
+ 
 
 # Rows in the data after subsetting with seurat object  
-cat(paste("HH117:", nrow(bcr_data_qc_annot$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data_qc_annot[[HH]]), "sequences\n"))
+}
 
-# ------------------------------------------------------------------------------
+for (HH in patients){
+  cat(paste(bcr_data_qc_annot[[HH]]$sample_clean %>% table()), "\n")
+}
+
+ # ------------------------------------------------------------------------------
 # Summary of filtering
 # ------------------------------------------------------------------------------
 
-# Rows in the data before filtering 
-cat(paste("HH117:", nrow(bcr_data$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data$HH119), "sequences\n"))
+for (HH in patients){
+  cat(paste(HH, "-", nrow(bcr_data[[HH]]), "sequences pre-filt\n")) # Rows in the data before filtering
+  cat(paste(HH, "-", nrow(bcr_data_qc[[HH]]), "sequences post-filt\n")) # Rows in the data after filtering
+  cat(paste(HH, "-", nrow(bcr_data_qc_annot$HH119), "sequences post-seurat-filt\n")) # Rows in the data after subsetting with seurat object
+  cat("\n")
+}
 
-# Rows in the data after filtering 
-cat(paste("HH117:", nrow(bcr_data_qc$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc$HH119), "sequences\n"))
+# ------------------------------------------------------------------------------
+# Export bcr_data_qc_annot
+# ------------------------------------------------------------------------------
 
-# Rows in the data after subsetting with seurat object  
-cat(paste("HH117:", nrow(bcr_data_qc_annot$HH117), "sequences\n"))
-cat(paste("HH119:", nrow(bcr_data_qc_annot$HH119), "sequences\n"))
+saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
+# bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
+
 
 # ------------------------------------------------------------------------------
 # BCR availability stats
 # ------------------------------------------------------------------------------
 
+# Safe row count: NA if the patient is absent from a list
+n_rows <- function(lst, p) if (is.null(lst[[p]])) NA_integer_ else nrow(lst[[p]])
+
+seurat_meta <- seurat_integrated[[]]
+
 df_stats <- data.frame(
-  patient = c("HH117", "HH119"),
-  bcr_raw = c(nrow(bcr_data$HH117), nrow(bcr_data$HH119)),
-  bcr_qc = c(nrow(bcr_data_qc$HH117), nrow(bcr_data_qc$HH119)),
-  seurat_cells = c(seurat_integrated[[]] %>% filter(patient == "HH117") %>% nrow(), seurat_integrated[[]] %>% filter(patient == "HH119") %>% nrow()),
-  bcr_qc_annot = c(nrow(bcr_data_qc_annot$HH117), nrow(bcr_data_qc_annot$HH119))
-) %>% 
-  pivot_longer(cols = c("seurat_cells", "bcr_raw", "bcr_qc", "bcr_qc_annot")) %>% 
-  mutate(
-    name = factor(name, levels = c("seurat_cells", "bcr_raw", "bcr_qc", "bcr_qc_annot"))
-  )
+  patient      = patients,
+  seurat_cells = sapply(patients, function(p) sum(seurat_meta$patient == p)),
+  bcr_raw      = sapply(patients, function(p) n_rows(bcr_data, p)),
+  bcr_qc       = sapply(patients, function(p) n_rows(bcr_data_qc, p)),
+  bcr_qc_annot = sapply(patients, function(p) n_rows(bcr_data_qc_annot, p)),
+  row.names    = NULL
+) %>%
+  pivot_longer(cols = -patient) %>%
+  mutate(name = factor(name, levels = c("seurat_cells", "bcr_raw", "bcr_qc", "bcr_qc_annot")))
 
 df_stats %>% 
   ggplot(aes(x = patient, y = value, fill = name)) + 
@@ -371,13 +404,6 @@ df_stats %>%
 
 ggsave(glue("{outdir}/bcr_availability_barplot.png"))
   
-
-# ------------------------------------------------------------------------------
-# Export bcr_data_qc_annot
-# ------------------------------------------------------------------------------
-
-saveRDS(bcr_data_qc_annot, "45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
-# bcr_data_qc_annot <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds")
 
 # # ------------------------------------------------------------------------------
 # # Summary follicles and cell types

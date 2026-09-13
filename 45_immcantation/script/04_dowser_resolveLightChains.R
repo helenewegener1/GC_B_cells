@@ -1,4 +1,4 @@
-setwd("~/ciir/people/helweg/projects/GC_B_cells")
+setwd("~/gcb/")
 
 library(dowser)
 library(alakazam)
@@ -40,7 +40,7 @@ sample_names <- files[1:length(files)-1]
 
 # data <- readRDS("45_immcantation/out/rds/05_spec_clones_vj_gmm_threshold.rds") 
 data <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds") 
-clone_10x_combined <- list(data$HH117, data$HH119) %>% bind_rows()
+clone_10x_combined <- data %>% bind_rows()
 
 # HH <- "HH117"
 # clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
@@ -48,20 +48,37 @@ clone_10x_combined <- list(data$HH117, data$HH119) %>% bind_rows()
 light_chain_list <- lapply(sample_names, function(x){
   
   # x <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool1"
+  # x <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Yellow"
   
   light_chain <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass_QC.tsv"))
+  # light_chain <- read.delim(glue("45_immcantation/out/{x}/{x}_light_germ-pass.tsv"))
   
   # light_chain$sample_id <- x %>% str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC")
-  light_chain$cell_id <- paste(light_chain$sample_id, light_chain$cell_id, sep = "_")
+  light_chain$cell_id <- paste(x, light_chain$cell_id, sep = "_")
   light_chain$sequence_id <- paste(light_chain$sequence_id, "Light", sep = "_")
   
-  light_chain <- light_chain %>%  mutate(
-    sample_clean_fol = ifelse(!is.na(manual_ADT_ID), paste(sample_clean, manual_ADT_ID, sep = "_"), sample_clean)
-  )
+  # Heavy chain cells 
+  # meta_x <- clone_10x_combined %>% filter(sample_id == x) %>% 
+  #   select(
+  #     cell_id
+  #   )
+  # heavy_cells <- meta_x$cell_id
   
-  return(light_chain)
+  nrow(light_chain)
+  
+  light_chain_qc <- light_chain %>% 
+    # inner_join(meta_x, by = "cell_id") %>% 
+    mutate(
+      sample_clean_fol = ifelse(!is.na(manual_ADT_ID), paste(sample_clean, manual_ADT_ID, sep = "_"), sample_clean)
+    ) %>% 
+    select(-L1_annotation)
+  
+  nrow(light_chain_qc)
+  
+  return(light_chain_qc)
   
 }) %>% setNames(sample_names)
+
 light_chain_combined <- bind_rows(light_chain_list)
 
 # Check cell IDs of heavy and light chain
@@ -75,16 +92,17 @@ table(clone_10x_combined$cell_id %in% light_chain_combined$cell_id)
 # Combine heavy and light chain in one df
 light_chain_combined$barcode_suffix <- as.character(light_chain_combined$barcode_suffix)
 
-both_combined_all <- bind_rows(clone_10x_combined, light_chain_combined)
+all_combined <- bind_rows(clone_10x_combined, light_chain_combined)
 
-both_combined_all$cell_id %>% str_split_i("_", 2) %>% unique()
+all_combined$cell_id %>% str_split_i("_", 2) %>% unique()
 
-both_combined <- list(
-  "HH117" = both_combined_all %>% filter(subject_id == "HH117"),
-  "HH119" = both_combined_all %>% filter(subject_id == "HH119")
-)
+patients <- all_combined$patient_id %>% unique()
 
-saveRDS(both_combined, "45_immcantation/out/rds/04_bcr_heavy_light.rds")
+all_combined_list <- lapply(patients, function(HH){
+  all_combined %>% filter(patient_id == HH)
+}) %>% setNames(patients)
+
+saveRDS(all_combined_list, "45_immcantation/out/rds/04_bcr_heavy_light.rds")
 
 # spec_clones_vj <- readRDS("45_immcantation/out/rds/spec_clones_vj.rds")
 # 
@@ -102,35 +120,43 @@ saveRDS(both_combined, "45_immcantation/out/rds/04_bcr_heavy_light.rds")
 # ------------------------------------------------------------------------------
 
 # Check that sequence_id and cell_id are unique
-both_combined$HH119$sequence_id %>% length()
-both_combined$HH119$sequence_id %>% unique() %>% length()
-clone_10x_combined %>% filter(subject_id == "HH119") %>% pull(cell_id) %>% length()
-clone_10x_combined %>% filter(subject_id == "HH119") %>% pull(cell_id) %>% unique() %>% length()
-light_chain_combined %>% filter(subject_id == "HH119") %>% pull(cell_id) %>% length()
-light_chain_combined %>% filter(subject_id == "HH119") %>% pull(cell_id) %>% unique() %>% length()
-# light_chain_combined %>% filter(subject_id == "HH119") %>% count(cell_id, sort = TRUE)
+for (HH in patients){
+  # HH <- "HH151"
+  print(HH)
+  print(all_combined_list[[HH]]$sequence_id %>% length())
+  print(all_combined_list[[HH]]$sequence_id %>% unique() %>% length())
+  print(clone_10x_combined %>% filter(patient_id == HH) %>% pull(cell_id) %>% length())
+  print(clone_10x_combined %>% filter(patient_id == HH) %>% pull(cell_id) %>% unique() %>% length())
+  print(light_chain_combined %>% filter(patient_id == HH) %>% pull(cell_id) %>% length())
+  print(light_chain_combined %>% filter(patient_id == HH) %>% pull(cell_id) %>% unique() %>% length())
+  cat("\n")
+}
 
-both_combined$HH117$sequence_id %>% length()
-both_combined$HH117$sequence_id %>% unique() %>% length()
-clone_10x_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% length()
-clone_10x_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% unique() %>% length()
-light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% length()
-light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) %>% unique() %>% length()
+# # light_chain_combined %>% filter(patient_id == "HH119") %>% count(cell_id, sort = TRUE)
+# 
+# all_combined_list$HH117$sequence_id %>% length()
+# all_combined_list$HH117$sequence_id %>% unique() %>% length()
+# clone_10x_combined %>% filter(patient_id == "HH117") %>% pull(cell_id) %>% length()
+# clone_10x_combined %>% filter(patient_id == "HH117") %>% pull(cell_id) %>% unique() %>% length()
+# light_chain_combined %>% filter(patient_id == "HH117") %>% pull(cell_id) %>% length()
+# light_chain_combined %>% filter(patient_id == "HH117") %>% pull(cell_id) %>% unique() %>% length()
 
 # Max 2 chains per cell id: heavy and light chain
-both_combined$HH119 %>% dplyr::count(cell_id, sort = TRUE) %>% pull(n) %>% table()
-both_combined$HH117 %>% dplyr::count(cell_id, sort = TRUE) %>% pull(n) %>% table()
-
-HH117_heavy <- clone_10x_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) 
-HH117_light <- light_chain_combined %>% filter(subject_id == "HH117") %>% pull(cell_id) 
+for (HH in patients){
+  print(HH)
+  print(all_combined_list[[HH]] %>% dplyr::count(cell_id, sort = TRUE) %>% pull(n) %>% table())
+}
+  
+HH117_heavy <- clone_10x_combined %>% filter(patient_id == "HH117") %>% pull(cell_id) 
+HH117_light <- light_chain_combined %>% filter(patient_id == "HH117") %>% pull(cell_id) 
 
 HH117_heavy %>% sort() %>% head()
 HH117_light %>% sort() %>% head()
 
 table(HH117_heavy %in% HH117_light)
 
-HH119_heavy <- clone_10x_combined %>% filter(subject_id == "HH119") %>% pull(cell_id) 
-HH119_light <- light_chain_combined %>% filter(subject_id == "HH119") %>% pull(cell_id) 
+HH119_heavy <- clone_10x_combined %>% filter(patient_id == "HH119") %>% pull(cell_id) 
+HH119_light <- light_chain_combined %>% filter(patient_id == "HH119") %>% pull(cell_id) 
 
 HH119_heavy %>% sort() %>% head()
 HH119_light %>% sort() %>% head()
@@ -138,50 +164,50 @@ HH119_light %>% sort() %>% head()
 table(HH119_heavy %in% HH119_light)
 
 # Run resolveLightChains
-patients <- names(both_combined)
+# patients <- names(all_combined_list)
 
-resolve_LC_list <- lapply(patients, function(HH){
-
-  # HH <- "HH117"
-  
-  # both_combined[[HH]] %>% filter(locus == "IGH") %>% nrow()
-  
-  # resolve_LC_HH <- resolve_LC_list[[HH]]
-  resolve_LC_HH <- resolveLightChains(both_combined[[HH]])
-  
-  # resolve_LC_HH %>% filter(locus == "IGH") %>% nrow()
-
-  # table(resolve_LC_HH$celltype_broad, useNA = "always")
-  
-  # Get meta data from heavy chains
-  meta <- resolve_LC_HH %>%
-    filter(locus == "IGH", !is.na(celltype_broad)) %>%
-    select(cell_id, celltype_broad)
-  
-  # nrow(meta)
-  # table(resolve_LC_HH$cell_id %in% meta$cell_id)
-
-  # Clear and re-add 
-  resolve_LC_HH_final <- resolve_LC_HH %>%
-    select(-celltype_broad) %>%
-    left_join(meta, by = "cell_id")
-  
-  # resolve_LC_HH_test %>% filter(locus == "IGH") %>% nrow()
-
-  return(resolve_LC_HH_final)
-
-}) %>% setNames(patients)
-
-saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
-
-## Test
-HH <- "HH117"
-clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
-resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
-
-HH <- "HH119"
-clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
-resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
+# resolve_LC_list <- lapply(patients, function(HH){
+# 
+#   # HH <- "HH117"
+#   
+#   # all_combined_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
+#   
+#   # resolve_LC_HH <- resolve_LC_list[[HH]]
+#   resolve_LC_HH <- resolveLightChains(all_combined_list[[HH]])
+#   
+#   # resolve_LC_HH %>% filter(locus == "IGH") %>% nrow()
+# 
+#   # table(resolve_LC_HH$celltype_broad, useNA = "always")
+#   
+#   # Get meta data from heavy chains
+#   meta <- resolve_LC_HH %>%
+#     filter(locus == "IGH", !is.na(celltype_broad)) %>%
+#     select(cell_id, celltype_broad)
+#   
+#   # nrow(meta)
+#   # table(resolve_LC_HH$cell_id %in% meta$cell_id)
+# 
+#   # Clear and re-add 
+#   resolve_LC_HH_final <- resolve_LC_HH %>%
+#     select(-celltype_broad) %>%
+#     left_join(meta, by = "cell_id")
+#   
+#   # resolve_LC_HH_test %>% filter(locus == "IGH") %>% nrow()
+# 
+#   return(resolve_LC_HH_final)
+# 
+# }) %>% setNames(patients)
+# 
+# saveRDS(resolve_LC_list, "45_immcantation/out/rds/resolve_LC_list.rds")
+# 
+# ## Test
+# HH <- "HH117"
+# clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
+# resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
+# 
+# HH <- "HH119"
+# clone_10x_combined %>% filter(patient_id == HH) %>% nrow()
+# resolve_LC_list[[HH]] %>% filter(locus == "IGH") %>% nrow()
 
 
 
