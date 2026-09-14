@@ -12,6 +12,7 @@ library(scoper)
 library(pheatmap)
 library(dowser)
 library(patchwork)
+library(stringdist)
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -105,7 +106,6 @@ lapply(patients, function(HH){
 # Inspect top clones
 # ------------------------------------------------------------------------------
 
-
 for (HH in patients){
   
   # HH <- "HH119"
@@ -115,4 +115,78 @@ for (HH in patients){
   print(df %>% dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) )
   cat("\n")
   
+}
+
+# ------------------------------------------------------------------------------
+# Inspect top clones
+# ------------------------------------------------------------------------------
+
+
+n_top <- 15
+
+files <- list.files("45_immcantation/out/rds/")
+patients <- grep("05_", files, value = TRUE) %>% str_split_i("_", 2)
+
+for (HH in patients) {
+  
+  # HH <- "HH119"
+  
+  df <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
+    filter(locus == "IGH", !is.na(junction), junction != "")
+  
+  # Top N clones by number of sequences 
+  df_meta <- df %>%
+    count(clone_subgroup_id_90_similarity, junction_length, sort = TRUE) %>%
+    slice_head(n = n_top) %>%
+    rename(clone = clone_subgroup_id_90_similarity) %>% 
+    mutate(label = glue("{clone} (n={n}, jl={junction_length})"))
+  
+  # All pairwise Levenshtein distances within each clone
+  df_seqs <- df %>%
+    filter(clone_subgroup_id_90_similarity %in% df_meta$clone) %>% 
+    select(clone_subgroup_id_90_similarity, junction) %>% 
+    distinct()
+  
+  dist_list <- list()
+  
+  for (cl in df_meta$clone) {
+    
+    seqs <- df_seqs %>%
+      filter(clone_subgroup_id_90_similarity == cl) %>%
+      pull(junction)
+    
+    if (length(seqs) < 2) next
+    
+    dist_list[[cl]] <- tibble(
+      clone = cl,
+      dist  = as.vector(stringdistmatrix(seqs, method = "lv"))
+    )
+  }
+  
+  df_dist <- bind_rows(dist_list) %>%
+    left_join(df_meta, by = "clone") %>%
+    mutate(label = factor(label, levels = df_meta$label))
+  
+  df_dist %>%
+    ggplot(aes(x = label, y = dist)) +
+    geom_boxplot(outlier.shape = NA, fill = "grey90", width = 0.6) +
+    geom_jitter(width = 0.25, height = 0.15, size = 0.6, alpha = 0.4) +
+    scale_y_continuous(breaks = scales::breaks_width(2)) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.minor = element_blank()
+    ) +
+    labs(
+      x = "Clone",
+      y = "Levenshtein distance (N mutations)",
+      title = glue("{HH}: pairwise junction distances within top {n_top} clones"),
+      subtitle = "Unique junctions only; sequences have whole numbers of mutations"
+    )
+  
+  ggsave(
+    glue("45_immcantation/plot/05_define_clones/{HH}_junction_distance.png"),
+    width = 16, height = 8, dpi = 300
+  )
+
 }
