@@ -31,7 +31,7 @@ grep("clone", colnames(resolve_LC_list$HH117), value = TRUE)
 # nrow(df_heavy)
 
 # Load seurat object
-# seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
+seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
 
 outdir <- glue("45_immcantation/plot/10_general_figures")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
@@ -838,7 +838,7 @@ plot_df %>%
   facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
   labs(
     title = "N GC B cell clones per patient",
-    subtitle = "Cells where follicle could not be determined are included",
+    subtitle = "GC B cells across all tissues",
     x = "Patient",
     y = "N clones", 
     fill = "Clone size group"
