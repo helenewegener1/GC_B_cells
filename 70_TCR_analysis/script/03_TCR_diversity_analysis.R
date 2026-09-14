@@ -219,7 +219,7 @@ gini_combined <- df_tcr %>%
 ggplot(gini_combined, aes(x = sample_clean, y = gini, color = patient_id)) +
   geom_point(size = 2.5) +
   scale_y_continuous(limits = c(0, 1)) +
-  scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452")) +
+  scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(
@@ -251,7 +251,7 @@ for (min_n in c(30, 100)) {
 
   ggplot(shannon_combined, aes(x = sample_clean, y = d, color = patient_id)) +
     geom_point(size = 2.5) +
-    scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452")) +
+    scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")) +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none") +
     labs(

@@ -35,7 +35,7 @@ df_tcr <- df_tcr %>%
   mutate(v_trb_call = extract_trbv(CTgene))
 
 # ==============================================================================
-# N clones per compartment
+# N clones per cells
 # ==============================================================================
 
 outdir1 <- glue("{outdir}/N_cells/")

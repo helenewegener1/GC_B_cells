@@ -30,7 +30,7 @@ source("10_broad_annotation/script/color_palette.R")
 #    `table()` check).
 # ==============================================================================
 
-seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
+seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
 
 # ------------------------------------------------------------------------------
 # Load data
@@ -39,6 +39,16 @@ seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.
 combined.TCR.filtered <- readRDS("20_VDJ/out/combined.TCR.filtered.rds")
 
 names(combined.TCR.filtered) %>% head(20)
+
+# Make pattern to make sample_clean column (redundant information removed)
+markers <- c("HLADR", "CD19", "GC", "TFH", "PB", "MEM", "PC")
+tails   <- c("Green", "Red", "Yellow", "Blue", "Pool\\d+")
+
+pattern <- sprintf(
+  "(?:[-_](?:%s)(?=[-_]|$)|[-_]?(?:%s)).*?(?=_Fol|$)",
+  paste(markers, collapse = "|"),
+  paste(tails,   collapse = "|")
+)
 
 # ------------------------------------------------------------------------------
 # Flatten list -> one row per cell
@@ -57,6 +67,7 @@ df_tcr <- df_tcr %>%
 nrow(df_tcr)
 table(df_tcr$sample_high_level)
 
+
 # ------------------------------------------------------------------------------
 # Clean sample names -> sample_clean / sample_clean_fol / patient_id
 # (Same suffix-stripping rules as BCR_01_make_combined.filtered.R, so labels
@@ -65,15 +76,16 @@ table(df_tcr$sample_high_level)
 
 df_tcr <- df_tcr %>%
   mutate(
-    sample_clean_fol = sample_fol_name %>%
-      str_remove_all("-HLADR-AND-CD19-AND-GC-AND-TFH|-CD19-AND-GC-AND-PB-AND-TFH|-HLADR-AND-CD19|-PC") %>%
-      str_remove_all("-GC-AND-PB-AND-TFH-Pool1|-GC-AND-PB-AND-TFH-Pool2|-CD19-Pool1|-CD19-Pool2"),
+    sample_high_level = sample_fol_name %>% str_remove("_Fol-\\d+"), 
+    sample_clean_fol = str_remove(sample_fol_name, regex(pattern, ignore_case = TRUE)),
+    # sample_clean_fol = sample_fol_name %>% str_remove_all(pattern),
     sample_clean = sample_clean_fol %>% str_split_i("_", 1),
     patient_id   = sample_clean %>% str_split_i("-", 1)
   )
 
+df_tcr$sample_high_level %>% unique()
 df_tcr$sample_clean %>% unique()
-df_tcr$sample_clean_fol %>% unique() %>% head(20)
+df_tcr$sample_clean_fol %>% unique() 
 df_tcr$patient_id %>% table()
 
 # ------------------------------------------------------------------------------
@@ -90,7 +102,7 @@ meta %>%
   filter(str_detect(cell_id, "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH") & L1_annotation == "Tfh_cells")
 
 df_tcr <- df_tcr %>%
-  mutate(cell_id = glue("{sample_high_level}_{barcode}") %>% str_remove("_\\d$"))  
+  mutate(cell_id = barcode %>% str_remove("_Fol-\\d+"))  
 
 df_tcr %>% 
   filter(str_detect(cell_id, "HH119-SI-MILF-CD19-AND-GC-AND-PB-AND-TFH"))
@@ -106,6 +118,8 @@ table(df_tcr$cell_id %in% meta$cell_id)
 df_tcr_filtered <- df_tcr %>%
   inner_join(meta, by = "cell_id") %>%  # Inner join to not keep the bad quality cells 
   filter(L1_annotation == "Tfh_cells") # Only keep Tfh cells 
+
+df_tcr_filtered$sample_clean %>% table()
   
 # ------------------------------------------------------------------------------
 # Filter to the T cell population of interest and export
