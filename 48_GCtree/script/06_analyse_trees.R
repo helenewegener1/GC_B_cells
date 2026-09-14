@@ -449,9 +449,18 @@ ggsave(glue("48_GCtree/plot_06_analyse_trees/combined_top_20_distance_median_box
 # Isotype switching along GCtree edges (nearest observed-ancestor comparison)
 # ------------------------------------------------------------------------------
 
-# HH <- "HH153"
+# for a given observed node, walk up the tree until hitting another observed ("seq*") node
+get_nearest_observed_ancestor <- function(node, parent_of) {
+  current <- parent_of[node]
+  while (!is.na(current) && !str_detect(current, "^seq[0-9]+$")) {
+    current <- parent_of[current]
+  }
+  if (is.na(current)) NA_character_ else current
+}
 
 for (HH in patients){
+  
+  # HH <- "HH151"
   
   # Get top clones
   top_clones <- resolve_LC_list_germlined[[HH]] %>%
@@ -468,15 +477,6 @@ for (HH in patients){
   dir.create(outdir_isotype_switching, recursive = TRUE, showWarnings = FALSE)
   
   isotype_switch_order <- c("IGHM/D", "IGHG3", "IGHG1", "IGHA1", "IGHG2", "IGHG4", "IGHE", "IGHA2")
-  
-  # for a given observed node, walk up the tree until hitting another observed ("seq*") node
-  get_nearest_observed_ancestor <- function(node, parent_of) {
-    current <- parent_of[node]
-    while (!is.na(current) && !str_detect(current, "^seq[0-9]+$")) {
-      current <- parent_of[current]
-    }
-    if (is.na(current)) NA_character_ else current
-  }
   
   # resolves each observed node's isotype top-down: a mixed node prefers continuity
   # with its resolved ancestor's isotype (assumes no switch) over blindly picking the
@@ -776,7 +776,10 @@ for (HH in patients){
           patient_id = HH
         )
       
-      celltype_results_all <- bind_rows(celltype_results_all, celltype_df)
+      if (nrow(celltype_df) !=0){
+        celltype_results_all <- bind_rows(celltype_results_all, celltype_df)
+      }
+      
       
     }
     

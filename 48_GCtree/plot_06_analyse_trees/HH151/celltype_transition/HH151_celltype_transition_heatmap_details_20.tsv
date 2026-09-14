@@ -1,0 +1,4 @@
+ancestor_celltype	node_celltype	n_clones	clone_nrs	clones
+GC_B_cells_SI-PP-nonINF	Memory_B_cells_SI-PP-nonINF	1	16	2080_1
+Memory_B_cells_SI-PP-nonINF	GC_B_cells_SI-PP-nonINF	1	12	7573_1
+PCs_SILP-nonINF	GC_B_cells_SI-PP-nonINF	1	1	8378_1
