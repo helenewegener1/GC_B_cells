@@ -30,13 +30,14 @@ fasta_files <- list.files(fasta_path)
 #   "Unconventional_Bcells"      = 6
 # )
 
-clone_nrs <- 1:20
+clone_nrs <- 2:20
 
 patients <- c("HH151", "HH153")
+# patients <- c("HH117", "HH119")
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
   
   for (clone_nr in clone_nrs){

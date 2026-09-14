@@ -1,0 +1,13 @@
+ancestor_celltype	node_celltype	n_clones	clone_nrs	clones
+PCs_SILP-nonINF	GC_B_cells_SI-PP-nonINF	10	1, 2, 3, 4, 5, 6, 7, 10, 14, 18	125_1, 149_1, 188_1, 215_1, 2204_1, 2209_1, 2211_1, 3058_1, 3100_1, 3105_1
+GC_B_cells_SI-PP-nonINF	PCs_SILP-nonINF	6	1, 2, 3, 4, 10, 18	125_1, 188_1, 215_1, 2204_1, 3100_1, 3105_1
+PCs_SILP-INF	GC_B_cells_SI-PP-nonINF	6	2, 3, 4, 6, 13, 18	188_1, 215_1, 2204_1, 3058_1, 3105_1, 617_1
+PCs_SILP-INF	PCs_SILP-nonINF	3	3, 4, 18	188_1, 215_1, 3105_1
+GC_B_cells_SI-PP-nonINF	PCs_SILP-INF	2	2, 13	2204_1, 617_1
+PCs_SILP-nonINF	PCs_SILP-INF	2	4, 6	3058_1, 3105_1
+GC_B_cells_SI-PP-nonINF	Naive_B_cells_SI-PP-nonINF	1	3	188_1
+GC_B_cells_SI-PP-nonINF	PCs_SI-PP-nonINF	1	3	188_1
+Memory_B_cells_SI-PP-nonINF	GC_B_cells_SI-PP-nonINF	1	4	3105_1
+Memory_B_cells_SI-PP-nonINF	PCs_SILP-nonINF	1	4	3105_1
+PCs_SI-PP-nonINF	GC_B_cells_SI-PP-nonINF	1	3	188_1
+PCs_SILP-nonINF	PCs_SI-PP-nonINF	1	3	188_1
