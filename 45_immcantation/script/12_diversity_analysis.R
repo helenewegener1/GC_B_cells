@@ -16,7 +16,7 @@ resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
-HH <- "HH119"
+HH <- "HH151"
 extra <- ""
 
 # Read rds
@@ -30,8 +30,8 @@ df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
 # df_heavy$manual_ADT_full_ID
 
 # Remove largest clone as it "takes all the signal"
-df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "20693_1")
-extra <- "_largest_removed"
+# df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "20693_1")
+# extra <- "_largest_removed"
 
 # Prep output
 outdir = glue("45_immcantation/plot/12_diversity_analysis/{HH}{extra}")
@@ -45,6 +45,14 @@ HH_samples <- names(sample_clean_plot_colors) %>% str_subset(glue("^{HH}")) %>% 
 HH_samples_colors <- sample_clean_plot_colors[HH_samples]
 names(HH_samples_colors) <- names(HH_samples_colors) %>% str_split_i("_", 2)
 HH_samples_colors
+
+# patient_to_condition
+patient_to_condition <- data.frame(
+  patient = c("HH117", "HH151", "HH153", "HH119"), 
+  condition = c(rep("Crohns", 3), rep("Control", 1))
+)
+
+patient_color_values <- c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")
 
 # ------------------------------------------------------------------------------
 # Generate a clonal abundance curve
@@ -319,7 +327,7 @@ lapply(versions, function(version) {
 # Both patients - Gini + Shannon comparison
 # ------------------------------------------------------------------------------
 
-patients <- c("HH117", "HH119")
+patients <- c("HH117", "HH119", "HH151", "HH153")
 
 # Load both patients
 df_both <- lapply(patients, function(HH) {
@@ -357,7 +365,8 @@ lapply(versions, function(version) {
       gini = gini_coeff(n_cells),
       total_clones = n_distinct(clone_subgroup_id_90_similarity),
       .groups = "drop"
-    )
+    ) %>% 
+    left_join(patient_to_condition, by = "patient")
   
   version_txt <- str_replace_all(version, "_", " ")
   
@@ -365,14 +374,15 @@ lapply(versions, function(version) {
     geom_boxplot(outlier.shape = NA, width = 0.4, fill = "grey90") +
     geom_jitter(aes(color = patient), width = 0.1, size = 2.5, alpha = 0.8) +
     scale_y_continuous(limits = c(0, 1)) +
-    scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452")) +
-    theme_minimal() +
+    scale_color_manual(values = patient_color_values) +
+    theme_bw() +
     labs(
       x = "Patient",
       y = "Gini coefficient",
       title = glue("Gini coefficient per follicle - {version_txt}"),
       subtitle = "Each point represents one follicle"
     ) +
+    facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
     theme(legend.position = "none")
   
   ggsave(glue("{outdir_combined}/gini_coef_{version}_combined.png"), width = 8, height = 8)
@@ -407,23 +417,26 @@ lapply(versions, function(version) {
         filter(q == 1) %>%
         mutate(patient = HH)
       
-    }) %>% bind_rows()
+    }) %>% bind_rows() 
     
     version_txt <- str_replace_all(version, "_", " ")
     
-    ggplot(shannon_combined, aes(x = patient, y = d)) +
-      geom_boxplot(outlier.shape = NA, width = 0.4, fill = "grey90") +
-      geom_jitter(aes(color = patient), width = 0.1, size = 2.5, alpha = 0.8) +
-      scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452")) +
-      theme_minimal() +
-      labs(
-        x = "Patient",
-        y = "Shannon diversity (q=1)",
-        title = glue("Shannon diversity per follicle - {version_txt}"),
-        subtitle = glue("Follicles with <{min_n} GC B cells excluded. Each point represents one follicle."),
-        caption = "Bootstrapped estimates (100 resamples, 95% CI)"
-      ) +
-      theme(legend.position = "none")
+    shannon_combined %>% 
+      left_join(patient_to_condition, by = "patient") %>% 
+      ggplot(aes(x = patient, y = d)) +
+        geom_boxplot(outlier.shape = NA, width = 0.4, fill = "grey90") +
+        geom_jitter(aes(color = patient), width = 0.1, size = 2.5, alpha = 0.8) +
+        scale_color_manual(values = patient_color_values) +
+        theme_bw() +
+        facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") +
+        labs(
+          x = "Patient",
+          y = "Shannon diversity (q=1)",
+          title = glue("Shannon diversity per follicle - {version_txt}"),
+          subtitle = glue("Follicles with <{min_n} GC B cells excluded. Each point represents one follicle."),
+          caption = "Bootstrapped estimates (100 resamples, 95% CI)"
+        ) +
+        theme(legend.position = "none")
     
     ggsave(glue("{outdir_combined}/shannon_diversity_{version}_min_n_{min_n}_combined.png"), width = 8, height = 8)
     
