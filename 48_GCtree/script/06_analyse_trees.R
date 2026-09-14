@@ -12,10 +12,12 @@ seq_dir <- readRDS("48_GCtree/out/rds/seq_dir.rds")
 
 patients <- names(resolve_LC_list_germlined)
 
-HH <- "HH119" 
+HH <- "HH153" 
 
 n_clones_begin_list <- list(
   "HH117" = 1, 
+  "HH151" = 1, 
+  "HH153" = 1,
   "HH119" = 2
 )
 

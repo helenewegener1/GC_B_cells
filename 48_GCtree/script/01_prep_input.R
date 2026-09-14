@@ -13,6 +13,12 @@ table(resolve_LC_list_germlined$HH117$locus, resolve_LC_list_germlined$HH117$sam
 
 patients <- names(resolve_LC_list_germlined)
 
+# Not germline resolved
+rds_files <- list.files("45_immcantation/out/rds") 
+resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
+patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
+patients
+
 # ------------------------------------------------------------------------------
 # Make overview
 # ------------------------------------------------------------------------------

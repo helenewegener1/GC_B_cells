@@ -1,0 +1,10 @@
+seq_unique,seq_name,L1_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1,GC_B_cells,IGHG1,HH151-SI-PP-nonINF_Fol-20,1,2,5
+seq2,sequence_2,GC_B_cells,NA,HH151-SI-PP-nonINF_Fol-20,1,4,5
+seq3,sequence_3,GC_B_cells,IGHG1,HH151-SI-PP-nonINF_Fol-20,1,2,5
+seq4,sequence_4,GC_B_cells,IGHG1,HH151-SI-PP-nonINF_Fol-20,1,2,5
+seq5,sequence_5,GC_B_cells,IGHG1,HH151-SI-PP-nonINF_Fol-20,1,2,5
+seq6,sequence_6:sequence_7:sequence_8:sequence_9:sequence_11:sequence_12,PCs,IGHG1,HH151-SILP-nonINF,2,2,3
+seq7,sequence_10:sequence_15,PCs,IGHG1,HH151-SILP-nonINF:HH151-SILP-INF,2,2,4
+seq8,sequence_13,PCs,IGHG3,HH151-SILP-INF,2,3,1
+seq9,sequence_14:sequence_16:sequence_17,PCs,IGHA1:IGHG3,HH151-SILP-INF:HH151-SILP-nonINF,2,1,2

@@ -1,0 +1,10 @@
+seq_unique,seq_name,L1_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2:sequence_3:sequence_4:sequence_5:sequence_8:sequence_10:sequence_12:sequence_13:sequence_14:sequence_16:sequence_17:sequence_18:sequence_19:sequence_20:sequence_21:sequence_25,GC_B_cells:PCs,IGHA2,HH153-SI-PP-nonINF_Fol-4:HH153-SI-PP-nonINF_Fol-1:HH153-SILP-INF,2,1,3
+seq2,sequence_6,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq3,sequence_7,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq4,sequence_9,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq5,sequence_11,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq6,sequence_15,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq7,sequence_22,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq8,sequence_23,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-4,1,1,2
+seq9,sequence_24,GC_B_cells,IGHA2,HH153-SI-PP-nonINF_Fol-1,1,1,1
