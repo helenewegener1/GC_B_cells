@@ -627,6 +627,7 @@ plot_isotype_pies <- function(dat, filename_suffix, title_suffix) {
     
     plot_width <- if (HH == "HH119") width + 4 else width
     plot_height <- if (HH == "HH119") height + 4 else height
+    plot_width <- if (HH == "HH153") width + 5 else width
     
     ggsave(
       glue("{outdir}/{HH}_isotype_follicle_shared_clones_{filename_suffix}.png"),

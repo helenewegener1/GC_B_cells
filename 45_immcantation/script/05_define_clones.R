@@ -129,17 +129,22 @@ patients <- grep("05_", files, value = TRUE) %>% str_split_i("_", 2)
 
 for (HH in patients) {
   
-  # HH <- "HH119"
+  # HH <- "HH153"
   
   df <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
-    filter(locus == "IGH", !is.na(junction), junction != "")
+    filter(locus == "IGH")
   
   # Top N clones by number of sequences 
   df_meta <- df %>%
+    filter(
+      L1_annotation == "GC_B_cells"
+    ) %>% 
     count(clone_subgroup_id_90_similarity, junction_length, sort = TRUE) %>%
     slice_head(n = n_top) %>%
-    rename(clone = clone_subgroup_id_90_similarity) %>% 
-    mutate(label = glue("{clone} (n={n}, jl={junction_length})"))
+    dplyr::rename(clone = clone_subgroup_id_90_similarity) %>% 
+    mutate(
+      label = glue("{clone} (n={n}, jl={junction_length})") %>% as.factor()
+    ) 
   
   # All pairwise Levenshtein distances within each clone
   df_seqs <- df %>%
@@ -150,6 +155,8 @@ for (HH in patients) {
   dist_list <- list()
   
   for (cl in df_meta$clone) {
+    
+    # cl <- "3100_1"
     
     seqs <- df_seqs %>%
       filter(clone_subgroup_id_90_similarity == cl) %>%
@@ -171,7 +178,7 @@ for (HH in patients) {
     ggplot(aes(x = label, y = dist)) +
     geom_boxplot(outlier.shape = NA, fill = "grey90", width = 0.6) +
     geom_jitter(width = 0.25, height = 0.15, size = 0.6, alpha = 0.4) +
-    scale_y_continuous(breaks = scales::breaks_width(2)) +
+    scale_y_continuous(breaks = scales::breaks_width(1)) +
     theme_minimal() +
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1),
@@ -180,7 +187,7 @@ for (HH in patients) {
     labs(
       x = "Clone",
       y = "Levenshtein distance (N mutations)",
-      title = glue("{HH}: pairwise junction distances within top {n_top} clones"),
+      title = glue("{HH}: pairwise junction distances within top {n_top} GC B clones"),
       subtitle = "Unique junctions only; sequences have whole numbers of mutations"
     )
   
