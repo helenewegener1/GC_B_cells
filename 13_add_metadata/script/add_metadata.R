@@ -12,6 +12,8 @@ seurat_obj_list <- readRDS("11_ADT_demultiplex/out/seurat_obj_ADT_demultiplexed_
 
 sample_names <- names(seurat_obj_list)
 
+CD_patient_ids <- c("HH117", "HH151", "HH153")
+
 source("10_broad_annotation/script/color_palette.R")
 
 # ------------------------------------------------------------------------------
@@ -40,7 +42,7 @@ celltype_counts %>%
     size = 3
   ) +
   # scale_fill_manual(values = celltype_colors) +
-  scale_fill_manual(values = wes_palette("Darjeeling1")[c(2:5)]) +
+  # scale_fill_manual(values = wes_palette("Darjeeling1")[c(2:5)]) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
   labs(
@@ -89,13 +91,14 @@ for (sample_name in sample_names){
   # sample_name <- "HH119-SI-PP-GC-AND-PB-AND-TFH-Pool2"
   # sample_name <- "HH117-SI-PP-nonINF-HLADR-AND-CD19-AND-GC-AND-TFH" 
   # sample_name <- "HH117-SI-MILF-INF-HLADR-AND-CD19" 
+  # sample_name <- "HH151-SI-PP-nonINF-MEM-AND-GC-AND-TFH-AND-PB_Blue"
   seurat_obj <- seurat_obj_list[[sample_name]]
   
   # Define metadata
   sample <- sample_name
   patient <- str_split_i(sample_name, "-", 1)
   inflammed <- str_detect(sample_name, "-INF-")
-  condition <- ifelse(patient == "HH117", "Chrons", "Control") # TODO: Update when more samples come
+  condition <- ifelse(patient %in% CD_patient_ids, "Chrons", "Control") # TODO: Update when more samples come
   # Tissue
   tissue_1 <- str_split_i(sample_name, "-", 2)
   tissue_2 <- ifelse(nchar(tissue_1) < 4, paste0("-", str_split_i(sample_name, "-", 3)), "")
