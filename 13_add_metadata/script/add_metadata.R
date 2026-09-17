@@ -98,7 +98,7 @@ for (sample_name in sample_names){
   sample <- sample_name
   patient <- str_split_i(sample_name, "-", 1)
   inflammed <- str_detect(sample_name, "-INF-")
-  condition <- ifelse(patient %in% CD_patient_ids, "Chrons", "Control") # TODO: Update when more samples come
+  condition <- ifelse(patient %in% CD_patient_ids, "Crohn's", "Control") # TODO: Update when more samples come
   # Tissue
   tissue_1 <- str_split_i(sample_name, "-", 2)
   tissue_2 <- ifelse(nchar(tissue_1) < 4, paste0("-", str_split_i(sample_name, "-", 3)), "")
@@ -117,7 +117,7 @@ for (sample_name in sample_names){
   seurat_obj@meta.data$condition <- condition
   seurat_obj@meta.data$inflammed <- inflammed
   seurat_obj@meta.data$tissue <- tissue
-  sample_clean_inflammed <- ifelse(condition == "Chrons", ifelse(inflammed, '-INF', '-nonINF'), "")
+  sample_clean_inflammed <- ifelse(condition == "Crohn's", ifelse(inflammed, '-INF', '-nonINF'), "")
   seurat_obj@meta.data$sample_clean <- glue("{patient}-{tissue}{sample_clean_inflammed}")
   # print(sample_name)
   # print("--------------------")
