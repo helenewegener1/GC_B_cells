@@ -15,7 +15,7 @@ library(dowser)
 
 resolve_LC_germline_list <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 
-HH <- "HH117"
+HH <- "HH151"
 
 resolve_LC_HH_germline <- resolve_LC_germline_list[[HH]]
 

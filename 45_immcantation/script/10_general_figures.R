@@ -68,7 +68,7 @@ B_cell_subsets <- list(
 patient_to_condition <- seurat_integrated[[]] %>% 
   select(patient, condition) %>% 
   distinct() %>% 
-  rename(patient_id = patient)
+  dplyr::rename(patient_id = patient)
 rownames(patient_to_condition) <- NULL
 
 # Make pattern to make sample_clean column (redundant information removed)
@@ -129,7 +129,7 @@ pattern <- sprintf(
 #   # Merge and create final meta data for Gina
 #   meta_4_Gina <- seurat_obj[[]] %>%
 #     select(manual_ADT_class, manual_ADT_ID, manual_ADT_full_ID, sample, L1_annotation, sample_clean, patient, condition) %>%
-#     rename(patient_id = patient) %>% 
+#     rename(patient_id = patient) %>%
 #     rownames_to_column("cell_id_seurat_clean") %>%
 #     left_join(resolve_LC_HH_meta, by = "cell_id_seurat_clean") %>%
 #     column_to_rownames("cell_id_seurat_clean")
@@ -318,7 +318,7 @@ ggsave(glue("{outdir3}/N_GC_B_cells_in_PP.png"))
 
 # ADT avail
 df_plot <- meta %>% 
-  filter(
+  filter( 
     L1_annotation == "GC_B_cells"
   ) %>% 
   mutate(
@@ -706,9 +706,9 @@ lapply(patients, function(HH){
 outdir_2 <- glue("{outdir}/Follicle_GC_B_cells_isotypes")
 dir.create(outdir_2, recursive = TRUE, showWarnings = FALSE)
 
-lapply(patients, function(HH){
+lapply(patients, function(HH){ 
   
-  # HH <- "HH153"
+  # HH <- "HH151"
   # p <- patient_names[[HH]]
   
   plot_df <- resolve_LC_list[[HH]] %>% 
@@ -716,13 +716,23 @@ lapply(patients, function(HH){
       locus == "IGH",
       !is.na(manual_ADT_ID), 
       L1_annotation == "GC_B_cells",
-      !is.na(c_call_grouped)
+      !is.na(c_call_grouped),
+      c_call_grouped != "IGHE"
     ) %>% 
     mutate(
-      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
     ) %>%
     add_count(manual_ADT_ID_plot, name = "Count") 
   
+  # Remove follicles that have less than 5 GC B cells
+  fol_to_rm <- plot_df %>% 
+    count(manual_ADT_ID) %>% 
+    filter(n < 5) %>% 
+    pull(manual_ADT_ID)
+  
+  plot_df <- plot_df %>% 
+    filter(!(manual_ADT_ID %in% fol_to_rm))
+    
   # Across follicles 
   # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
   
@@ -752,17 +762,124 @@ lapply(patients, function(HH){
       ) + 
       scale_fill_manual(values = isotype_grouped_colors_custom) +
       scale_y_continuous(labels = scales::percent) +
-      scale_x_continuous(
-        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-        limits = c(0.5, NA),
-        expand = c(0, 0.5)
-      ) + 
+      # scale_x_continuous(
+      #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+      #   limits = c(0.5, NA),
+      #   expand = c(0, 0.5)
+      # ) + 
       theme_classic() +
       labs(
         x = "Follicle number", 
         y = "Frequency", 
         title = glue("{HH}: GC B cells from Peyer's patch follicles"),
-        fill = "Isotype"
+        fill = "Isotype", 
+        caption = "Numbers on top of bars are N GC B cells in each follicle."
+      ) + 
+      theme(
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 16)
+      )
+  )
+  
+  dev.off()
+  
+})
+
+# ==============================================================================
+# GC B cells: Summary of follicles and isotypes -- centered log-ratio (CLR)
+# ==============================================================================
+
+pseudocount <- 1  # added before taking logs so isotypes with 0 cells in a
+# follicle don't produce -Inf / undefined CLR values
+
+lapply(patients, function(HH){
+  
+  # HH <- "HH119"
+  
+  plot_df <- resolve_LC_list[[HH]] %>% 
+    filter(
+      locus == "IGH",
+      !is.na(manual_ADT_ID), 
+      L1_annotation == "GC_B_cells",
+      !is.na(c_call_grouped), 
+      c_call_grouped != "IGHE"
+    ) %>% 
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
+    )
+  
+  # Remove follicles that have less than 5 GC B cells
+  fol_to_rm <- plot_df %>% 
+    count(manual_ADT_ID) %>% 
+    filter(n < 5) %>% 
+    mutate(manual_ADT_ID = str_split_i(manual_ADT_ID, "-", 2)) %>%  
+    pull(manual_ADT_ID) 
+    
+  # Per-follicle isotype counts, completed so every isotype is present in
+  # every follicle (0 where absent) -- needed for a valid composition before
+  # transforming
+  clr_df <- plot_df %>%
+    count(manual_ADT_ID_plot, c_call_grouped, name = "n") %>%
+    complete(manual_ADT_ID_plot, c_call_grouped, fill = list(n = 0)) %>%
+    group_by(manual_ADT_ID_plot) %>%
+    mutate(
+      Count    = sum(n),                  # total cells in this follicle (raw, no pseudocount)
+      n_pseudo = n + pseudocount,
+      prop     = n_pseudo / sum(n_pseudo),
+      log_prop = log(prop),
+      clr      = log_prop - mean(log_prop)  # centered log-ratio -- sums to 0 within each follicle
+    ) %>%
+    ungroup() %>% 
+    filter(!(manual_ADT_ID_plot %in% fol_to_rm)) # Remove follicles that have less than 5 GC B cells
+  
+  # count label placed just above the tallest bar in each follicle
+  follicle_labels <- clr_df %>%
+    select(manual_ADT_ID_plot, Count) %>% 
+    distinct()
+  
+  # Get max clr
+  max_clr <- clr_df %>% filter(clr > 0) %>% summarise(sum = sum(clr), .by = manual_ADT_ID_plot) %>% pull(sum) %>% max()
+  
+  width <- 13
+  if (HH == "HH117"){
+    width <- 12 
+  } else if (HH == "HH119"){
+    width <- 15.5
+  }
+  
+  png(glue("{outdir_2}/{HH}_Isotype_CLR_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
+  
+  print(
+    clr_df %>%
+      ggplot(aes(x = manual_ADT_ID_plot, y = clr, fill = c_call_grouped)) + 
+      geom_col() + 
+      geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+      geom_text(
+        data = follicle_labels,
+        aes(x = manual_ADT_ID_plot, y = max_clr + 0.5, label = Count),
+        inherit.aes = FALSE
+      ) + 
+      scale_fill_manual(values = isotype_grouped_colors_custom) +
+      # scale_x_continuous(
+      #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+      #   limits = c(0.5, NA),
+      #   expand = c(0, 0.5)
+      # ) +
+      scale_y_continuous(
+        breaks = scales::breaks_width(1),
+        minor_breaks = scales::breaks_width(1)
+      ) + 
+      theme_classic() +
+      labs(
+        x = "Follicle number", 
+        y = "Centered log-ratio (CLR)", 
+        title = glue("{HH}: GC B cells from Peyer's patch follicles"),
+        subtitle = "The CLR shows that isotypes above 0 are more common than that follicle's average; below 0, less common.",
+        fill = "Isotype", 
+        caption = "Numbers on top of bars are N GC B cells in each follicle."
       ) + 
       theme(
         plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
@@ -794,6 +911,180 @@ top_GC_clones <- lapply(patients, function(HH) {
     pull(clone_subgroup_id_90_similarity)
   
 }) %>% setNames(patients)
+
+# ==============================================================================
+# G B cells: Summary of follicles and isotypes - CRC without the big clone
+# ==============================================================================
+
+HH <- "HH119"
+p <- patient_names[[HH]]
+large_clone <- top_GC_clones[[HH]][[1]]
+# large_clone <- top_GC_clones[[HH]][c(1,2)]
+
+plot_df <- resolve_LC_list[[HH]] %>%
+  filter(
+    locus == "IGH",
+    !is.na(manual_ADT_ID),
+    L1_annotation == "GC_B_cells",
+    !is.na(c_call_grouped),
+    c_call_grouped != "IGHE",
+    !(clone_subgroup_id_90_similarity %in% large_clone)
+  ) %>%
+  mutate(
+    manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
+  ) %>%
+  add_count(manual_ADT_ID_plot, name = "Count")
+
+# Remove follicles that have less than 5 GC B cells
+fol_to_rm <- plot_df %>% 
+  count(manual_ADT_ID) %>% 
+  filter(n < 5) %>% 
+  pull(manual_ADT_ID)
+
+plot_df <- plot_df %>% 
+  filter(!(manual_ADT_ID %in% fol_to_rm))
+
+# Isotype
+## Freq
+png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone.png"), width = 15.5, height = 7, res = 1000, units = "in")
+# png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone_2.png"), width = 15.5, height = 7, res = 1000, units = "in")
+
+print(
+  plot_df %>%
+    filter(
+      !is.na(manual_ADT_ID),
+      L1_annotation == "GC_B_cells",
+      !is.na(c_call)
+    ) %>%
+    ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) +
+    geom_bar(position = "fill") +
+    geom_text(
+      aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+    ) +
+    scale_fill_manual(values = isotype_colors_custom) +
+    scale_y_continuous(labels = scales::percent) +
+    # scale_x_continuous(
+    #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+    #   limits = c(0.5, NA),
+    #   expand = c(0, 0.5)
+    # ) +
+    theme_classic() +
+    labs(
+      x = "Follicle number",
+      y = "Frequency",
+      title = glue("{HH}:GC B cells from Peyer's patch follicles\nLargest clones excluded"),
+      # title = glue("{p}\nGC B cells from Peyer's patch follicles - Two largest clones removed"),
+      fill = "Isotype",
+      caption = "Numbers on top of bars are N GC B cells in each follicle."
+    ) +
+    theme(
+      plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 16),
+      legend.title = element_text(size = 20),
+      legend.text = element_text(size = 16)
+    )
+)
+
+dev.off()
+
+
+# CLR
+plot_df <- resolve_LC_list[[HH]] %>% 
+  filter(
+    locus == "IGH",
+    !is.na(manual_ADT_ID), 
+    L1_annotation == "GC_B_cells",
+    !is.na(c_call_grouped),
+    c_call_grouped != "IGHE",
+    !(clone_subgroup_id_90_similarity %in% large_clone)
+  ) %>% 
+  mutate(
+    manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
+  )
+
+# Remove follicles that have less than 5 GC B cells
+fol_to_rm <- plot_df %>% 
+  count(manual_ADT_ID) %>% 
+  filter(n < 5) %>% 
+  mutate(manual_ADT_ID = str_split_i(manual_ADT_ID, "-", 2)) %>%  
+  pull(manual_ADT_ID) 
+
+
+# Per-follicle isotype counts, completed so every isotype is present in
+# every follicle (0 where absent) -- needed for a valid composition before
+# transforming
+clr_df <- plot_df %>%
+  count(manual_ADT_ID_plot, c_call_grouped, name = "n") %>%
+  complete(manual_ADT_ID_plot, c_call_grouped, fill = list(n = 0)) %>%
+  group_by(manual_ADT_ID_plot) %>%
+  mutate(
+    Count    = sum(n),                  # total cells in this follicle (raw, no pseudocount)
+    n_pseudo = n + pseudocount,
+    prop     = n_pseudo / sum(n_pseudo),
+    log_prop = log(prop),
+    clr      = log_prop - mean(log_prop)  # centered log-ratio -- sums to 0 within each follicle
+  ) %>%
+  ungroup() %>% 
+  filter(!(manual_ADT_ID_plot %in% fol_to_rm)) # Remove follicles that have less than 5 GC B cells
+
+# count label placed just above the tallest bar in each follicle
+follicle_labels <- clr_df %>%
+  select(manual_ADT_ID_plot, Count) %>% 
+  distinct()
+
+# Get max clr
+max_clr <- clr_df %>% filter(clr > 0) %>% summarise(sum = sum(clr), .by = manual_ADT_ID_plot) %>% pull(sum) %>% max()
+
+width <- 13
+if (HH == "HH117"){
+  width <- 12 
+} else if (HH == "HH119"){
+  width <- 15.5
+}
+
+png(glue("{outdir_2}/{HH}_Isotype_CLR_across_follicles_rm_large_clone.png"), width = width, height = 7, res = 1000, units = "in")
+
+print(
+  clr_df %>%
+    ggplot(aes(x = manual_ADT_ID_plot, y = clr, fill = c_call_grouped)) + 
+    geom_col() + 
+    geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+    geom_text(
+      data = follicle_labels,
+      aes(x = manual_ADT_ID_plot, y = max_clr + 0.5, label = Count),
+      inherit.aes = FALSE
+    ) + 
+    scale_fill_manual(values = isotype_grouped_colors_custom) +
+    # scale_x_continuous(
+    #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+    #   limits = c(0.5, NA),
+    #   expand = c(0, 0.5)
+    # ) +
+    scale_y_continuous(
+      breaks = scales::breaks_width(1),
+      minor_breaks = scales::breaks_width(1)
+    ) + 
+    theme_classic() +
+    labs(
+      x = "Follicle number", 
+      y = "Centered log-ratio (CLR)", 
+      title = glue("{HH}: GC B cells from Peyer's patch follicles\nLargest clones excluded"),
+      subtitle = "The CLR shows that isotypes above 0 are more common than that follicle's average; below 0, less common.",
+      fill = "Isotype", 
+      caption = "Numbers on top of bars are N GC B cells in each follicle."
+    ) + 
+    theme(
+      plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 16),
+      legend.title = element_text(size = 20),
+      legend.text = element_text(size = 16)
+    )
+)
+
+dev.off()
+
 
 # ------------------------------------------------------------------------------
 # N clones barplot
@@ -858,22 +1149,24 @@ library(packcircles)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH117"
+  # HH <- "HH119"
   
   p <- patient_names[[HH]]
   
   # Subset data to patient, PPs and GC B cells
   df_HH <- resolve_LC_list[[HH]] %>% 
     filter(
-      locus == "IGH" & str_detect(sample_clean, "PP") & L1_annotation == "GC_B_cells"
+      locus == "IGH" & str_detect(sample_clean, "PP|MILF") & L1_annotation == "GC_B_cells"
     ) %>% 
     mutate(
-      fol_plot = str_split_i(sample_clean_fol, "_", 2)
+      fol_plot = str_split_i(sample_clean_fol, "_", 2),
+      fol_plot = ifelse(is.na(fol_plot), sample_clean %>% str_remove(glue("{HH}-")), fol_plot)
     ) %>% 
     filter(
-      !is.na(manual_ADT_ID), 
+      # !is.na(manual_ADT_ID), 
       L1_annotation == "GC_B_cells",
-      !is.na(c_call_grouped)
+      # !is.na(c_call_grouped)
+      !is.na(clone_subgroup_id_90_similarity)
     )
   
   # ------------------------------------------------------------------------------
@@ -1222,205 +1515,527 @@ lapply(patients, function(HH){
 })
 
 
+# ------------------------------------------------------------------------------
+# Isotypes of clones Upset plot 
+# ------------------------------------------------------------------------------
+
+# Upset plot of combination of isotypes across clones
+# For each clone, find the SET of distinct isotypes (c_call_grouped) it
+# contains at least one cell of (e.g. a clone with both IGHM/D and IGHA1
+# cells has the set {IGHM/D, IGHA1}). The UpSet plot then shows, across all
+# clones, how common each isotype combination is -- e.g. "how many clones
+# are IGHM/D-only" vs "how many clones span both IGHM/D and IGHA1".
+
+outdir_isotype_upset <- glue("{outdir}/Isotype_upset")
+dir.create(outdir_isotype_upset, recursive = TRUE, showWarnings = FALSE)
+
+for (HH in patients) {
+
+  # HH <- "HH117"
+
+  df_heavy_gcb <- resolve_LC_list[[HH]] %>%
+    filter(
+      locus == "IGH",
+      L1_annotation == "GC_B_cells",
+      !is.na(c_call_grouped),
+      !is.na(clone_subgroup_id_90_similarity)
+    )
+
+  df_clone_isotypes <- df_heavy_gcb %>%
+    distinct(clone_subgroup_id_90_similarity, c_call_grouped)
+
+  # one named list element per isotype, holding the clone IDs that contain it
+  # -- this is the input format UpSetR::fromList() expects
+  isotype_sets <- df_clone_isotypes %>%
+    group_by(c_call_grouped) %>%
+    summarise(clones = list(clone_subgroup_id_90_similarity), .groups = "drop") %>%
+    { setNames(.$clones, .$c_call_grouped) }
+
+  png(glue("{outdir_isotype_upset}/{HH}_clone_isotype_combinations_upset.png"),
+      width = 10, height = 6.5, res = 1000, units = "in")
+
+  print(
+    upset(
+      fromList(isotype_sets),
+      nsets = length(isotype_sets),
+      order.by = "freq",
+      # main.bar.color = "steelblue",
+      # sets.bar.color = "darkorange",
+      text.scale = 1.3,
+      mainbar.y.label = "N clones with this isotype combination",
+      sets.x.label = "N clones with this isotype"
+    )
+  )
+
+  grid.text(
+    glue("{HH}: Isotype across GC B cell clones (singletons included)"),
+    x = 0.65, y = 0.97, gp = gpar(fontsize = 16, fontface = "bold")
+  )
+
+  dev.off()
+
+  # Same plot, but excluding "singleton" clones -- clones with only ONE cell
+  # (clone abundance == 1). Singletons can't show any isotype combination by
+  # definition (a single cell only ever has one isotype), so they only ever
+  # contribute to the single-set bars and can dominate/clutter the plot above;
+  # dropping them focuses the view on clones large enough (>=2 cells) to
+  # actually inform the isotype-combination patterns.
+  clone_sizes <- df_heavy_gcb %>%
+    count(clone_subgroup_id_90_similarity, name = "clone_size")
+
+  clones_not_singleton <- clone_sizes %>%
+    filter(clone_size > 1) %>%
+    pull(clone_subgroup_id_90_similarity)
+
+  isotype_sets_no_singletons <- df_clone_isotypes %>%
+    filter(clone_subgroup_id_90_similarity %in% clones_not_singleton) %>%
+    group_by(c_call_grouped) %>%
+    summarise(clones = list(clone_subgroup_id_90_similarity), .groups = "drop") %>%
+    { setNames(.$clones, .$c_call_grouped) }
+
+  if (length(isotype_sets_no_singletons) == 0) {
+
+    message(glue("{HH}: no clones with >1 cell found -- skipping no-singletons upset plot"))
+
+  } else {
+
+    png(glue("{outdir_isotype_upset}/{HH}_clone_isotype_combinations_upset_no_singletons.png"),
+        width = 10, height = 6.5, res = 1000, units = "in")
+
+    print(
+      upset(
+        fromList(isotype_sets_no_singletons),
+        nsets = length(isotype_sets_no_singletons),
+        order.by = "freq",
+        text.scale = 1.3,
+        mainbar.y.label = "N clones with this isotype combination",
+        sets.x.label = "N clones with this isotype"
+      )
+    )
+
+    grid.text(
+      glue("{HH}: Isotypes across GC B cell clones (singletons excluded)"),
+      x = 0.65, y = 0.97, gp = gpar(fontsize = 16, fontface = "bold")
+    )
+
+    dev.off()
+
+  }
+
+}
 
 
-# # ==============================================================================
-# # G B cells: Summary of follicles and isotypes - CRC without the big clone
-# # ==============================================================================
-# 
-# HH <- "HH119"
-# p <- patient_names[[HH]]
-# large_clone <- top_GC_clones[[HH]][[1]]
-# # large_clone <- top_GC_clones[[HH]][c(1,2)]
-# 
-# plot_df <- resolve_LC_list[[HH]] %>% 
-#   filter(
-#     locus == "IGH",
-#     !is.na(manual_ADT_ID), 
-#     L1_annotation == "GC_B_cells",
-#     !is.na(c_call),
-#     !(clone_subgroup_id_90_similarity %in% large_clone)
-#   ) %>% 
-#   mutate(
-#     manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-#   ) %>%
-#   add_count(manual_ADT_ID_plot, name = "Count") 
-# 
-# 
-# # Isotype
-# ## Freq
-# png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone.png"), width = 15.5, height = 7, res = 1000, units = "in")
-# # png(glue("{outdir_2}/{HH}_Isotype_freq_across_follicles_rm_large_clone_2.png"), width = 15.5, height = 7, res = 1000, units = "in")
-# 
-# print(
-#   plot_df %>% 
-#     filter(
-#       !is.na(manual_ADT_ID), 
-#       L1_annotation == "GC_B_cells",
-#       !is.na(c_call)
-#     ) %>% 
-#     ggplot(aes(x = manual_ADT_ID_plot, fill = c_call)) + 
-#     geom_bar(position = "fill") + 
-#     geom_text(
-#       aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
-#     ) + 
-#     scale_fill_manual(values = isotype_colors_custom) +
-#     scale_y_continuous(labels = scales::percent) +
-#     scale_x_continuous(
-#       breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-#       limits = c(0.5, NA),
-#       expand = c(0, 0.5)
-#     ) + 
-#     theme_classic() +
-#     labs(
-#       x = "Follicle number", 
-#       y = "Frequency", 
-#       title = glue("{p}\nGC B cells from Peyer's patch follicles - Largest clones removed"),
-#       # title = glue("{p}\nGC B cells from Peyer's patch follicles - Two largest clones removed"),
-#       fill = "Isotype"
-#     ) + 
-#     theme(
-#       plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
-#       axis.title = element_text(size = 20),
-#       axis.text = element_text(size = 16),
-#       legend.title = element_text(size = 20),
-#       legend.text = element_text(size = 16)
-#     )
-# )
-# 
-# dev.off()
-# 
-# # ==============================================================================
-# # Frequency of top clone per follicle 
-# # ==============================================================================
-# 
-# outdir_6 <- glue("{outdir}/Follicle_GC_B_cells_freq_barplot")
-# dir.create(outdir_6, recursive = TRUE)
-# 
-<<<<<<< HEAD:45_immcantation/script/18_90_similarity_05_general_figures.R
-# n_clones <- 10
-# 
-# lapply(patients, function(HH){
-#   
-#   # HH <- "HH119"
-#   p <- patient_names[[HH]]
-#   
-#   # Subset clones
-#   top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
-#   
-#   plot_df <- resolve_LC_list[[HH]] %>% 
-#     filter(
-#       locus == "IGH", 
-#       L1_annotation == "GC_B_cells",
-#       !is.na(manual_ADT_ID)
-#     ) %>% 
-#     mutate(
-#       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer(),
-#       clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% top_GC_clones_subset, clone_subgroup_id_90_similarity, "other"),
-#       clone_subgroup_id_90_similarity_plot = factor(clone_subgroup_id_90_similarity_plot, levels = c(top_GC_clones_subset, "other"))
-#     ) %>%
-#     add_count(manual_ADT_ID_plot, name = "Count") 
-#   
-#   # Across follicles 
-#   # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
-#   
-#   # Define clone colors 
-#   clone_colors <- list(
-#     "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
-#     "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
-#     # "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
-#     # "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
-#     "grey85"
-#   ) %>% setNames(c(top_GC_clones_subset, "other"))
-#   
-#   # Define clone names
-#   clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
-#   
-#   # N clones 
-#   N_clones_per_fol <- plot_df %>%
-#     filter(
-#       !is.na(manual_ADT_ID)
-#     ) %>%
-#     mutate(
-#       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-#     ) %>%
-#     group_by(manual_ADT_ID_plot) %>%
-#     count(clone_subgroup_id_90_similarity) %>%
-#     count(manual_ADT_ID_plot) %>%
-#     ungroup() %>%
-#     complete(
-#       manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
-#       fill = list(n = 0)
-#     ) 
-#   
-#   # colnames(N_clones_per_fol) <- c("Follicle", "N clones")
-#   # 
-#   # ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
-#   # # grid.text(
-#   # #   glue("{p}: N clones per follicle"),
-#   # #   x = 0.50, y = 0.97,          # adjust position as needed
-#   # #   gp = gpar(fontsize = 20, fontface = "bold")
-#   # # )
-#   # ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
-#   # 
-#   # N clones 
-#   
-#   if (HH == "HH117"){
-#     width <- 12 
-#   } else if (HH == "HH119"){
-#     width <- 15.5
-#   }
-#   
-#   png(glue("{outdir_6}/{HH}_N_{n_clones}.png"), width = width, height = 7, units = "in", res = 1000)
-#   
-#   print(
-#     plot_df %>%
-#       filter(!is.na(manual_ADT_ID)) %>%
-#       ggplot(aes(x = manual_ADT_ID_plot)) + 
-#       geom_bar(aes(fill = clone_subgroup_id_90_similarity_plot), position = "fill") + 
-#       # geom_text(
-#       #   # data = N_clones_per_fol, 
-#       #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
-#       # ) +
-#       geom_text(
-#         data = N_clones_per_fol,
-#         aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
-#       ) +
-#       scale_fill_manual(
-#         values = clone_colors, 
-#         labels = clone_names
-#       ) + 
-#       scale_x_continuous(
-#         breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-#         limits = c(0.5, NA),
-#         expand = c(0, 0.5)
-#       ) + 
-#       scale_y_continuous(labels = scales::percent) +
-#       theme_classic() +
-#       labs(
-#         x = "Follicle number", 
-#         y = "Frequency", 
-#         # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
-#         # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
-#         title = glue("{p}\nTop {n_clones} GC B cell clones in Peyer's patch follicles"),
-#         # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
-#         fill = "Clone"
-#       ) + 
-#       theme(
-#         plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
-#         axis.title = element_text(size = 20),
-#         axis.text = element_text(size = 16),
-#         legend.title = element_text(size = 20),
-#         legend.text = element_text(size = 16)
-#       )
-#   )
-#   
-#   dev.off()
-#   
-#   
-#   
-# })
-# 
+# ------------------------------------------------------------------------------
+# Isotype combinations pooled per condition (UpSet)
+# ------------------------------------------------------------------------------
+
+# Same idea as above, but pooling clones across all patients within a condition
+# into one UpSet plot per condition, so patterns can be compared side by side.
+# clone_subgroup_id_90_similarity is assigned WITHIN patient, so clone IDs are
+# only unique per patient -- prefix with patient_id before pooling, otherwise
+# e.g. "clone 5" from two different patients would incorrectly get merged into
+# a single set member.
+
+df_clone_isotypes_all <- purrr::map_dfr(patients, function(HH) {
+  resolve_LC_list[[HH]] %>%
+    filter(
+      locus == "IGH",
+      L1_annotation == "GC_B_cells",
+      !is.na(c_call_grouped),
+      !is.na(clone_subgroup_id_90_similarity)
+    ) %>%
+    distinct(clone_subgroup_id_90_similarity, c_call_grouped) %>%
+    mutate(
+      patient_id = HH,
+      clone_uid = paste(HH, clone_subgroup_id_90_similarity, sep = "_")
+    )
+}) %>%
+  left_join(patient_to_condition, by = "patient_id")
+
+for (cond in unique(df_clone_isotypes_all$condition)) {
+
+  # cond <- unique(df_clone_isotypes_all$condition)[1]
+
+  isotype_sets_cond <- df_clone_isotypes_all %>%
+    filter(condition == cond) %>%
+    distinct(clone_uid, c_call_grouped) %>%
+    group_by(c_call_grouped) %>%
+    summarise(clones = list(clone_uid), .groups = "drop") %>%
+    { setNames(.$clones, .$c_call_grouped) }
+
+  png(glue("{outdir_isotype_upset}/{cond}_clone_isotype_combinations_upset.png"),
+      width = 10, height = 6.5, res = 1000, units = "in")
+
+  print(
+    upset(
+      fromList(isotype_sets_cond),
+      nsets = length(isotype_sets_cond),
+      order.by = "freq",
+      text.scale = 1.3,
+      mainbar.y.label = "N clones with this isotype combination",
+      sets.x.label = "N clones with this isotype"
+    )
+  )
+
+  grid.text(
+    glue("{cond}: Isotype combinations across GC B cell clones (all patients pooled)"),
+    x = 0.65, y = 0.97, gp = gpar(fontsize = 14, fontface = "bold")
+  )
+
+  dev.off()
+
+}
+
+
+# ------------------------------------------------------------------------------
+# Isotype diversification per clone, summarised per patient / condition
+# ------------------------------------------------------------------------------
+
+# The UpSet plots above are great within one sample but hard to compare
+# statistically across many samples, since each sample can show a different
+# set of combinations. Collapse each clone to a simple binary call instead:
+# "single-isotype" (every cell in the clone shares one c_call_grouped) vs
+# "multi-isotype" (the clone contains >1 distinct isotype -- i.e. there is
+# evidence of further class-switch diversification within that clone).
+# Then compare the % of multi-isotype clones per patient across condition.
+
+outdir_table_general_figures <- glue("45_immcantation/table/10_general_figures")
+dir.create(outdir_table_general_figures, recursive = TRUE, showWarnings = FALSE)
+
+df_clone_isotype_diversity <- df_clone_isotypes_all %>%
+  group_by(patient_id, condition, clone_subgroup_id_90_similarity) %>%
+  summarise(n_isotypes = n_distinct(c_call_grouped), .groups = "drop") %>%
+  mutate(isotype_diversity = if_else(n_isotypes > 1, "Multi-isotype", "Single-isotype"))
+
+table_isotype_diversity_summary <- df_clone_isotype_diversity %>%
+  count(patient_id, condition, isotype_diversity) %>%
+  group_by(patient_id) %>%
+  mutate(pct = round(n / sum(n) * 100, 1)) %>%
+  ungroup()
+
+# % multi-isotype per patient -- patients with zero multi-isotype clones don't
+# get a row above, so re-complete against the full patient list and fill 0
+df_pct_multi_isotype <- table_isotype_diversity_summary %>%
+  filter(isotype_diversity == "Multi-isotype") %>%
+  select(patient_id, condition, pct_multi_isotype = pct) %>%
+  right_join(patient_to_condition, by = c("patient_id", "condition")) %>%
+  mutate(pct_multi_isotype = replace_na(pct_multi_isotype, 0)) %>%
+  filter(patient_id %in% patients)
+
+write_csv(table_isotype_diversity_summary,
+          glue("{outdir_table_general_figures}/isotype_diversity_summary_by_patient.csv"))
+write_csv(df_pct_multi_isotype,
+          glue("{outdir_table_general_figures}/isotype_diversity_pct_multi_isotype_by_patient.csv"))
+
+# Wilcoxon test between conditions (only well-defined for exactly 2 conditions)
+wilcox_isotype_diversity <- NULL
+if (n_distinct(df_pct_multi_isotype$condition) == 2) {
+  wilcox_isotype_diversity <- wilcox.test(
+    pct_multi_isotype ~ condition,
+    data = df_pct_multi_isotype
+  )
+}
+
+ggplot(df_pct_multi_isotype, aes(x = condition, y = pct_multi_isotype, fill = condition)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.6) +
+  geom_jitter(width = 0.15, size = 2, alpha = 0.8) +
+  labs(
+    title = "GC B cell clones: isotype diversification by condition",
+    subtitle = if (!is.null(wilcox_isotype_diversity)) {
+      glue("Wilcoxon p = {signif(wilcox_isotype_diversity$p.value, 3)}")
+    } else {
+      glue("{n_distinct(df_pct_multi_isotype$condition)} conditions present -- Wilcoxon needs exactly 2")
+    },
+    x = NULL,
+    y = "% of clones with >1 isotype detected\n(\"multi-isotype\" clones)"
+  ) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+ggsave(
+  glue("{outdir_isotype_upset}/isotype_diversity_pct_multi_isotype_by_condition.pdf"),
+  width = 5, height = 5
+)
+
+
+
+# ==============================================================================
+# Frequency of top clone per follicle
+# ==============================================================================
+
+outdir_6 <- glue("{outdir}/Follicle_GC_B_cells_freq_barplot")
+dir.create(outdir_6, recursive = TRUE, showWarnings = FALSE)
+
+n_clones <- 10
+
+lapply(patients, function(HH){
+
+  # HH <- "HH151"
+  p <- patient_names[[HH]]
+
+  # Subset clones
+  top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
+
+  plot_df <- resolve_LC_list[[HH]] %>%
+    filter(
+      locus == "IGH",
+      L1_annotation == "GC_B_cells",
+      !is.na(manual_ADT_ID)
+    ) %>%
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer(),
+      clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% top_GC_clones_subset, clone_subgroup_id_90_similarity, "other"),
+      clone_subgroup_id_90_similarity_plot = factor(clone_subgroup_id_90_similarity_plot, levels = c(top_GC_clones_subset, "other"))
+    ) %>%
+    add_count(manual_ADT_ID_plot, name = "Count")
+  
+  # Remove follicles that have less than 5 GC B cells
+  fol_to_rm <- plot_df %>% 
+    count(manual_ADT_ID) %>% 
+    filter(n < 5) %>% 
+    pull(manual_ADT_ID)
+  
+  plot_df <- plot_df %>% 
+    filter(!(manual_ADT_ID %in% fol_to_rm)) 
+  
+  # Across follicles
+  # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+
+  # Define clone colors
+  clone_colors <- list(
+    "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
+    "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+    # "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
+    # "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
+    "grey85"
+  ) %>% setNames(c(top_GC_clones_subset, "other"))
+
+  # Define clone names
+  clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
+
+  # N clones
+  N_clones_per_fol <- plot_df %>%
+    filter(
+      !is.na(manual_ADT_ID)
+    ) %>%
+    mutate(
+      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() 
+    ) %>%
+    group_by(manual_ADT_ID_plot) %>%
+    count(clone_subgroup_id_90_similarity) %>%
+    count(manual_ADT_ID_plot) %>%
+    ungroup() %>%
+    complete(
+      manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
+      fill = list(n = 0)
+    ) %>% 
+    filter(!(manual_ADT_ID_plot %in% str_split_i(fol_to_rm, "-", 2)), n != 0) %>% 
+    mutate(manual_ADT_ID_plot = as.factor(manual_ADT_ID_plot))
+
+  # colnames(N_clones_per_fol) <- c("Follicle", "N clones")
+  #
+  # ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
+  # # grid.text(
+  # #   glue("{p}: N clones per follicle"),
+  # #   x = 0.50, y = 0.97,          # adjust position as needed
+  # #   gp = gpar(fontsize = 20, fontface = "bold")
+  # # )
+  # ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
+  #
+  # N clones
+
+  if (HH == "HH117"){
+    width <- 12
+  } else if (HH == "HH119"){
+    width <- 15.5
+  }
+
+  png(glue("{outdir_6}/{HH}_N_{n_clones}.png"), width = width, height = 7, units = "in", res = 1000)
+
+  print(
+    plot_df %>%
+      mutate(manual_ADT_ID_plot = as.factor(manual_ADT_ID_plot)) %>%
+      filter(!is.na(manual_ADT_ID)) %>%
+      ggplot(aes(x = manual_ADT_ID_plot)) +
+      geom_bar(aes(fill = clone_subgroup_id_90_similarity_plot), position = "fill") +
+      # geom_text(
+      #   # data = N_clones_per_fol,
+      #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+      # ) +
+      geom_text(
+        data = N_clones_per_fol,
+        aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
+      ) +
+      scale_fill_manual(
+        values = clone_colors,
+        labels = clone_names
+      ) +
+      # scale_x_continuous(
+      #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+      #   limits = c(0.5, NA),
+      #   expand = c(0, 0.5)
+      # ) +
+      scale_y_continuous(labels = scales::percent) +
+      theme_classic() +
+      labs(
+        x = "Follicle number",
+        y = "Frequency",
+        # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
+        # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
+        title = glue("{HH}: Top {n_clones} GC B cell clones in Peyer's patch follicles"),
+        # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
+        fill = "Clone"
+      ) +
+      theme(
+        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 16),
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 16)
+      )
+  )
+
+  dev.off()
+
+
+
+})
+
+
+# Largest HH119 clone removed 
+HH <- "HH119"
+p <- patient_names[[HH]]
+large_clone <- top_GC_clones[[HH]][[1]]
+
+# HH <- "HH151"
+p <- patient_names[[HH]]
+
+# Subset clones
+top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
+
+plot_df <- resolve_LC_list[[HH]] %>%
+  filter(
+    locus == "IGH",
+    L1_annotation == "GC_B_cells",
+    !is.na(manual_ADT_ID), 
+    clone_subgroup_id_90_similarity != large_clone
+  ) %>%
+  mutate(
+    manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer(),
+    clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% top_GC_clones_subset, clone_subgroup_id_90_similarity, "other"),
+    clone_subgroup_id_90_similarity_plot = factor(clone_subgroup_id_90_similarity_plot, levels = c(top_GC_clones_subset, "other"))
+  ) %>%
+  add_count(manual_ADT_ID_plot, name = "Count")
+
+# Remove follicles that have less than 5 GC B cells
+fol_to_rm <- plot_df %>% 
+  count(manual_ADT_ID) %>% 
+  filter(n < 5) %>% 
+  pull(manual_ADT_ID)
+
+plot_df <- plot_df %>% 
+  filter(!(manual_ADT_ID %in% fol_to_rm)) 
+
+# Across follicles
+# HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+
+# Define clone colors
+clone_colors <- list(
+  "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
+  "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+  # "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
+  # "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
+  "grey85"
+) %>% setNames(c(top_GC_clones_subset, "other"))
+
+# Define clone names
+clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
+
+# N clones
+N_clones_per_fol <- plot_df %>%
+  filter(
+    !is.na(manual_ADT_ID)
+  ) %>%
+  mutate(
+    manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() 
+  ) %>%
+  group_by(manual_ADT_ID_plot) %>%
+  count(clone_subgroup_id_90_similarity) %>%
+  count(manual_ADT_ID_plot) %>%
+  ungroup() %>%
+  complete(
+    manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
+    fill = list(n = 0)
+  ) %>% 
+  filter(!(manual_ADT_ID_plot %in% str_split_i(fol_to_rm, "-", 2)), n != 0) %>% 
+  mutate(manual_ADT_ID_plot = as.factor(manual_ADT_ID_plot))
+
+# colnames(N_clones_per_fol) <- c("Follicle", "N clones")
+#
+# ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
+# # grid.text(
+# #   glue("{p}: N clones per follicle"),
+# #   x = 0.50, y = 0.97,          # adjust position as needed
+# #   gp = gpar(fontsize = 20, fontface = "bold")
+# # )
+# ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
+#
+# N clones
+
+if (HH == "HH117"){
+  width <- 12
+} else if (HH == "HH119"){
+  width <- 15.5
+}
+
+png(glue("{outdir_6}/{HH}_N_{n_clones}_rm_largest_clone.png"), width = width, height = 7, units = "in", res = 1000)
+
+print(
+  plot_df %>%
+    mutate(manual_ADT_ID_plot = as.factor(manual_ADT_ID_plot)) %>%
+    filter(!is.na(manual_ADT_ID)) %>%
+    ggplot(aes(x = manual_ADT_ID_plot)) +
+    geom_bar(aes(fill = clone_subgroup_id_90_similarity_plot), position = "fill") +
+    # geom_text(
+    #   # data = N_clones_per_fol,
+    #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+    # ) +
+    geom_text(
+      data = N_clones_per_fol,
+      aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
+    ) +
+    scale_fill_manual(
+      values = clone_colors,
+      labels = clone_names
+    ) +
+    # scale_x_continuous(
+    #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+    #   limits = c(0.5, NA),
+    #   expand = c(0, 0.5)
+    # ) +
+    scale_y_continuous(labels = scales::percent) +
+    theme_classic() +
+    labs(
+      x = "Follicle number",
+      y = "Frequency",
+      # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
+      # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
+      title = glue("{HH}: Top {n_clones} GC B cell clones in Peyer's patch follicles\nLargest clone excluded"),
+      # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
+      fill = "Clone"
+    ) +
+    theme(
+      plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+      axis.title = element_text(size = 20),
+      axis.text = element_text(size = 16),
+      legend.title = element_text(size = 20),
+      legend.text = element_text(size = 16)
+    )
+)
+
+dev.off()
+
+
 # # ==============================================================================
 # # Frequency of top clone per follicle - junction sequence 
 # # ==============================================================================
@@ -1573,149 +2188,149 @@ lapply(patients, function(HH){
 #   
 #   
 # })
-=======
-n_clones <- 10
-
-clone_colors_all <- list(
-  "HH117" = c(
-    "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
-    "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
-    "grey85"
-  ), 
-  "HH119" = c(
-    "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
-    "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
-    "grey85"
-  )
-) 
-
-lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  p <- patient_names[[HH]]
-  
-  # Subset clones
-  top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
-  
-  plot_df <- resolve_LC_list[[HH]] %>% 
-    filter(
-      locus == "IGH", 
-      L1_annotation == "GC_B_cells",
-      !is.na(manual_ADT_ID)
-    ) %>% 
-    mutate(
-      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer(),
-      clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% top_GC_clones_subset, clone_subgroup_id_90_similarity, "other"),
-      clone_subgroup_id_90_similarity_plot = factor(clone_subgroup_id_90_similarity_plot, levels = c(top_GC_clones_subset, "other"))
-    ) %>%
-    add_count(manual_ADT_ID_plot, name = "Count") 
-  
-  # Across follicles 
-  # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
-  
-  # Define clone colors 
-  clone_colors <- clone_colors_all[[HH]] %>% setNames(c(top_GC_clones_subset, "other"))
-  
-  # Define clone names
-  # clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
-  
-  # Define majority junction sequence as clone name 
-  clone_names <- resolve_LC_list[[HH]] %>% 
-    filter(
-      locus == "IGH", clone_subgroup_id_90_similarity %in% top_GC_clones_subset
-    ) %>% 
-    dplyr::count(clone_subgroup_id_90_similarity, junction, sort = TRUE) %>% 
-    group_by(clone_subgroup_id_90_similarity) %>% 
-    dplyr::slice(1) %>% 
-    ungroup() %>% 
-    select(-n) %>% 
-    deframe() %>% 
-    as.list()
-  
-  clone_names <- c(clone_names, "other"= "Other")
-  
-  
-  # N clones 
-  N_clones_per_fol <- plot_df %>%
-    filter(
-      !is.na(manual_ADT_ID)
-    ) %>%
-    mutate(
-      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
-    ) %>%
-    group_by(manual_ADT_ID_plot) %>%
-    dplyr::count(clone_subgroup_id_90_similarity) %>%
-    dplyr::count(manual_ADT_ID_plot) %>%
-    ungroup() %>%
-    complete(
-      manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
-      fill = list(n = 0)
-    ) 
-  
-  # colnames(N_clones_per_fol) <- c("Follicle", "N clones")
-  # 
-  # ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
-  # # grid.text(
-  # #   glue("{p}: N clones per follicle"),
-  # #   x = 0.50, y = 0.97,          # adjust position as needed
-  # #   gp = gpar(fontsize = 20, fontface = "bold")
-  # # )
-  # ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
-  # 
-  # N clones 
-  
-  if (HH == "HH117"){
-    width <- 15
-  } else if (HH == "HH119"){
-    width <- 20
-  }
-  
-  png(glue("{outdir_6}/{HH}_N_{n_clones}_sequences.png"), width = width, height = 7, units = "in", res = 1000)
-  
-  print(
-    plot_df %>%
-      filter(!is.na(manual_ADT_ID)) %>%
-      ggplot(aes(x = manual_ADT_ID_plot)) + 
-      geom_bar(aes(fill = clone_subgroup_id_90_similarity_plot), position = "fill") + 
-      # geom_text(
-      #   # data = N_clones_per_fol, 
-      #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
-      # ) +
-      geom_text(
-        data = N_clones_per_fol,
-        aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
-      ) +
-      scale_fill_manual(
-        values = clone_colors, 
-        labels = clone_names
-      ) + 
-      scale_x_continuous(
-        breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-        limits = c(0.5, NA),
-        expand = c(0, 0.5)
-      ) + 
-      scale_y_continuous(labels = scales::percent) +
-      theme_classic() +
-      labs(
-        x = "Follicle number", 
-        y = "Frequency", 
-        # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
-        # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
-        title = glue("{p}\nTop {n_clones} GC B cell clones in Peyer's patch follicles"),
-        # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
-        fill = "Clone"
-      ) + 
-      theme(
-        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 16)
-        # legend.title = element_text(size = 20),
-        # legend.text = element_text(size = 16)
-      )
-  )
-  
-  dev.off()
-  
-  
-  
-})
+# =======
+# n_clones <- 10
+# 
+# clone_colors_all <- list(
+#   "HH117" = c(
+#     "#E05C8A", "#66CC55", "#5588DD", "#EE9944", "#AA3377",
+#     "#44BBAA", "#CC6644", "#4499CC", "#AACC33", "#9955BB",
+#     "grey85"
+#   ), 
+#   "HH119" = c(
+#     "#00CCCC", "#FF0099", "#996600", "#0099FF", "#669900",
+#     "#FF0000", "#0000FF", "#00CC00", "#FF6600", "#9900CC",
+#     "grey85"
+#   )
+# ) 
+# 
+# lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   p <- patient_names[[HH]]
+#   
+#   # Subset clones
+#   top_GC_clones_subset <- top_GC_clones[[HH]][c(1:n_clones)]
+#   
+#   plot_df <- resolve_LC_list[[HH]] %>% 
+#     filter(
+#       locus == "IGH", 
+#       L1_annotation == "GC_B_cells",
+#       !is.na(manual_ADT_ID)
+#     ) %>% 
+#     mutate(
+#       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer(),
+#       clone_subgroup_id_90_similarity_plot = ifelse(clone_subgroup_id_90_similarity %in% top_GC_clones_subset, clone_subgroup_id_90_similarity, "other"),
+#       clone_subgroup_id_90_similarity_plot = factor(clone_subgroup_id_90_similarity_plot, levels = c(top_GC_clones_subset, "other"))
+#     ) %>%
+#     add_count(manual_ADT_ID_plot, name = "Count") 
+#   
+#   # Across follicles 
+#   # HH_fol_sample_clean <- plot_df %>% filter(!is.na(manual_ADT_ID)) %>% pull(sample_clean) %>% unique() %>% str_remove(glue("{HH}-"))
+#   
+#   # Define clone colors 
+#   clone_colors <- clone_colors_all[[HH]] %>% setNames(c(top_GC_clones_subset, "other"))
+#   
+#   # Define clone names
+#   # clone_names <- c(paste("Clone", 1:n_clones), "Other") %>% as.list() %>% setNames(c(top_GC_clones_subset, "other"))
+#   
+#   # Define majority junction sequence as clone name 
+#   clone_names <- resolve_LC_list[[HH]] %>% 
+#     filter(
+#       locus == "IGH", clone_subgroup_id_90_similarity %in% top_GC_clones_subset
+#     ) %>% 
+#     dplyr::count(clone_subgroup_id_90_similarity, junction, sort = TRUE) %>% 
+#     group_by(clone_subgroup_id_90_similarity) %>% 
+#     dplyr::slice(1) %>% 
+#     ungroup() %>% 
+#     select(-n) %>% 
+#     deframe() %>% 
+#     as.list()
+#   
+#   clone_names <- c(clone_names, "other"= "Other")
+#   
+#   
+#   # N clones 
+#   N_clones_per_fol <- plot_df %>%
+#     filter(
+#       !is.na(manual_ADT_ID)
+#     ) %>%
+#     mutate(
+#       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer()
+#     ) %>%
+#     group_by(manual_ADT_ID_plot) %>%
+#     dplyr::count(clone_subgroup_id_90_similarity) %>%
+#     dplyr::count(manual_ADT_ID_plot) %>%
+#     ungroup() %>%
+#     complete(
+#       manual_ADT_ID_plot = seq(min(manual_ADT_ID_plot), max(manual_ADT_ID_plot)),
+#       fill = list(n = 0)
+#     ) 
+#   
+#   # colnames(N_clones_per_fol) <- c("Follicle", "N clones")
+#   # 
+#   # ggtexttable(N_clones_per_fol, rows = NULL, theme = ttheme("classic"))
+#   # # grid.text(
+#   # #   glue("{p}: N clones per follicle"),
+#   # #   x = 0.50, y = 0.97,          # adjust position as needed
+#   # #   gp = gpar(fontsize = 20, fontface = "bold")
+#   # # )
+#   # ggsave(glue("{outdir_6}/{HH}_N_clones_table.png"), dpi = 1000, height = 10)
+#   # 
+#   # N clones 
+#   
+#   if (HH == "HH117"){
+#     width <- 15
+#   } else if (HH == "HH119"){
+#     width <- 20
+#   }
+#   
+#   png(glue("{outdir_6}/{HH}_N_{n_clones}_sequences.png"), width = width, height = 7, units = "in", res = 1000)
+#   
+#   print(
+#     plot_df %>%
+#       filter(!is.na(manual_ADT_ID)) %>%
+#       ggplot(aes(x = manual_ADT_ID_plot)) + 
+#       geom_bar(aes(fill = clone_subgroup_id_90_similarity_plot), position = "fill") + 
+#       # geom_text(
+#       #   # data = N_clones_per_fol, 
+#       #   aes(x = manual_ADT_ID_plot, y = 1.02, label = Count)
+#       # ) +
+#       geom_text(
+#         data = N_clones_per_fol,
+#         aes(x = manual_ADT_ID_plot, y = 1.02, label = n)
+#       ) +
+#       scale_fill_manual(
+#         values = clone_colors, 
+#         labels = clone_names
+#       ) + 
+#       scale_x_continuous(
+#         breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+#         limits = c(0.5, NA),
+#         expand = c(0, 0.5)
+#       ) + 
+#       scale_y_continuous(labels = scales::percent) +
+#       theme_classic() +
+#       labs(
+#         x = "Follicle number", 
+#         y = "Frequency", 
+#         # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
+#         # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
+#         title = glue("{p}\nTop {n_clones} GC B cell clones in Peyer's patch follicles"),
+#         # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
+#         fill = "Clone"
+#       ) + 
+#       theme(
+#         plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+#         axis.title = element_text(size = 20),
+#         axis.text = element_text(size = 16)
+#         # legend.title = element_text(size = 20),
+#         # legend.text = element_text(size = 16)
+#       )
+#   )
+#   
+#   dev.off()
+#   
+#   
+#   
+# })
