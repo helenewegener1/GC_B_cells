@@ -14,6 +14,36 @@ large_clone <- df_both$HH119 %>%
   head(1) %>% 
   pull(clone_subgroup_id_90_similarity)
 
+patient_color_values <- c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")
+
+n_clones <- 20
+
+# ------------------------------------------------------------------------------
+# Where do we find memory cells?  
+# ------------------------------------------------------------------------------
+
+df_both %>% 
+  bind_rows() %>% 
+  filter(L1_annotation == "Memory_B_cells") %>% 
+  count(patient_id, sample_clean, sort = TRUE) %>% 
+  ggplot(aes(x = sample_clean, y = n, fill = patient_id)) + 
+  geom_col() + 
+  theme_bw() + 
+  scale_fill_manual(values = patient_color_values) + 
+  scale_y_continuous(
+    breaks = scales::breaks_width(1000)
+    # minor_breaks = scales::breaks_width(100)
+  ) + 
+  labs(
+    title = "N memory B cells across samples",
+    x = "Sample", 
+    y = "Count", 
+    fill = "Patient"
+  )
+  
+ggsave("61_memory_clones/plot/05_general_figures/N_memory_B_cells_across_samples.png", height = 7, width = 15)
+  
+
 # ------------------------------------------------------------------------------
 # Define top PC clones 
 # ------------------------------------------------------------------------------
@@ -28,7 +58,7 @@ for (HH in patients){
   
   # clones with more than one unique sequence -> can build a tree
   clones_with_variation <- df_HH %>% 
-    filter(locus == "IGH", L1_annotation == "Memory_Bcells", clone_subgroup_id_90_similarity != large_clone) %>% 
+    filter(locus == "IGH", L1_annotation == "Memory_B_cells", clone_subgroup_id_90_similarity != large_clone) %>% 
     group_by(clone_subgroup_id_90_similarity) %>% 
     summarise(n_unique_seqs = n_distinct(sequence_alignment), .groups = "drop") %>% 
     filter(n_unique_seqs > 1) %>% 
@@ -37,11 +67,11 @@ for (HH in patients){
   HH_clones <- df_HH %>% 
     filter(
       locus == "IGH", 
-      L1_annotation == "Memory_Bcells", 
+      L1_annotation == "Memory_B_cells", 
       clone_subgroup_id_90_similarity %in% clones_with_variation
     ) %>% 
     dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
-    head(20) %>% 
+    head(n_clones) %>% 
     pull(clone_subgroup_id_90_similarity)
   
   mem_clones[[HH]] <- HH_clones
@@ -58,7 +88,7 @@ mem_clones
 outdir <- glue("61_memory_clones/fasta")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
-clone_nrs <- 1:20
+# clone_nrs <- 1:n_clones
 
 # prep seq name dir 
 seq_dir <- list()
@@ -68,7 +98,7 @@ for (HH in names(mem_clones)){
   # HH <- "HH117"
   df_HH <- df_both[[HH]]
   
-  for (clone_nr in clone_nrs){
+  for (clone_nr in 1:length(mem_clones[[HH]])){
     
     # Get top "clone_nr" clone from given sample
     # clone_nr <- 1

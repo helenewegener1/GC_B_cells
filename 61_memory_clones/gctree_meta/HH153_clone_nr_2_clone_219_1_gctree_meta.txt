@@ -1,0 +1,4 @@
+seq_unique,seq_name,L1_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1,GC_B_cells,IGHM/D,HH153-SI-PP-nonINF_Fol-5,1,2,2
+seq2,sequence_2,Memory_B_cells,IGHM/D,HH153-SI-PP-nonINF_Fol-5,2,2,2
+seq3,sequence_3,Memory_B_cells,IGHA1,HH153-SI-PP-nonINF_Fol-11,2,1,1

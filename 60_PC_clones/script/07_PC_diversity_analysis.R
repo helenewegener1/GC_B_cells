@@ -16,6 +16,8 @@ resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
+patient_color_values <- c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")
+
 HH <- "HH119"
 extra <- ""
 
@@ -272,7 +274,7 @@ ggplot(gini_combined, aes(x = sample_clean, y = gini, color = patient)) +
   # geom_jitter(aes(color = patient), width = 0.1, size = 2.5, alpha = 0.8) +
   geom_point(size = 2.5) + 
   scale_y_continuous(limits = c(0, 1)) +
-  scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452")) +
+  scale_color_manual(values = patient_color_values) +
   theme_minimal() +
   labs(
     x = "Sample",
@@ -319,7 +321,7 @@ for (min_n in c(30, 100)) {
     # geom_boxplot(outlier.shape = NA, width = 0.4, fill = "grey90") +
     # geom_jitter(aes(color = patient), width = 0.1, size = 2.5, alpha = 0.8) +
     geom_point(size = 2.5) +
-    scale_color_manual(values = c("HH117" = "#4C72B0", "HH119" = "#DD8452")) +
+    scale_color_manual(values = patient_color_values) +
     theme_minimal() +
     labs(
       x = "Sample",

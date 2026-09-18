@@ -14,6 +14,8 @@ large_clone <- df_both$HH119 %>%
   head(1) %>% 
   pull(clone_subgroup_id_90_similarity)
 
+n_clones <- 20 
+
 # ------------------------------------------------------------------------------
 # Define top PC clones (excluding clones with no sequence variation)
 # ------------------------------------------------------------------------------
@@ -48,7 +50,7 @@ for (HH in patients){
         clone_subgroup_id_90_similarity %in% clones_with_variation
       ) %>% 
       dplyr::count(clone_subgroup_id_90_similarity, sort = TRUE) %>% 
-      head(10) %>% 
+      head(n_clones) %>% 
       pull(clone_subgroup_id_90_similarity)
     
     PC_clones[[site]] <- site_clones
@@ -66,7 +68,7 @@ PC_clones
 outdir <- glue("60_PC_clones/fasta")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
 
-clone_nrs <- 1:10
+clone_nrs <- 1:n_clones
 
 # prep seq name dir 
 seq_dir <- list()

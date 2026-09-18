@@ -18,7 +18,7 @@ patients
 # Load data and filter for LP PCs
 resolve_LC_list <- lapply(resolve_LC_files, function(x){
   readRDS(glue("45_immcantation/out/rds/{x}")) %>% 
-    filter(locus == "IGH" & L1_annotation == "Memory_Bcells")
+    filter(locus == "IGH" & L1_annotation == "Memory_B_cells")
 }) %>% 
   setNames(patients)
 
@@ -35,7 +35,7 @@ grep("clone", colnames(resolve_LC_list$HH117), value = TRUE)
 # nrow(df_heavy)
 
 # Load seurat object
-seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
+seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
 
 outdir <- glue("61_memory_clones/plot/05_general_figures")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
@@ -76,20 +76,22 @@ df_plot <- df_both %>%
   ) 
 
 df_plot %>% 
-  select(sample_clean, clone_subgroup_id_90_similarity) %>% 
+  select(patient_id, sample_clean, clone_subgroup_id_90_similarity) %>% 
   distinct() %>% 
-  count(sample_clean) %>% 
-  ggplot(aes(x = sample_clean, y = n)) + 
+  count(patient_id, sample_clean) %>% 
+  ggplot(aes(x = sample_clean, y = n, fill = patient_id)) + 
   geom_col() + 
   geom_text(
     aes(label = n), size = 3, vjust = -0.5
   ) + 
+  scale_fill_manual(values = patient_color_values) + 
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(
     title = "N memory B cell clones", 
     y = "N clones",
-    x = "Compartment"
+    x = "Compartment", 
+    fill = "Patient"
   )
 
 ggsave(glue("{outdir4}/N_clones_per_sample.png"))

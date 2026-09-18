@@ -30,12 +30,14 @@ fasta_files <- list.files(fasta_path)
 #   "Unconventional_Bcells"      = 6
 # )
 
-clone_nrs <- 1:20
+# clone_nrs <- 1:20
 
 for (HH in patients){
   
-  # HH <- "HH117"
+  # HH <- "HH151"
   df_HH <- df_both[[HH]]
+  
+  clone_nrs <- grep(glue("{HH}_clone_nr_*_"), fasta_files, value = TRUE) %>% str_split_i("_", 4)
   
   for (clone_nr in clone_nrs){
     

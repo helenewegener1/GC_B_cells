@@ -35,7 +35,7 @@ grep("clone", colnames(resolve_LC_list$HH117), value = TRUE)
 # nrow(df_heavy)
 
 # Load seurat object
-seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs.rds")
+seurat_integrated <- readRDS("30_seurat_integration/out/seurat_integrated_10PCs_annotated.rds")
 
 outdir <- glue("60_PC_clones/plot/05_general_figures")
 dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
