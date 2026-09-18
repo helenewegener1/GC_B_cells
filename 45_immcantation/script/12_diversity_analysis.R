@@ -16,7 +16,7 @@ resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
-HH <- "HH151"
+HH <- "HH117"
 extra <- ""
 
 # Read rds
@@ -30,7 +30,8 @@ df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>%
 # df_heavy$manual_ADT_full_ID
 
 # Remove largest clone as it "takes all the signal"
-# df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != "20693_1")
+# largest_clone <- df_heavy %>% count(clone_subgroup_id_90_similarity, sort = TRUE) %>% head(1) %>% pull(clone_subgroup_id_90_similarity)
+# df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != largest_clone)
 # extra <- "_largest_removed"
 
 # Prep output
@@ -52,7 +53,6 @@ patient_to_condition <- data.frame(
   condition = c(rep("Crohns", 3), rep("Control", 1))
 )
 
-patient_color_values <- c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")
 
 # ------------------------------------------------------------------------------
 # Generate a clonal abundance curve
@@ -216,6 +216,15 @@ lapply(versions, function(version) {
     df_heavy
   }
   
+  # Remove follicles that have less than 5 GC B cells
+  fol_to_rm <- df_heavy_DXX %>% 
+    count(manual_ADT_ID) %>% 
+    filter(n < 5) %>% 
+    pull(manual_ADT_ID)
+  
+  df_heavy_DXX <- df_heavy_DXX %>% 
+    filter(!(manual_ADT_ID %in% fol_to_rm))
+  
   d50_per_follicle <- df_heavy_DXX %>%
     filter(
       !is.na(clone_subgroup_id_90_similarity)
@@ -245,6 +254,7 @@ lapply(versions, function(version) {
   
   version_txt <- str_replace_all(version, "_", " ")
   
+  # D20 + D50
   ggplot(d50_per_follicle_long, aes(x = manual_ADT_full_ID_plot, y = value, fill = metric)) +
     geom_col() +
     geom_text(
@@ -254,19 +264,53 @@ lapply(versions, function(version) {
       vjust = -0.5, size = 3
     ) +
     scale_fill_manual(
-      values = c("D20_segment" = "#E87722", "D50_extra" = "steelblue"),
+      values = c("D20_segment" = "forestgreen", "D50_extra" = "steelblue"),
       labels = c("D20_segment" = "D20", "D50_extra" = "D20 to D50")
     ) +
+    scale_y_continuous(
+      breaks = scales::breaks_width(1)
+      # minor_breaks = scales::breaks_width(minor_breaks_width),
+    ) + 
     theme_minimal() +
     labs(
       x = "Follicle",
       y = "Number of clones",
       fill = NULL,
       title = glue("{HH}: {version_txt} clonal dominance per follicle"),
-      caption = "Numbers above bars indicate total GC B cell clone count per follicle"
+      caption = "Numbers above bars indicate total GC B cell clone count per follicle."
     ) 
   
   ggsave(glue("{outdir}/clonal_D20_D50_plot_{version}.png"), width = 10, height = 6)
+  
+  # D20
+  d50_per_follicle_long %>% 
+    filter(metric == "D20_segment") %>% 
+    ggplot(aes(x = manual_ADT_full_ID_plot, y = value, fill = metric)) +
+      geom_col() +
+      geom_text(
+        data = d50_per_follicle,
+        aes(x = manual_ADT_full_ID_plot, y = D20, label = total_clones),
+        inherit.aes = FALSE,
+        vjust = -0.5, size = 3
+      ) +
+      scale_fill_manual(
+        values = c("D20_segment" = "forestgreen"),
+        labels = c("D20_segment" = "D20")
+      ) +
+      scale_y_continuous(
+        breaks = scales::breaks_width(1)
+        # minor_breaks = scales::breaks_width(minor_breaks_width),
+      ) + 
+      theme_minimal() +
+      labs(
+        x = "Follicle",
+        y = "Number of clones",
+        fill = NULL,
+        title = glue("{HH}: {version_txt} clonal dominance per follicle"),
+        caption = "Numbers above bars indicate total GC B cell clone count per follicle."
+      ) 
+  
+  ggsave(glue("{outdir}/clonal_D20_plot_{version}.png"), width = 10, height = 6)
   
 })
 
@@ -339,8 +383,10 @@ df_both <- lapply(patients, function(HH) {
     mutate(patient = HH)
 }) %>% bind_rows()
 
+
+df_both %>% filter(clone_subgroup_id_90_similarity == largest_clone) %>% count(patient_id) 
 if (extra == "_largest_removed"){
-  df_both <- df_both %>% filter(clone_subgroup_id_90_similarity != "20693_1")
+  df_both <- df_both %>% filter(clone_subgroup_id_90_similarity != largest_clone)
 }
 
 versions <- c("GC_B_cells", "all_cells")
@@ -350,6 +396,8 @@ versions <- c("GC_B_cells", "all_cells")
 # ------------------------------------------------------------------------------
 
 lapply(versions, function(version) {
+  
+  # version <- "GC_B_cells"
   
   df_gini <- if (version == "GC_B_cells") {
     df_both %>% filter(L1_annotation == "GC_B_cells")
