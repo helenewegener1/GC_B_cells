@@ -31,6 +31,14 @@ df_both <- lapply(patients, function(HH) {
     )
 }) %>% bind_rows()
 
+# patient_to_condition
+patient_to_condition <- data.frame(
+  patient_id = c("HH117", "HH151", "HH153", "HH119"), 
+  condition = c(rep("Crohn's", 3), rep("Control", 1))
+)
+
+df_both <- df_both %>% left_join(patient_to_condition, by = "patient_id")
+
 # ------------------------------------------------------------------------------
 # Define top clones
 # ------------------------------------------------------------------------------
@@ -86,12 +94,13 @@ for (n_min_cells in c(1, 2)){
       mean_clone_size = mean(clone_size) %>% round(1),
       median_clone_size = median(clone_size)
     ) %>% 
-    ungroup()
+    ungroup() %>% 
+    left_join(patient_to_condition, by = "patient_id")
   
   # N 
   df_N <- df_plot %>%
     select(-clone_subgroup_id_90_similarity) %>% 
-    count(patient_id, n_compartments, mean_clone_size, median_clone_size, sort = TRUE) 
+    count(condition, patient_id, n_compartments, mean_clone_size, median_clone_size, sort = TRUE) 
   
   # Jitter plot split by patient 
   df_plot %>% 
@@ -101,17 +110,18 @@ for (n_min_cells in c(1, 2)){
       alpha = 0.5, width = 0.30, height = 0.2#, size = 2.5
     ) + 
     scale_color_viridis_d(option = "plasma", direction = -1) +
-    geom_text(
-      data = df_N,
-      aes(x = patient_id, y = n_compartments, label = glue("{n} clones ({mean_clone_size}; {median_clone_size})")),
-      size = 3,
-      position = position_nudge(x = 0.45)
-    ) +
+    # geom_text(
+    #   data = df_N,
+    #   aes(x = patient_id, y = n_compartments, label = glue("{n} clones ({mean_clone_size}; {median_clone_size})")),
+    #   size = 3,
+    #   position = position_nudge(x = 0.45)
+    # ) +
     theme_bw() + 
     scale_y_continuous(
       breaks = scales::breaks_width(1),
       minor_breaks = scales::breaks_width(1)
     ) + 
+    facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") + 
     labs(
       x = "Patient ID",
       y = "N compartments",
@@ -120,7 +130,7 @@ for (n_min_cells in c(1, 2)){
       caption = "N clones (mean clone size; median clone size)"
     )
   
-  ggsave(glue("{outdir}/clones_in_n_compartments_{n_min_cells}.png"), width = 12, height = 6)
+  ggsave(glue("{outdir}/clones_in_n_compartments_{n_min_cells}.png"), width = 9, height = 5)
   
   # ------------------------------------------------------------------------------
   # Clonal sharing proportions 
@@ -130,7 +140,7 @@ for (n_min_cells in c(1, 2)){
   # in the abundance of n_min_cells. This is both the number and the plots. 
   
   df_totals <- df_plot %>% 
-    group_by(patient_id) %>% 
+    group_by(condition, patient_id) %>% 
     summarise(
       n_clones = n(),
       total_cells = sum(clone_size),
@@ -149,6 +159,7 @@ for (n_min_cells in c(1, 2)){
       # size = 3
     ) +
     scale_y_continuous(labels = scales::percent) +
+    facet_grid(cols = vars(condition), scales = "free_x", space = "free_x") + 
     theme_bw() +
     labs(
       fill = "N compartments",

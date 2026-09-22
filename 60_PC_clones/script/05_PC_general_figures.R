@@ -62,6 +62,15 @@ resolve_LC_list <- lapply(patients, function(HH){
 
 df_both <- bind_rows(resolve_LC_list)
 
+# Condition 
+patient_to_condition <- seurat_integrated[[]] %>% 
+  select(patient, condition) %>% 
+  distinct() %>% 
+  dplyr::rename(patient_id = patient)
+rownames(patient_to_condition) <- NULL
+
+df_both <- df_both %>% left_join(patient_to_condition, by = "patient_id")
+
 # ==============================================================================
 # N clones
 # ==============================================================================
@@ -76,22 +85,24 @@ df_plot <- df_both %>%
   ) 
 
 df_plot %>% 
-  select(sample_clean, clone_subgroup_id_90_similarity) %>% 
+  select(condition, patient_id, sample_clean, clone_subgroup_id_90_similarity) %>% 
   distinct() %>% 
-  count(sample_clean) %>% 
-  ggplot(aes(x = sample_clean, y = n)) + 
+  count(condition, patient_id, sample_clean) %>% 
+  ggplot(aes(x = sample_clean, y = n, fill = patient_id)) + 
   geom_col() + 
   geom_text(
     aes(label = n), size = 3, vjust = -0.5
   ) + 
+  scale_fill_manual(values = patient_color_values) + 
   theme_bw() + 
   labs(
     title = "N clones for LP PC samples", 
     y = "N clones",
     x = "Compartment"
-  )
+  ) + 
+  facet_grid(cols = vars(condition), scales = "free_x", space = "free_x")
 
-ggsave(glue("{outdir4}/N_clones_per_sample.png"))
+ggsave(glue("{outdir4}/N_clones_per_sample.png"), width = 12, height = 6)
 
 # ==============================================================================
 # Clone size graph (Freds plot)
@@ -156,7 +167,7 @@ df_plot <- df_both %>%
   filter(
     !is.na(clone_subgroup_id_90_similarity) & !is.na(c_call_grouped)
   ) %>% 
-  count(sample_clean, c_call_grouped) 
+  count(condition, sample_clean, c_call_grouped) 
 
 df_plot %>% 
   ggplot(aes(x = sample_clean, y = n, fill = c_call_grouped)) + 
@@ -168,9 +179,10 @@ df_plot %>%
     x = "Samples", 
     y = "N cells", 
     fill = "Isotype"
-  )
+  ) + 
+  facet_grid(cols = vars(condition), scales = "free_x", space = "free_x")
   
-ggsave(glue("{outdir6}/isotype_barplot.png"))
+ggsave(glue("{outdir6}/isotype_barplot.png"), width = 12, height = 6)
 
 # ==============================================================================
 # APackOfTheClones
@@ -179,6 +191,7 @@ ggsave(glue("{outdir6}/isotype_barplot.png"))
 library(Seurat)
 library(scRepertoire)
 library(APackOfTheClones)
+library(patchwork)
 
 outdir7 <- glue("{outdir}/APackOfTheClones/")
 dir.create(outdir7, recursive = TRUE, showWarnings = FALSE)
@@ -237,11 +250,13 @@ lapply(patients, function(HH){
 outdir7 <- glue("{outdir}/APackOfTheClones/")
 dir.create(outdir7, recursive = TRUE, showWarnings = FALSE)
 
+n_clones <- 15
+
 library(packcircles)
 
 lapply(patients, function(HH){
   
-  # HH <- "HH117"
+  # HH <- "HH151"
   
   # Subset data to patient, PPs and GC B cells
   df_HH <- df_both %>% filter(patient_id == HH)
@@ -259,7 +274,7 @@ lapply(patients, function(HH){
     summarise(n_follicles = n_distinct(sample_clean), total_cells = sum(clone_size), .groups = "drop") %>% 
     filter(n_follicles > 1) %>% 
     arrange(desc(total_cells)) %>% 
-    slice_head(n = 15) %>% 
+    slice_head(n = n_clones) %>% 
     pull(clone_subgroup_id_90_similarity)
   
   # color: one distinct color per top shared clone, grey for everything else
@@ -348,7 +363,7 @@ lapply(patients, function(HH){
     coord_equal() + 
     labs(
       title = glue("{HH}: LP PCs clones"), 
-      subtitle = "Top 15 clones shared across tissues, colored; all other clones in grey",
+      subtitle = glue("Top {n_clones} clones shared across tissues, colored; all other clones in grey"),
       fill = "Clone"
     ) + 
     theme_void() + 
