@@ -78,14 +78,21 @@ L1_colors <- c(
   "Contamination_myeloid_stroma"     = "#D1D1D1"
 )
 
-
-# Name mapping 
-patient_names <- list(
+L3_GC_pretty_colors <- c(
   
-  "HH117" = "Crohn's Disease", 
-  "HH119" = "Colorectal Cancer"
-  
+  "DZ_cycling"= "#6A98C4",
+  "DZ"= "#A9CDE0",
+  "Pre_MBC_cycling" = "#A485C6",
+  "LZ"= "#7BA270",
+  "LZ_transitioning" = "#A3C293",
+  "BACH2+"= "#E77F6D",
+  "BACH2_cycling"= "#BA6052",
+  "Pre_MBC"= "#5BA4A4",
+  "Pre_PB"= "#745973"
 )
+
+
+
 
 # Cell type names
 cell_type_names <- list(
@@ -186,5 +193,75 @@ sample_clean_plot_colors <- c(
     "HH119-SI-PP_Fol-31"  = "#228B22",
     "HH119-SI-PP_Fol-32"  = "#A066DD",
     "HH119-SI-PP_Fol-33"  = "#44BB66",
-    "HH119-SI-PP_Fol-34"  = "#C4B410"
+    "HH119-SI-PP_Fol-34"  = "#C4B410",
+    
+    # HH153
+    "HH153-SI-PP-nonINF_Fol-1"  = "#228B22",
+    "HH153-SI-PP-nonINF_Fol-2"  = "#A066DD",
+    "HH153-SI-PP-nonINF_Fol-3"  = "#44BB66",
+    "HH153-SI-PP-nonINF_Fol-4"  = "#C4B410",
+    "HH153-SI-PP-nonINF_Fol-5"  = "#1F77B4",
+    "HH153-SI-PP-nonINF_Fol-6"  = "#E377C2",
+    "HH153-SI-PP-nonINF_Fol-7"  = "#17BECF",
+    "HH153-SI-PP-nonINF_Fol-8"  = "#D62728",
+    "HH153-SI-PP-nonINF_Fol-9"  = "#8C564B",
+    "HH153-SI-PP-nonINF_Fol-10" = "#FF7F0E",
+    "HH153-SI-PP-nonINF_Fol-11" = "#7B68EE",
+    "HH153-SI-PP-nonINF_Fol-12" = "#9ACD32",
+    "HH153-SI-PP-nonINF_Fol-13" = "#FF69B4",
+    "HH153-SI-PP-nonINF_Fol-14" = "#00CED1",
+    "HH153-SI-PP-nonINF_Fol-15" = "#B8860B",
+    "HH153-SI-PP-nonINF_Fol-16" = "#4B0082",
+    "HH153-SI-PP-nonINF_Fol-17" = "#2E8B57",
+    "HH153-SI-PP-nonINF_Fol-18" = "#FF4500",
+    "HH153-SI-PP-nonINF_Fol-19" = "#4682B4",
+    "HH153-SI-PP-nonINF_Fol-20" = "#DA70D6",
+    
+    # HH151
+    "HH151-SI-PP-nonINF_Fol-1"  = "#228B22",
+    "HH151-SI-PP-nonINF_Fol-2"  = "#A066DD",
+    "HH151-SI-PP-nonINF_Fol-3"  = "#44BB66",
+    "HH151-SI-PP-nonINF_Fol-4"  = "#C4B410",
+    "HH151-SI-PP-nonINF_Fol-5"  = "#1F77B4",
+    "HH151-SI-PP-nonINF_Fol-6"  = "#E377C2",
+    "HH151-SI-PP-nonINF_Fol-7"  = "#17BECF",
+    "HH151-SI-PP-nonINF_Fol-8"  = "#D62728",
+    "HH151-SI-PP-nonINF_Fol-9"  = "#8C564B",
+    "HH151-SI-PP-nonINF_Fol-10" = "#FF7F0E",
+    "HH151-SI-PP-nonINF_Fol-11" = "#7B68EE",
+    "HH151-SI-PP-nonINF_Fol-12" = "#9ACD32",
+    "HH151-SI-PP-nonINF_Fol-13" = "#FF69B4",
+    "HH151-SI-PP-nonINF_Fol-14" = "#00CED1",
+    "HH151-SI-PP-nonINF_Fol-15" = "#B8860B",
+    "HH151-SI-PP-nonINF_Fol-16" = "#4B0082",
+    "HH151-SI-PP-nonINF_Fol-17" = "#2E8B57",
+    "HH151-SI-PP-nonINF_Fol-18" = "#FF4500",
+    "HH151-SI-PP-nonINF_Fol-19" = "#4682B4",
+    "HH151-SI-PP-nonINF_Fol-20" = "#DA70D6"
+    
   )
+
+patient_color_values <- c("HH117" = "#4C72B0", "HH119" = "#DD8452", "HH151" = "#55A868", "HH153" = "#C44E52")
+
+# Name mapping 
+patient_names <- list(
+  
+  # "HH117" = "Crohn's Disease", 
+  # "HH119" = "Colorectal Cancer"
+  "HH117" = "CD", 
+  "HH151" = "CD", 
+  "HH153" = "CD", 
+  "HH119" = "CRC"
+  
+)
+
+# enhanced_default_pal
+PC_clusters_colors <- c(
+  "0" = "#E41A1C",
+  "1" = "#FF8C00",
+  "2" = "#4DAF4A",
+  "3" = "#00A896",
+  "4" = "#377EB8",
+  "5" = "#984EA3",
+  "6" = "#E7298A"
+)
