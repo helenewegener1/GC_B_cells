@@ -557,7 +557,7 @@ dir.create(outdir_1, recursive = TRUE, showWarnings = FALSE)
 lapply(patients, function(HH){
   
   # HH <- "HH153"
-  # p <- patient_names[[HH]]
+  p <- patient_names[[HH]]
   
   meta_HH <- meta %>% filter(patient_id == HH)
   
@@ -613,7 +613,7 @@ lapply(patients, function(HH){
         x = "Follicle number", 
         y = "Count", 
         # title = glue ("{p}: {HH_fol_sample_clean} follicles"),
-        title = glue ("{HH}: Peyer's patch follicles"),
+        title = glue ("{HH} ({p}): Peyer's patch follicles"),
         fill = "Cell type"
       ) + 
       theme(
@@ -709,7 +709,7 @@ dir.create(outdir_2, recursive = TRUE, showWarnings = FALSE)
 lapply(patients, function(HH){ 
   
   # HH <- "HH151"
-  # p <- patient_names[[HH]]
+  p <- patient_names[[HH]]
   
   plot_df <- resolve_LC_list[[HH]] %>% 
     filter(
@@ -771,7 +771,7 @@ lapply(patients, function(HH){
       labs(
         x = "Follicle number", 
         y = "Frequency", 
-        title = glue("{HH}: GC B cells from Peyer's patch follicles"),
+        title = glue("{HH} ({p}): GC B cells from Peyer's patch follicles"),
         fill = "Isotype", 
         caption = "Numbers on top of bars are N GC B cells in each follicle."
       ) + 
@@ -788,111 +788,111 @@ lapply(patients, function(HH){
   
 })
 
-# ==============================================================================
-# GC B cells: Summary of follicles and isotypes -- centered log-ratio (CLR)
-# ==============================================================================
-
-pseudocount <- 1  # added before taking logs so isotypes with 0 cells in a
-# follicle don't produce -Inf / undefined CLR values
-
-lapply(patients, function(HH){
-  
-  # HH <- "HH119"
-  
-  plot_df <- resolve_LC_list[[HH]] %>% 
-    filter(
-      locus == "IGH",
-      !is.na(manual_ADT_ID), 
-      L1_annotation == "GC_B_cells",
-      !is.na(c_call_grouped), 
-      c_call_grouped != "IGHE"
-    ) %>% 
-    mutate(
-      manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
-    )
-  
-  # Remove follicles that have less than 5 GC B cells
-  fol_to_rm <- plot_df %>% 
-    count(manual_ADT_ID) %>% 
-    filter(n < 5) %>% 
-    mutate(manual_ADT_ID = str_split_i(manual_ADT_ID, "-", 2)) %>%  
-    pull(manual_ADT_ID) 
-    
-  # Per-follicle isotype counts, completed so every isotype is present in
-  # every follicle (0 where absent) -- needed for a valid composition before
-  # transforming
-  clr_df <- plot_df %>%
-    count(manual_ADT_ID_plot, c_call_grouped, name = "n") %>%
-    complete(manual_ADT_ID_plot, c_call_grouped, fill = list(n = 0)) %>%
-    group_by(manual_ADT_ID_plot) %>%
-    mutate(
-      Count    = sum(n),                  # total cells in this follicle (raw, no pseudocount)
-      n_pseudo = n + pseudocount,
-      prop     = n_pseudo / sum(n_pseudo),
-      log_prop = log(prop),
-      clr      = log_prop - mean(log_prop)  # centered log-ratio -- sums to 0 within each follicle
-    ) %>%
-    ungroup() %>% 
-    filter(!(manual_ADT_ID_plot %in% fol_to_rm)) # Remove follicles that have less than 5 GC B cells
-  
-  # count label placed just above the tallest bar in each follicle
-  follicle_labels <- clr_df %>%
-    select(manual_ADT_ID_plot, Count) %>% 
-    distinct()
-  
-  # Get max clr
-  max_clr <- clr_df %>% filter(clr > 0) %>% summarise(sum = sum(clr), .by = manual_ADT_ID_plot) %>% pull(sum) %>% max()
-  
-  width <- 13
-  if (HH == "HH117"){
-    width <- 12 
-  } else if (HH == "HH119"){
-    width <- 15.5
-  }
-  
-  png(glue("{outdir_2}/{HH}_Isotype_CLR_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
-  
-  print(
-    clr_df %>%
-      ggplot(aes(x = manual_ADT_ID_plot, y = clr, fill = c_call_grouped)) + 
-      geom_col() + 
-      geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-      geom_text(
-        data = follicle_labels,
-        aes(x = manual_ADT_ID_plot, y = max_clr + 0.5, label = Count),
-        inherit.aes = FALSE
-      ) + 
-      scale_fill_manual(values = isotype_grouped_colors_custom) +
-      # scale_x_continuous(
-      #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-      #   limits = c(0.5, NA),
-      #   expand = c(0, 0.5)
-      # ) +
-      scale_y_continuous(
-        breaks = scales::breaks_width(1),
-        minor_breaks = scales::breaks_width(1)
-      ) + 
-      theme_classic() +
-      labs(
-        x = "Follicle number", 
-        y = "Centered log-ratio (CLR)", 
-        title = glue("{HH}: GC B cells from Peyer's patch follicles"),
-        subtitle = "The CLR shows that isotypes above 0 are more common than that follicle's average; below 0, less common.",
-        fill = "Isotype", 
-        caption = "Numbers on top of bars are N GC B cells in each follicle."
-      ) + 
-      theme(
-        plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 16),
-        legend.title = element_text(size = 20),
-        legend.text = element_text(size = 16)
-      )
-  )
-  
-  dev.off()
-  
-})
+# # ==============================================================================
+# # GC B cells: Summary of follicles and isotypes -- centered log-ratio (CLR)
+# # ==============================================================================
+# 
+# pseudocount <- 1  # added before taking logs so isotypes with 0 cells in a
+# # follicle don't produce -Inf / undefined CLR values
+# 
+# lapply(patients, function(HH){
+#   
+#   # HH <- "HH119"
+#   
+#   plot_df <- resolve_LC_list[[HH]] %>% 
+#     filter(
+#       locus == "IGH",
+#       !is.na(manual_ADT_ID), 
+#       L1_annotation == "GC_B_cells",
+#       !is.na(c_call_grouped), 
+#       c_call_grouped != "IGHE"
+#     ) %>% 
+#     mutate(
+#       manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
+#     )
+#   
+#   # Remove follicles that have less than 5 GC B cells
+#   fol_to_rm <- plot_df %>% 
+#     count(manual_ADT_ID) %>% 
+#     filter(n < 5) %>% 
+#     mutate(manual_ADT_ID = str_split_i(manual_ADT_ID, "-", 2)) %>%  
+#     pull(manual_ADT_ID) 
+#     
+#   # Per-follicle isotype counts, completed so every isotype is present in
+#   # every follicle (0 where absent) -- needed for a valid composition before
+#   # transforming
+#   clr_df <- plot_df %>%
+#     count(manual_ADT_ID_plot, c_call_grouped, name = "n") %>%
+#     complete(manual_ADT_ID_plot, c_call_grouped, fill = list(n = 0)) %>%
+#     group_by(manual_ADT_ID_plot) %>%
+#     mutate(
+#       Count    = sum(n),                  # total cells in this follicle (raw, no pseudocount)
+#       n_pseudo = n + pseudocount,
+#       prop     = n_pseudo / sum(n_pseudo),
+#       log_prop = log(prop),
+#       clr      = log_prop - mean(log_prop)  # centered log-ratio -- sums to 0 within each follicle
+#     ) %>%
+#     ungroup() %>% 
+#     filter(!(manual_ADT_ID_plot %in% fol_to_rm)) # Remove follicles that have less than 5 GC B cells
+#   
+#   # count label placed just above the tallest bar in each follicle
+#   follicle_labels <- clr_df %>%
+#     select(manual_ADT_ID_plot, Count) %>% 
+#     distinct()
+#   
+#   # Get max clr
+#   max_clr <- clr_df %>% filter(clr > 0) %>% summarise(sum = sum(clr), .by = manual_ADT_ID_plot) %>% pull(sum) %>% max()
+#   
+#   width <- 13
+#   if (HH == "HH117"){
+#     width <- 12 
+#   } else if (HH == "HH119"){
+#     width <- 15.5
+#   }
+#   
+#   png(glue("{outdir_2}/{HH}_Isotype_CLR_across_follicles.png"), width = width, height = 7, res = 1000, units = "in")
+#   
+#   print(
+#     clr_df %>%
+#       ggplot(aes(x = manual_ADT_ID_plot, y = clr, fill = c_call_grouped)) + 
+#       geom_col() + 
+#       geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+#       geom_text(
+#         data = follicle_labels,
+#         aes(x = manual_ADT_ID_plot, y = max_clr + 0.5, label = Count),
+#         inherit.aes = FALSE
+#       ) + 
+#       scale_fill_manual(values = isotype_grouped_colors_custom) +
+#       # scale_x_continuous(
+#       #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+#       #   limits = c(0.5, NA),
+#       #   expand = c(0, 0.5)
+#       # ) +
+#       scale_y_continuous(
+#         breaks = scales::breaks_width(1),
+#         minor_breaks = scales::breaks_width(1)
+#       ) + 
+#       theme_classic() +
+#       labs(
+#         x = "Follicle number", 
+#         y = "Centered log-ratio (CLR)", 
+#         title = glue("{HH}: GC B cells from Peyer's patch follicles"),
+#         subtitle = "The CLR shows that isotypes above 0 are more common than that follicle's average; below 0, less common.",
+#         fill = "Isotype", 
+#         caption = "Numbers on top of bars are N GC B cells in each follicle."
+#       ) + 
+#       theme(
+#         plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+#         axis.title = element_text(size = 20),
+#         axis.text = element_text(size = 16),
+#         legend.title = element_text(size = 20),
+#         legend.text = element_text(size = 16)
+#       )
+#   )
+#   
+#   dev.off()
+#   
+# })
 
 
 # ------------------------------------------------------------------------------
@@ -972,7 +972,7 @@ print(
     labs(
       x = "Follicle number",
       y = "Frequency",
-      title = glue("{HH}:GC B cells from Peyer's patch follicles\nLargest clones excluded"),
+      title = glue("{HH} ({p}):GC B cells from Peyer's patch follicles\nLargest clones excluded"),
       # title = glue("{p}\nGC B cells from Peyer's patch follicles - Two largest clones removed"),
       fill = "Isotype",
       caption = "Numbers on top of bars are N GC B cells in each follicle."
@@ -989,101 +989,101 @@ print(
 dev.off()
 
 
-# CLR
-plot_df <- resolve_LC_list[[HH]] %>% 
-  filter(
-    locus == "IGH",
-    !is.na(manual_ADT_ID), 
-    L1_annotation == "GC_B_cells",
-    !is.na(c_call_grouped),
-    c_call_grouped != "IGHE",
-    !(clone_subgroup_id_90_similarity %in% large_clone)
-  ) %>% 
-  mutate(
-    manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
-  )
-
-# Remove follicles that have less than 5 GC B cells
-fol_to_rm <- plot_df %>% 
-  count(manual_ADT_ID) %>% 
-  filter(n < 5) %>% 
-  mutate(manual_ADT_ID = str_split_i(manual_ADT_ID, "-", 2)) %>%  
-  pull(manual_ADT_ID) 
-
-
-# Per-follicle isotype counts, completed so every isotype is present in
-# every follicle (0 where absent) -- needed for a valid composition before
-# transforming
-clr_df <- plot_df %>%
-  count(manual_ADT_ID_plot, c_call_grouped, name = "n") %>%
-  complete(manual_ADT_ID_plot, c_call_grouped, fill = list(n = 0)) %>%
-  group_by(manual_ADT_ID_plot) %>%
-  mutate(
-    Count    = sum(n),                  # total cells in this follicle (raw, no pseudocount)
-    n_pseudo = n + pseudocount,
-    prop     = n_pseudo / sum(n_pseudo),
-    log_prop = log(prop),
-    clr      = log_prop - mean(log_prop)  # centered log-ratio -- sums to 0 within each follicle
-  ) %>%
-  ungroup() %>% 
-  filter(!(manual_ADT_ID_plot %in% fol_to_rm)) # Remove follicles that have less than 5 GC B cells
-
-# count label placed just above the tallest bar in each follicle
-follicle_labels <- clr_df %>%
-  select(manual_ADT_ID_plot, Count) %>% 
-  distinct()
-
-# Get max clr
-max_clr <- clr_df %>% filter(clr > 0) %>% summarise(sum = sum(clr), .by = manual_ADT_ID_plot) %>% pull(sum) %>% max()
-
-width <- 13
-if (HH == "HH117"){
-  width <- 12 
-} else if (HH == "HH119"){
-  width <- 15.5
-}
-
-png(glue("{outdir_2}/{HH}_Isotype_CLR_across_follicles_rm_large_clone.png"), width = width, height = 7, res = 1000, units = "in")
-
-print(
-  clr_df %>%
-    ggplot(aes(x = manual_ADT_ID_plot, y = clr, fill = c_call_grouped)) + 
-    geom_col() + 
-    geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
-    geom_text(
-      data = follicle_labels,
-      aes(x = manual_ADT_ID_plot, y = max_clr + 0.5, label = Count),
-      inherit.aes = FALSE
-    ) + 
-    scale_fill_manual(values = isotype_grouped_colors_custom) +
-    # scale_x_continuous(
-    #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
-    #   limits = c(0.5, NA),
-    #   expand = c(0, 0.5)
-    # ) +
-    scale_y_continuous(
-      breaks = scales::breaks_width(1),
-      minor_breaks = scales::breaks_width(1)
-    ) + 
-    theme_classic() +
-    labs(
-      x = "Follicle number", 
-      y = "Centered log-ratio (CLR)", 
-      title = glue("{HH}: GC B cells from Peyer's patch follicles\nLargest clones excluded"),
-      subtitle = "The CLR shows that isotypes above 0 are more common than that follicle's average; below 0, less common.",
-      fill = "Isotype", 
-      caption = "Numbers on top of bars are N GC B cells in each follicle."
-    ) + 
-    theme(
-      plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
-      axis.title = element_text(size = 20),
-      axis.text = element_text(size = 16),
-      legend.title = element_text(size = 20),
-      legend.text = element_text(size = 16)
-    )
-)
-
-dev.off()
+# # CLR
+# plot_df <- resolve_LC_list[[HH]] %>% 
+#   filter(
+#     locus == "IGH",
+#     !is.na(manual_ADT_ID), 
+#     L1_annotation == "GC_B_cells",
+#     !is.na(c_call_grouped),
+#     c_call_grouped != "IGHE",
+#     !(clone_subgroup_id_90_similarity %in% large_clone)
+#   ) %>% 
+#   mutate(
+#     manual_ADT_ID_plot = str_split_i(manual_ADT_ID, "-", 2) %>% as.integer() %>% as.factor()
+#   )
+# 
+# # Remove follicles that have less than 5 GC B cells
+# fol_to_rm <- plot_df %>% 
+#   count(manual_ADT_ID) %>% 
+#   filter(n < 5) %>% 
+#   mutate(manual_ADT_ID = str_split_i(manual_ADT_ID, "-", 2)) %>%  
+#   pull(manual_ADT_ID) 
+# 
+# 
+# # Per-follicle isotype counts, completed so every isotype is present in
+# # every follicle (0 where absent) -- needed for a valid composition before
+# # transforming
+# clr_df <- plot_df %>%
+#   count(manual_ADT_ID_plot, c_call_grouped, name = "n") %>%
+#   complete(manual_ADT_ID_plot, c_call_grouped, fill = list(n = 0)) %>%
+#   group_by(manual_ADT_ID_plot) %>%
+#   mutate(
+#     Count    = sum(n),                  # total cells in this follicle (raw, no pseudocount)
+#     n_pseudo = n + pseudocount,
+#     prop     = n_pseudo / sum(n_pseudo),
+#     log_prop = log(prop),
+#     clr      = log_prop - mean(log_prop)  # centered log-ratio -- sums to 0 within each follicle
+#   ) %>%
+#   ungroup() %>% 
+#   filter(!(manual_ADT_ID_plot %in% fol_to_rm)) # Remove follicles that have less than 5 GC B cells
+# 
+# # count label placed just above the tallest bar in each follicle
+# follicle_labels <- clr_df %>%
+#   select(manual_ADT_ID_plot, Count) %>% 
+#   distinct()
+# 
+# # Get max clr
+# max_clr <- clr_df %>% filter(clr > 0) %>% summarise(sum = sum(clr), .by = manual_ADT_ID_plot) %>% pull(sum) %>% max()
+# 
+# width <- 13
+# if (HH == "HH117"){
+#   width <- 12 
+# } else if (HH == "HH119"){
+#   width <- 15.5
+# }
+# 
+# png(glue("{outdir_2}/{HH}_Isotype_CLR_across_follicles_rm_large_clone.png"), width = width, height = 7, res = 1000, units = "in")
+# 
+# print(
+#   clr_df %>%
+#     ggplot(aes(x = manual_ADT_ID_plot, y = clr, fill = c_call_grouped)) + 
+#     geom_col() + 
+#     geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+#     geom_text(
+#       data = follicle_labels,
+#       aes(x = manual_ADT_ID_plot, y = max_clr + 0.5, label = Count),
+#       inherit.aes = FALSE
+#     ) + 
+#     scale_fill_manual(values = isotype_grouped_colors_custom) +
+#     # scale_x_continuous(
+#     #   breaks = function(x) seq(1, ceiling(max(x)), by = 1),
+#     #   limits = c(0.5, NA),
+#     #   expand = c(0, 0.5)
+#     # ) +
+#     scale_y_continuous(
+#       breaks = scales::breaks_width(1),
+#       minor_breaks = scales::breaks_width(1)
+#     ) + 
+#     theme_classic() +
+#     labs(
+#       x = "Follicle number", 
+#       y = "Centered log-ratio (CLR)", 
+#       title = glue("{HH}: GC B cells from Peyer's patch follicles\nLargest clones excluded"),
+#       subtitle = "The CLR shows that isotypes above 0 are more common than that follicle's average; below 0, less common.",
+#       fill = "Isotype", 
+#       caption = "Numbers on top of bars are N GC B cells in each follicle."
+#     ) + 
+#     theme(
+#       plot.title = element_text(face = "bold", size = 26, hjust = 0.5),
+#       axis.title = element_text(size = 20),
+#       axis.text = element_text(size = 16),
+#       legend.title = element_text(size = 20),
+#       legend.text = element_text(size = 16)
+#     )
+# )
+# 
+# dev.off()
 
 
 # ------------------------------------------------------------------------------
@@ -1532,6 +1532,7 @@ dir.create(outdir_isotype_upset, recursive = TRUE, showWarnings = FALSE)
 for (HH in patients) {
 
   # HH <- "HH117"
+  p <- patient_names[[HH]]
 
   df_heavy_gcb <- resolve_LC_list[[HH]] %>%
     filter(
@@ -1568,7 +1569,7 @@ for (HH in patients) {
   )
 
   grid.text(
-    glue("{HH}: Isotype across GC B cell clones (singletons included)"),
+    glue("{HH} ({p}): Isotype across GC B cell clones (singletons included)"),
     x = 0.65, y = 0.97, gp = gpar(fontsize = 16, fontface = "bold")
   )
 
@@ -1614,7 +1615,7 @@ for (HH in patients) {
     )
 
     grid.text(
-      glue("{HH}: Isotypes across GC B cell clones (singletons excluded)"),
+      glue("{HH} ({p}): Isotypes across GC B cell clones (singletons excluded)"),
       x = 0.65, y = 0.97, gp = gpar(fontsize = 16, fontface = "bold")
     )
 
@@ -1882,7 +1883,7 @@ lapply(patients, function(HH){
         y = "Frequency",
         # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
         # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
-        title = glue("{HH}: Top {n_clones} GC B cell clones in Peyer's patch follicles"),
+        title = glue("{HH} ({p}): Top {n_clones} GC B cell clones in Peyer's patch follicles"),
         # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
         fill = "Clone"
       ) +
@@ -2020,7 +2021,7 @@ print(
       y = "Frequency",
       # title = glue("{p}: Top 10 clones across GC B cells in {HH_fol_sample_clean} follicles"),
       # title = glue("{p}\nTop 10 clones across GC B cells from Peyer's patch follicles"),
-      title = glue("{HH}: Top {n_clones} GC B cell clones in Peyer's patch follicles\nLargest clone excluded"),
+      title = glue("{HH} ({p}): Top {n_clones} GC B cell clones in Peyer's patch follicles\nLargest clone excluded"),
       # subtitle = glue("Top {n_clones} clones highlighted and number of clones with in each follicle is stated on top of the bars"),
       fill = "Clone"
     ) +

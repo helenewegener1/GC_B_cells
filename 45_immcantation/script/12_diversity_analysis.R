@@ -16,286 +16,258 @@ resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
 patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
 patients
 
-HH <- "HH117"
-extra <- ""
-
-# Read rds
-df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>% 
-  filter(
-    locus == "IGH",
-    !is.na(manual_ADT_full_ID)
-  )
-
-# df_heavy$clone_subgroup_id_90_similarity
-# df_heavy$manual_ADT_full_ID
-
-# Remove largest clone as it "takes all the signal"
-# largest_clone <- df_heavy %>% count(clone_subgroup_id_90_similarity, sort = TRUE) %>% head(1) %>% pull(clone_subgroup_id_90_similarity)
-# df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != largest_clone)
-# extra <- "_largest_removed"
-
-# Prep output
-outdir = glue("45_immcantation/plot/12_diversity_analysis/{HH}{extra}")
-dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
-
-outdir_combined <- glue("45_immcantation/plot/12_diversity_analysis/combined{extra}")
-dir.create(outdir_combined, recursive = TRUE, showWarnings = FALSE)
-
-# Prep colors 
-HH_samples <- names(sample_clean_plot_colors) %>% str_subset(glue("^{HH}")) %>% str_subset("Fol")
-HH_samples_colors <- sample_clean_plot_colors[HH_samples]
-names(HH_samples_colors) <- names(HH_samples_colors) %>% str_split_i("_", 2)
-HH_samples_colors
-
-# patient_to_condition
-patient_to_condition <- data.frame(
-  patient = c("HH117", "HH151", "HH153", "HH119"), 
-  condition = c(rep("Crohns", 3), rep("Control", 1))
-)
-
-
-# ------------------------------------------------------------------------------
-# Generate a clonal abundance curve
-# ------------------------------------------------------------------------------
-
-# Partitions the data on the sample column
-# Calculates a 95% confidence interval via 100 bootstrap realizations
-set.seed(123) # For reproducibility of example bootstrap results
-curve <- estimateAbundance(df_heavy, group="manual_ADT_full_ID", ci=0.95, nboot=100, clone="clone_subgroup_id_90_similarity")
-
-df_heavy$manual_ADT_full_ID %>% unique()
-
-# Plots a rank abundance curve of the relative clonal abundances
-plot(curve, colors = HH_samples_colors, legend_title="Sample") + theme_minimal()
-ggsave(glue("{outdir}/clonal_abundance_curve.png"))
-
-# ------------------------------------------------------------------------------
-# Generate a diversity curve
-# ------------------------------------------------------------------------------
-
-# Compare diversity curve across values in the "sample" column
-# q ranges from 0 (min_q=0) to 4 (max_q=4) in 0.05 increments (step_q=0.05)
-# A 95% confidence interval will be calculated (ci=0.95)
-# 100 resampling realizations are performed (nboot=100)
-set.seed(123) # For reproducibility of example alphaDiversity results
-sample_curve <- alphaDiversity(df_heavy, group="manual_ADT_full_ID", clone="clone_subgroup_id_90_similarity",
-                               min_q=0, max_q=4, step_q=0.1,
-                               ci=0.95, nboot=100)
-
-# Plot a log-log (log_q=TRUE, log_d=TRUE) plot of sample diversity
-# Indicate number of sequences resampled from each group in the title
-plot(sample_curve, colors=HH_samples_colors, main_title="Sample diversity", 
-     legend_title="Patient", shadow=FALSE) + theme_minimal()
-ggsave(glue("{outdir}/diversity_curve.png"))
-
-
-p <- plot(sample_curve, colors=HH_samples_colors, main_title="Sample diversity", 
-          legend_title="Patient") + theme_minimal()
-
-p$layers <- p$layers[!sapply(p$layers, function(x) inherits(x$geom, "GeomRibbon"))]
-p
-
-# ------------------------------------------------------------------------------
-# Shannon diversity
-# ------------------------------------------------------------------------------
-
-set.seed(123) # For reproducibility of example alphaDiversity results
-
-versions <- c("GC_B_cells", "all_cells")
-
-lapply(versions, function(version) {
+for (HH in patients){
   
-  # version <- "GC_B_cells"
-  df_heavy_sha <- if (version == "GC_B_cells") {
-    df_heavy %>% filter(L1_annotation == "GC_B_cells")
-  } else {
-    df_heavy
+  # HH <- "HH153"
+  extra <- ""
+  
+  # Read rds
+  df_heavy <- readRDS(glue("45_immcantation/out/rds/05_{HH}_resolve_LC.rds")) %>% 
+    filter(
+      locus == "IGH",
+      !is.na(manual_ADT_full_ID)
+    )
+  
+  # df_heavy$clone_subgroup_id_90_similarity
+  # df_heavy$manual_ADT_full_ID
+  
+  # Remove largest clone as it "takes all the signal"
+  # largest_clone <- df_heavy %>% count(clone_subgroup_id_90_similarity, sort = TRUE) %>% head(1) %>% pull(clone_subgroup_id_90_similarity)
+  # df_heavy <- df_heavy %>% filter(clone_subgroup_id_90_similarity != largest_clone)
+  # extra <- "_largest_removed"
+  
+  # Prep output
+  outdir = glue("45_immcantation/plot/12_diversity_analysis/{HH}{extra}")
+  dir.create(outdir, recursive = TRUE, showWarnings = FALSE)
+  
+  outdir_combined <- glue("45_immcantation/plot/12_diversity_analysis/combined{extra}")
+  dir.create(outdir_combined, recursive = TRUE, showWarnings = FALSE)
+  
+  # Prep colors 
+  HH_samples <- names(sample_clean_plot_colors) %>% str_subset(glue("^{HH}")) %>% str_subset("Fol")
+  HH_samples_colors <- sample_clean_plot_colors[HH_samples]
+  names(HH_samples_colors) <- names(HH_samples_colors) %>% str_split_i("_", 2)
+  HH_samples_colors
+  
+  # patient_to_condition
+  patient_to_condition <- data.frame(
+    patient = c("HH117", "HH151", "HH153", "HH119"), 
+    condition = c(rep("Crohn's", 3), rep("Control", 1))
+  )
+  
+  
+  # # ------------------------------------------------------------------------------
+  # # Generate a clonal abundance curve
+  # # ------------------------------------------------------------------------------
+  # 
+  # # Partitions the data on the sample column
+  # # Calculates a 95% confidence interval via 100 bootstrap realizations
+  # set.seed(123) # For reproducibility of example bootstrap results
+  # curve <- estimateAbundance(df_heavy, group="manual_ADT_full_ID", ci=0.95, nboot=100, clone="clone_subgroup_id_90_similarity")
+  # 
+  # df_heavy$manual_ADT_full_ID %>% unique()
+  # 
+  # # Plots a rank abundance curve of the relative clonal abundances
+  # plot(curve, colors = HH_samples_colors, legend_title="Sample") + theme_minimal()
+  # ggsave(glue("{outdir}/clonal_abundance_curve.png"))
+  # 
+  # # ------------------------------------------------------------------------------
+  # # Generate a diversity curve
+  # # ------------------------------------------------------------------------------
+  # 
+  # # Compare diversity curve across values in the "sample" column
+  # # q ranges from 0 (min_q=0) to 4 (max_q=4) in 0.05 increments (step_q=0.05)
+  # # A 95% confidence interval will be calculated (ci=0.95)
+  # # 100 resampling realizations are performed (nboot=100)
+  # set.seed(123) # For reproducibility of example alphaDiversity results
+  # sample_curve <- alphaDiversity(df_heavy, group="manual_ADT_full_ID", clone="clone_subgroup_id_90_similarity",
+  #                                min_q=0, max_q=4, step_q=0.1,
+  #                                ci=0.95, nboot=100)
+  # 
+  # # Plot a log-log (log_q=TRUE, log_d=TRUE) plot of sample diversity
+  # # Indicate number of sequences resampled from each group in the title
+  # plot(sample_curve, colors=HH_samples_colors, main_title="Sample diversity", 
+  #      legend_title="Patient", shadow=FALSE) + theme_minimal()
+  # ggsave(glue("{outdir}/diversity_curve.png"))
+  # 
+  # 
+  # p <- plot(sample_curve, colors=HH_samples_colors, main_title="Sample diversity", 
+  #           legend_title="Patient") + theme_minimal()
+  # 
+  # p$layers <- p$layers[!sapply(p$layers, function(x) inherits(x$geom, "GeomRibbon"))]
+  # p
+  # 
+  # # ------------------------------------------------------------------------------
+  # # Shannon diversity
+  # # ------------------------------------------------------------------------------
+  # 
+  # set.seed(123) # For reproducibility of example alphaDiversity results
+  # 
+  # versions <- c("GC_B_cells", "all_cells")
+  # 
+  # lapply(versions, function(version) {
+  #   
+  #   # version <- "GC_B_cells"
+  #   df_heavy_sha <- if (version == "GC_B_cells") {
+  #     df_heavy %>% filter(L1_annotation == "GC_B_cells")
+  #   } else {
+  #     df_heavy
+  #   }
+  #   
+  #   # N cells per follicle 
+  #   # df_heavy_sha %>% group_by(manual_ADT_full_ID) %>% count() %>% view()
+  #   
+  #   for (min_n in c(20, 30)){
+  #     
+  #     # min_n <- 30 # default
+  #     sample_curve <- alphaDiversity(df_heavy_sha, group="manual_ADT_full_ID", clone="clone_subgroup_id_90_similarity",
+  #                                    min_q=0, max_q=4, step_q=0.1,
+  #                                    ci=0.95, nboot=100, min_n = min_n)
+  #     
+  #     # Get shannon values
+  #     shannon_vals <- sample_curve@diversity %>%
+  #       filter(q == 1) %>%
+  #       mutate(
+  #         manual_ADT_full_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer(),
+  #         manual_ADT_full_ID_plot = factor(manual_ADT_full_ID_plot, levels = 1:max(manual_ADT_full_ID_plot))
+  #       )
+  #     
+  #     version_txt <- str_replace_all(version, "_", " ")
+  #     
+  #     ggplot(shannon_vals, aes(x = manual_ADT_full_ID_plot, y = d)) +
+  #       geom_pointrange(aes(ymin = d_lower, ymax = d_upper), color = "steelblue", size = 0.5) +
+  #       theme_minimal() +
+  #       labs(
+  #         x = "Follicle",
+  #         y = "Shannon diversity (q=1)",
+  #         title = glue("{HH}: {version_txt} Shannon diversity per follicle"),
+  #         subtitle = glue("Clones with <{min_n} cells are excluded from this analysis because of bootstrapping"),
+  #         caption = "Error bars show 95% CI from 100 bootstrap resamples"
+  #       ) 
+  #     
+  #     ggsave(glue("{outdir}/shannon_diversity_plot_{version}_min_n_{min_n}.png"), width = 10, height = 6)
+  #     
+  #   }
+  #   
+  # })
+  #   
+  
+  # ------------------------------------------------------------------------------
+  # View diversity tests at a fixed diversity order
+  # ------------------------------------------------------------------------------
+  
+  # # Test diversity at q=0, q=1 and q=2 (equivalent to species richness, Shannon entropy,
+  # # Simpson's index) across values in the sample_id column
+  # # 100 bootstrap realizations are performed (nboot=100)
+  # set.seed(123) # For reproducibility of example alphaDiversity results
+  # isotype_test <- alphaDiversity(resolve_LC_list_c_clean, group="c_call",
+  #                                min_q=0, max_q=2, step_q=1, nboot=100, clone="clone_subgroup_id_90_similarity")
+  # 
+  # # Print P-value table
+  # print(isotype_test@tests)
+  # 
+  # # Plot results at q=0 and q=2
+  # # Plot the mean and standard deviations at q=0 and q=2
+  # plot(isotype_test, 0, colors=isotype_colors_custom, main_title=isotype_main,
+  #      legend_title="Isotype")
+  # 
+  # plot(isotype_test, 2, colors=isotype_colors_custom, main_title=isotype_main,
+  #      legend_title="Isotype")
+  
+  # ------------------------------------------------------------------------------
+  # GC B cells count
+  # ------------------------------------------------------------------------------
+  
+  df_heavy %>% 
+    filter(L1_annotation == "GC_B_cells") %>% 
+    dplyr::count(manual_ADT_full_ID) %>% 
+    mutate(manual_ADT_full_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer() %>% as.factor()) %>% 
+    ggplot(aes(x = manual_ADT_full_ID_plot, y = n)) + 
+    geom_col() + 
+    geom_text(
+      aes(x = manual_ADT_full_ID_plot, y = n, label = n),
+      inherit.aes = FALSE,
+      vjust = -0.5, size = 3
+    ) + 
+    theme_minimal() + 
+    labs(
+      title = glue("{HH}: GC B cell (with BCR) count")
+    )
+  
+  ggsave(glue("{outdir}/GC_B_cell_count.png"), width = 12, height = 6)
+  
+  # ------------------------------------------------------------------------------
+  # Dxx plot - GC B cell clones
+  # ------------------------------------------------------------------------------
+  
+  compute_Dxx <- function(clone_counts, xx = 0.5) {
+    sorted <- sort(clone_counts, decreasing = TRUE)
+    cumulative <- cumsum(sorted) / sum(sorted)
+    which(cumulative >= xx)[1]
   }
   
-  # N cells per follicle 
-  # df_heavy_sha %>% group_by(manual_ADT_full_ID) %>% count() %>% view()
+  versions <- c("GC_B_cells", "all_cells")
   
-  for (min_n in c(20, 30)){
+  lapply(versions, function(version) {
     
-    # min_n <- 30 # default
-    sample_curve <- alphaDiversity(df_heavy_sha, group="manual_ADT_full_ID", clone="clone_subgroup_id_90_similarity",
-                                   min_q=0, max_q=4, step_q=0.1,
-                                   ci=0.95, nboot=100, min_n = min_n)
+    # version <- "GC_B_cells"
     
-    # Get shannon values
-    shannon_vals <- sample_curve@diversity %>%
-      filter(q == 1) %>%
+    df_heavy_DXX <- if (version == "GC_B_cells") {
+      df_heavy %>% filter(L1_annotation == "GC_B_cells")
+    } else {
+      df_heavy
+    }
+    
+    # Remove follicles that have less than 5 GC B cells
+    fol_to_rm <- df_heavy_DXX %>% 
+      count(manual_ADT_ID) %>% 
+      filter(n < 5) %>% 
+      pull(manual_ADT_ID)
+    
+    df_heavy_DXX <- df_heavy_DXX %>% 
+      filter(!(manual_ADT_ID %in% fol_to_rm))
+    
+    d50_per_follicle <- df_heavy_DXX %>%
+      filter(
+        !is.na(clone_subgroup_id_90_similarity)
+      ) %>%
+      dplyr::count(manual_ADT_full_ID, clone_subgroup_id_90_similarity, name = "n_cells") %>%
+      group_by(manual_ADT_full_ID) %>%
+      summarise(
+        D50 = compute_Dxx(n_cells, 0.50),
+        D20 = compute_Dxx(n_cells, 0.20),
+        total_clones = n_distinct(clone_subgroup_id_90_similarity),
+        .groups = "drop"
+      ) %>%
+      arrange(D50) %>% 
       mutate(
-        manual_ADT_full_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer(),
-        manual_ADT_full_ID_plot = factor(manual_ADT_full_ID_plot, levels = 1:max(manual_ADT_full_ID_plot))
+        manual_ADT_full_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer() %>% as.factor()
       )
+    
+    d50_per_follicle_long <- d50_per_follicle %>%
+      mutate(
+        D20_segment = D20,
+        D50_extra = D50 - D20
+      ) %>%
+      pivot_longer(cols = c(D20_segment, D50_extra), names_to = "metric", values_to = "value") %>%
+      mutate(
+        metric = factor(metric, levels = c("D50_extra", "D20_segment"))
+      ) 
     
     version_txt <- str_replace_all(version, "_", " ")
     
-    ggplot(shannon_vals, aes(x = manual_ADT_full_ID_plot, y = d)) +
-      geom_pointrange(aes(ymin = d_lower, ymax = d_upper), color = "steelblue", size = 0.5) +
-      theme_minimal() +
-      labs(
-        x = "Follicle",
-        y = "Shannon diversity (q=1)",
-        title = glue("{HH}: {version_txt} Shannon diversity per follicle"),
-        subtitle = glue("Clones with <{min_n} cells are excluded from this analysis because of bootstrapping"),
-        caption = "Error bars show 95% CI from 100 bootstrap resamples"
-      ) 
-    
-    ggsave(glue("{outdir}/shannon_diversity_plot_{version}_min_n_{min_n}.png"), width = 10, height = 6)
-    
-  }
-  
-})
-  
-
-# ------------------------------------------------------------------------------
-# View diversity tests at a fixed diversity order
-# ------------------------------------------------------------------------------
-
-# # Test diversity at q=0, q=1 and q=2 (equivalent to species richness, Shannon entropy,
-# # Simpson's index) across values in the sample_id column
-# # 100 bootstrap realizations are performed (nboot=100)
-# set.seed(123) # For reproducibility of example alphaDiversity results
-# isotype_test <- alphaDiversity(resolve_LC_list_c_clean, group="c_call",
-#                                min_q=0, max_q=2, step_q=1, nboot=100, clone="clone_subgroup_id_90_similarity")
-# 
-# # Print P-value table
-# print(isotype_test@tests)
-# 
-# # Plot results at q=0 and q=2
-# # Plot the mean and standard deviations at q=0 and q=2
-# plot(isotype_test, 0, colors=isotype_colors_custom, main_title=isotype_main,
-#      legend_title="Isotype")
-# 
-# plot(isotype_test, 2, colors=isotype_colors_custom, main_title=isotype_main,
-#      legend_title="Isotype")
-
-# ------------------------------------------------------------------------------
-# GC B cells count
-# ------------------------------------------------------------------------------
-
-df_heavy %>% 
-  filter(L1_annotation == "GC_B_cells") %>% 
-  dplyr::count(manual_ADT_full_ID) %>% 
-  mutate(manual_ADT_full_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer() %>% as.factor()) %>% 
-  ggplot(aes(x = manual_ADT_full_ID_plot, y = n)) + 
-  geom_col() + 
-  geom_text(
-    aes(x = manual_ADT_full_ID_plot, y = n, label = n),
-    inherit.aes = FALSE,
-    vjust = -0.5, size = 3
-  ) + 
-  theme_minimal() + 
-  labs(
-    title = glue("{HH}: GC B cell (with BCR) count")
-  )
-
-ggsave(glue("{outdir}/GC_B_cell_count.png"), width = 12, height = 6)
-
-# ------------------------------------------------------------------------------
-# Dxx plot - GC B cell clones
-# ------------------------------------------------------------------------------
-
-compute_Dxx <- function(clone_counts, xx = 0.5) {
-  sorted <- sort(clone_counts, decreasing = TRUE)
-  cumulative <- cumsum(sorted) / sum(sorted)
-  which(cumulative >= xx)[1]
-}
-
-versions <- c("GC_B_cells", "all_cells")
-
-lapply(versions, function(version) {
-  
-  # version <- "GC_B_cells"
-  
-  df_heavy_DXX <- if (version == "GC_B_cells") {
-    df_heavy %>% filter(L1_annotation == "GC_B_cells")
-  } else {
-    df_heavy
-  }
-  
-  # Remove follicles that have less than 5 GC B cells
-  fol_to_rm <- df_heavy_DXX %>% 
-    count(manual_ADT_ID) %>% 
-    filter(n < 5) %>% 
-    pull(manual_ADT_ID)
-  
-  df_heavy_DXX <- df_heavy_DXX %>% 
-    filter(!(manual_ADT_ID %in% fol_to_rm))
-  
-  d50_per_follicle <- df_heavy_DXX %>%
-    filter(
-      !is.na(clone_subgroup_id_90_similarity)
-    ) %>%
-    dplyr::count(manual_ADT_full_ID, clone_subgroup_id_90_similarity, name = "n_cells") %>%
-    group_by(manual_ADT_full_ID) %>%
-    summarise(
-      D50 = compute_Dxx(n_cells, 0.50),
-      D20 = compute_Dxx(n_cells, 0.20),
-      total_clones = n_distinct(clone_subgroup_id_90_similarity),
-      .groups = "drop"
-    ) %>%
-    arrange(D50) %>% 
-    mutate(
-      manual_ADT_full_ID_plot = str_remove(manual_ADT_full_ID, "Fol-") %>% as.integer() %>% as.factor()
-    )
-  
-  d50_per_follicle_long <- d50_per_follicle %>%
-    mutate(
-      D20_segment = D20,
-      D50_extra = D50 - D20
-    ) %>%
-    pivot_longer(cols = c(D20_segment, D50_extra), names_to = "metric", values_to = "value") %>%
-    mutate(
-      metric = factor(metric, levels = c("D50_extra", "D20_segment"))
-    ) 
-  
-  version_txt <- str_replace_all(version, "_", " ")
-  
-  # D20 + D50
-  ggplot(d50_per_follicle_long, aes(x = manual_ADT_full_ID_plot, y = value, fill = metric)) +
-    geom_col() +
-    geom_text(
-      data = d50_per_follicle,
-      aes(x = manual_ADT_full_ID_plot, y = D50, label = total_clones),
-      inherit.aes = FALSE,
-      vjust = -0.5, size = 3
-    ) +
-    scale_fill_manual(
-      values = c("D20_segment" = "forestgreen", "D50_extra" = "steelblue"),
-      labels = c("D20_segment" = "D20", "D50_extra" = "D20 to D50")
-    ) +
-    scale_y_continuous(
-      breaks = scales::breaks_width(1)
-      # minor_breaks = scales::breaks_width(minor_breaks_width),
-    ) + 
-    theme_minimal() +
-    labs(
-      x = "Follicle",
-      y = "Number of clones",
-      fill = NULL,
-      title = glue("{HH}: {version_txt} clonal dominance per follicle"),
-      caption = "Numbers above bars indicate total GC B cell clone count per follicle."
-    ) 
-  
-  ggsave(glue("{outdir}/clonal_D20_D50_plot_{version}.png"), width = 10, height = 6)
-  
-  # D20
-  d50_per_follicle_long %>% 
-    filter(metric == "D20_segment") %>% 
-    ggplot(aes(x = manual_ADT_full_ID_plot, y = value, fill = metric)) +
+    # D20 + D50
+    ggplot(d50_per_follicle_long, aes(x = manual_ADT_full_ID_plot, y = value, fill = metric)) +
       geom_col() +
       geom_text(
         data = d50_per_follicle,
-        aes(x = manual_ADT_full_ID_plot, y = D20, label = total_clones),
+        aes(x = manual_ADT_full_ID_plot, y = D50, label = total_clones),
         inherit.aes = FALSE,
         vjust = -0.5, size = 3
       ) +
       scale_fill_manual(
-        values = c("D20_segment" = "forestgreen"),
-        labels = c("D20_segment" = "D20")
+        values = c("D20_segment" = L1_colors[["GC_B_cells"]], "D50_extra" = "forestgreen"),
+        labels = c("D20_segment" = "D20", "D50_extra" = "D20 to D50")
       ) +
       scale_y_continuous(
         breaks = scales::breaks_width(1)
@@ -309,10 +281,53 @@ lapply(versions, function(version) {
         title = glue("{HH}: {version_txt} clonal dominance per follicle"),
         caption = "Numbers above bars indicate total GC B cell clone count per follicle."
       ) 
+    
+    ggsave(glue("{outdir}/clonal_D20_D50_plot_{version}.png"), width = 10, height = 6)
+    
+    # D20
+    d50_per_follicle_long %>% 
+      filter(metric == "D20_segment") %>% 
+      ggplot(aes(x = manual_ADT_full_ID_plot, y = value, fill = metric)) +
+      geom_col() +
+      geom_text(
+        data = d50_per_follicle,
+        aes(x = manual_ADT_full_ID_plot, y = D20, label = total_clones),
+        inherit.aes = FALSE,
+        vjust = -0.5, size = 4
+      ) +
+      scale_fill_manual(
+        values = c("D20_segment" = L1_colors[["GC_B_cells"]]), 
+        labels = c("D20_segment" = "D20")
+      ) +
+      scale_y_continuous(
+        breaks = scales::breaks_width(1), 
+        minor_breaks = scales::breaks_width(1),
+        limits = c(0, 4)
+      ) + 
+      theme_minimal() +
+      labs(
+        x = "Follicle",
+        y = "Number of clones",
+        fill = NULL,
+        title = glue("{HH}: {version_txt} clonal dominance per follicle"),
+        caption = "Numbers above bars indicate total GC B cell clone count per follicle."
+      ) +
+      theme(
+        plot.title   = element_text(size = 16, face = "bold"),
+        axis.title   = element_text(size = 14),
+        axis.text    = element_text(size = 12),
+        axis.text.y  = element_text(size = 14),
+        strip.text   = element_text(size = 12, face = "bold"),
+        legend.text  = element_text(size = 13),
+        legend.title = element_text(size = 14)
+      )
+    
+    ggsave(glue("{outdir}/clonal_D20_plot_{version}.png"), width = 10, height = 6)
+    
+  })
   
-  ggsave(glue("{outdir}/clonal_D20_plot_{version}.png"), width = 10, height = 6)
-  
-})
+}
+
 
 # ------------------------------------------------------------------------------
 # Gini
@@ -384,7 +399,7 @@ df_both <- lapply(patients, function(HH) {
 }) %>% bind_rows()
 
 
-df_both %>% filter(clone_subgroup_id_90_similarity == largest_clone) %>% count(patient_id) 
+df_both %>% filter(clone_subgroup_id_90_similarity == largest_clone) %>% count(patient_id)
 if (extra == "_largest_removed"){
   df_both <- df_both %>% filter(clone_subgroup_id_90_similarity != largest_clone)
 }
