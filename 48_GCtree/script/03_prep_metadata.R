@@ -17,6 +17,17 @@ fasta_files <- list.files(fasta_path)
 
 # resolve_LC_list_germlined$HH117$clone_subgroup_id_90_similarity
 
+# Load finer annotations
+L3_GCB_annotation <- readRDS("00_data/GCB_meta_GL.rds")
+PC_annotation <- readRDS("00_data/PC_meta_GL.rds")
+
+# Wrangle
+PC_annotation$cell_id <- glue("{PC_annotation$sample}_{rownames(PC_annotation)}") %>% str_remove("_\\d+")
+
+# Clean it up 
+L3_GCB_annotation_clean <- L3_GCB_annotation %>% select(cell_id, L3_GCB_annotation)
+PC_annotation_clean <- PC_annotation %>% select(cell_id, RNA_snn_res.0.4.merged)
+
 # ------------------------------------------------------------------------------
 # Meta data file writing
 # ------------------------------------------------------------------------------
@@ -32,12 +43,12 @@ fasta_files <- list.files(fasta_path)
 
 clone_nrs <- 2:20
 
-patients <- c("HH151", "HH153")
-# patients <- c("HH117", "HH119")
+# patients <- c("HH151", "HH153")
+patients <- c("HH117", "HH119")
 
 for (HH in patients){
   
-  # HH <- "HH119"
+  # HH <- "HH117"
   HH_spec_clones_vj <- resolve_LC_list_germlined[[HH]]
   
   for (clone_nr in clone_nrs){
@@ -49,7 +60,18 @@ for (HH in patients){
     clone <- str_extract(filename, "\\d+_\\d+(?=\\.fasta)")
     
     # Extract metadata
-    seqs_meta <- HH_spec_clones_vj %>% filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% select(L1_annotation, c_call_grouped, sample_clean_fol)
+    seqs_meta <- HH_spec_clones_vj %>% 
+      filter(clone_subgroup_id_90_similarity == clone & locus == "IGH") %>% 
+      left_join(L3_GCB_annotation_clean, by = "cell_id") %>% 
+      left_join(PC_annotation_clean, by = "cell_id") %>% 
+      mutate(
+        L3_annotation = case_when(
+          !is.na(L3_GCB_annotation) ~ L3_GCB_annotation, 
+          !is.na(RNA_snn_res.0.4.merged) ~ RNA_snn_res.0.4.merged,
+          .default = L1_annotation
+        )
+      ) %>% 
+      select(L1_annotation, L3_annotation, c_call_grouped, sample_clean_fol)
     
     # Map seq_names on meta data
     seq_names <- names(fasta)[1:length(fasta)-1]
@@ -71,6 +93,7 @@ for (HH in patients){
       summarise(
         seq_name = paste(seq_name, collapse = ":"),
         L1_annotation = paste(unique(L1_annotation), collapse = ":"),
+        L3_annotation = paste(unique(L3_annotation), collapse = ":"),
         # c_call = paste(unique(c_call), collapse = ":"),
         c_call_grouped = paste(unique(c_call_grouped), collapse = ":"),
         sample_clean_fol = paste(unique(sample_clean_fol), collapse = ":")
@@ -83,6 +106,7 @@ for (HH in patients){
       # )
       mutate(
         L1_annotation_int = as.integer(factor(L1_annotation)),
+        L3_annotation_int = as.integer(factor(L3_annotation)),
         c_call_grouped_int = as.integer(factor(c_call_grouped)),
         sample_clean_fol_int = as.integer(factor(sample_clean_fol))
       )
@@ -108,6 +132,17 @@ for (HH in patients){
       pivot_wider(names_from = L1_annotation, values_from = count, values_fill = 0)
 
     write.csv(L1_counts, glue("48_GCtree/gctree_meta/{sample}_L1_counts.csv"), row.names = FALSE)
+    
+    # L3_counts.csv
+    L3_counts <- gctree_meta %>%
+      select(seq_unique, seq_name) %>%       
+      separate_rows(seq_name, sep = ":") %>% 
+      left_join(seqs_meta %>% select(seq_name, L3_annotation), by = "seq_name") %>%  
+      group_by(seq_unique, L3_annotation) %>%
+      summarise(count = n(), .groups = "drop") %>%
+      pivot_wider(names_from = L3_annotation, values_from = count, values_fill = 0)
+    
+    write.csv(L1_counts, glue("48_GCtree/gctree_meta/{sample}_L3_counts.csv"), row.names = FALSE)
     
     # isotype_counts.csv
     isotype_counts <- gctree_meta %>%

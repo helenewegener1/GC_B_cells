@@ -143,6 +143,38 @@ color_list = {
         "PCs":                   "#C42030",
         "Unconventional_Bcells": "#8855CC",
     },
+    
+   "L3_annotation": {
+      # L1 annotation
+      "Tfh_cells":              "#E8608A",
+      "Naive_B_cells":          "#D4C420",
+      "Memory_B_cells":         "#2AAAC8",
+      "GC_B_cells":             "#E08C20",
+      "PCs":                    "#C42030",
+      "Unconventional_B_cells": "#8855CC",
+  
+      # GC B cell subsets
+      "DZ_cycling":             "#6A98C4",
+      "DZ":                     "#A9CDE0",
+      "Pre_MBC_cycling":        "#A485C6",
+      "LZ":                     "#7BA270",
+      "LZ_transitioning":       "#A3C293",
+      "BACH2+":                 "#E77F6D",
+      "BACH2_cycling":          "#BA6052",
+      "Pre_MBC":                "#5BA4A4",
+      "Pre_PB":                 "#745973",
+  
+      # Clusters
+      "0":                      "#E41A1C",
+      "1":                      "#FF8C00",
+      "2":                      "#4DAF4A",
+      "3":                      "#00A896",
+      "4":                      "#377EB8",
+      "5":                      "#984EA3",
+      "6":                      "#E7298A",
+    },
+    
+    
     # "c_call": {
     #     "IGHA1": "#FF7F00",
     #     "IGHA2": "#E31A1C",
@@ -285,6 +317,7 @@ color_list = {
 
 var_translate = {
   "L1_annotation": "Cell type", 
+  "L3_annotation": "Cell type (GC B subsets + PC clusters)", 
   "c_call_grouped": "Isotype",
   "sample_clean_fol": "Sample"
 }
@@ -297,6 +330,35 @@ label_translate = {
         "GC_B_cells":            "GC B cells",
         "PCs":                   "Plasma cells",
         "Unconventional_Bcells": "Unconventional B cells",
+    },
+    "L3_annotation": {
+      
+     "Tfh_cells":             "Tfh cells",
+        "Naive_Bcells":          "Naive B cells",
+        "Memory_Bcells":         "Memory B cells",
+        "GC_B_cells":            "GC B cells",
+        "PCs":                   "Plasma cells",
+        "Unconventional_Bcells": "Unconventional B cells",
+  
+      # GC B cell subsets
+      "DZ_cycling":             "DZ cycling",      
+      "DZ":                     "DZ",              
+      "Pre_MBC_cycling":        "Pre MBC cycling", 
+      "LZ":                     "LZ",             
+      "LZ_transitioning":       "LZ transitioning",
+      "BACH2+":                 "BACH2+",          
+      "BACH2_cycling":          "BACH2 cycling",   
+      "Pre_MBC":                "Pre MBC",         
+      "Pre_PB":                 "Pre PB",         
+  
+      # Clusters
+      "0":                      "PC cluster 1",
+      "1":                      "PC cluster 2",
+      "2":                      "PC cluster 3",
+      "3":                      "PC cluster 4",
+      "4":                      "PC cluster 5",
+      "5":                      "PC cluster 6",
+      "6":                      "PC cluster 7",
     },
     "c_call_grouped": {},        # no translation needed
     "sample_clean_fol": {
@@ -482,6 +544,9 @@ for sample, sample_name in samples_dict.items():
   
   # Color by L1_annotation
   plot_tree(tree, df_meta, "L1_annotation", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta")
+  
+  # Color by L3_annotation
+  plot_tree(tree, df_meta, "L3_annotation", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta")
   
   # Color by c_call (with counts for correct pie charts)
   plot_tree(tree, df_meta, "c_call_grouped", sample, custom_plot_path, color_list, counts_dir=f"../gctree_meta")
