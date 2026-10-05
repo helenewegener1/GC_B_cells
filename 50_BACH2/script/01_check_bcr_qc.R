@@ -62,7 +62,7 @@ table(L3_GCB_annotation$cell_id %in% bcr_data_tmp$cell_id)
 table(L3_GCB_annotation$L3_GCB_annotation)
 L3_GCB_annotation[L3_GCB_annotation$cell_id %in% bcr_data_tmp$cell_id, ] %>% pull(L3_GCB_annotation) %>% table()
 
-bcr_data_tmp <- bcr_data_tmp %>% left_join(L3_GCB_annotation %>% select(cell_id, L3_GCB_annotation), by = "cell_id")
+bcr_data_tmp <- bcr_data_tmp %>% left_join(L3_GCB_annotation %>% select(cell_id, L3_GCB_annotation, manual_ADT_ID), by = "cell_id")
 bcr_data_tmp$L3_GCB_annotation %>% table()
 
 bcr_data_tmp$cell_id %>% length()
@@ -189,33 +189,63 @@ table(L3_GCB_annotation$L3_GCB_annotation, L3_GCB_annotation$Patient)
 bcr_data_qc$HH117$L3_GCB_annotation %>% table()
 bcr_data_qc$HH119$L3_GCB_annotation %>% table()
 
+# bcr_data_qc$HH119 %>%
+#   filter(
+#     # !is.na(c_call),
+#     # !is.na(manual_ADT_ID), 
+#     !(manual_ADT_ID %in% c("Negative", "Doublet"))
+#   ) %>% 
+#   pull(L3_GCB_annotation) %>% 
+#   table()
+
 # bcr_data_qc$HH119 %>% filter(!is.na(c_call)) %>% pull(L3_GCB_annotation) %>% table()
 
 # Bar plot: x-axis = L3_GCB_annotation, facet_wrap on patient, dodge barplot 
 # GEX counts
 gex_counts <- L3_GCB_annotation %>%
-  filter(Patient %in% names(bcr_data_qc)) %>%
+  filter(
+    Patient %in% names(bcr_data_qc), 
+    !(manual_ADT_ID %in% c("Negative", "Doublet"))
+  ) %>%
   count(Patient, L3_GCB_annotation, name = "n") %>%
   mutate(Source = "GEX")
 
 # BCR (post-QC) counts
 bcr_counts <- bcr_data_qc %>%
   imap_dfr(~ .x %>%
-             count(L3_GCB_annotation, name = "n") %>%
+             filter(
+               !(manual_ADT_ID %in% c("Negative", "Doublet"))
+             )
+           count(L3_GCB_annotation, name = "n") %>%
              mutate(Patient = .y)) %>%
   mutate(Source = "BCR (QC)")
 
 # BCR (post-QC) counts with non-NA c_call
 bcr_ccall_counts <- bcr_data_qc %>%
   imap_dfr(~ .x %>%
-             filter(!is.na(c_call)) %>%
+             filter(
+               !is.na(c_call), 
+               !(manual_ADT_ID %in% c("Negative", "Doublet")),
+             ) %>%
              count(L3_GCB_annotation, name = "n") %>%
              mutate(Patient = .y)) %>%
   mutate(Source = "BCR (QC, c_call)")
 
-source_levels <- c("GEX", "BCR (QC)", "BCR (QC, c_call)")
+# BCR (post-QC) counts with non-NA ADT_manual_ID
+bcr_ADT_counts <- bcr_data_qc %>%
+  imap_dfr(~ .x %>%
+             filter(
+               !is.na(c_call),
+               !(manual_ADT_ID %in% c("Negative", "Doublet")),
+               !is.na(manual_ADT_ID)
+             ) %>%
+             count(L3_GCB_annotation, name = "n") %>%
+             mutate(Patient = .y)) %>%
+  mutate(Source = "BCR (QC, ADT)")
 
-plot_df <- bind_rows(gex_counts, bcr_counts, bcr_ccall_counts) %>%
+source_levels <- c("GEX", "BCR (QC)", "BCR (QC, c_call)", "BCR (QC, ADT)")
+
+plot_df <- bind_rows(gex_counts, bcr_counts, bcr_ccall_counts, bcr_ADT_counts) %>%
   mutate(Source = factor(Source, levels = source_levels)) %>%
   complete(Patient, L3_GCB_annotation, Source, fill = list(n = 0)) %>% 
   filter(
@@ -231,19 +261,29 @@ ggplot(plot_df, aes(x = L3_GCB_annotation, y = n, fill = Source)) +
   facet_wrap(~ Patient, ncol = 1) +
   scale_fill_manual(values = c("GEX" = "grey60",
                                "BCR (QC)" = "#2C7FB8",
-                               "BCR (QC, c_call)" = "#F28E2B")) +
+                               "BCR (QC, c_call)" = "#F28E2B",
+                               "BCR (QC, ADT)" = "forestgreen")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
-  labs(x = "L3 GCB annotation", y = "Number of cells", fill = NULL) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "bottom",
         strip.background = element_rect(fill = "grey90")) + 
   labs(
-    title = "Heavy chain GC B cell filtering"
+    title = "Heavy chain GC B cell filtering", 
+    subtitle = "ADT Negative and Doublet removed.",
+    x = "L3 GCB annotation", y = "Number of cells", fill = NULL
   )
 
 ggsave(glue("{outdir}/bcr_avail_heavy_chain.png"), width = 9, height = 8)
 
+# Save data 
+stats_data <- list(
+  "heavy" = list(
+    "bcr_data_tmp" = bcr_data_tmp,
+    "bcr_data" = bcr_data, 
+    "bcr_data_qc" = bcr_data_qc
+  )
+)
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -277,7 +317,7 @@ table(L3_GCB_annotation$cell_id %in% bcr_data_tmp$cell_id)
 table(L3_GCB_annotation$L3_GCB_annotation)
 L3_GCB_annotation[L3_GCB_annotation$cell_id %in% bcr_data_tmp$cell_id, ] %>% pull(L3_GCB_annotation) %>% table()
 
-bcr_data_tmp <- bcr_data_tmp %>% left_join(L3_GCB_annotation %>% select(cell_id, L3_GCB_annotation), by = "cell_id")
+bcr_data_tmp <- bcr_data_tmp %>% left_join(L3_GCB_annotation %>% select(cell_id, L3_GCB_annotation, manual_ADT_ID), by = "cell_id")
 bcr_data_tmp$L3_GCB_annotation %>% table()
 
 bcr_data_tmp$cell_id %>% length()
@@ -307,7 +347,7 @@ for (HH in patients){
 }
 
 # ------------------------------------------------------------------------------
-# Handle multiple heavy chains 
+# Handle multiple light chains 
 # ------------------------------------------------------------------------------
 
 # Filter cells based on multiple light chain
@@ -349,7 +389,7 @@ for (HH in patients){
 }
 
 # ------------------------------------------------------------------------------
-# BCR availability stats - heavy chain 
+# BCR availability stats - light chain 
 # ------------------------------------------------------------------------------
 
 # GEX cells
@@ -365,13 +405,19 @@ bcr_data_qc$HH119$L3_GCB_annotation %>% table()
 # Bar plot: x-axis = L3_GCB_annotation, y = counts, facet_wrap on patient
 # GEX counts
 gex_counts <- L3_GCB_annotation %>%
-  filter(Patient %in% names(bcr_data_qc)) %>%
+  filter(
+    Patient %in% names(bcr_data_qc), 
+    !(manual_ADT_ID %in% c("Negative", "Doublet"))
+  ) %>%
   count(Patient, L3_GCB_annotation, name = "n") %>%
   mutate(Source = "GEX")
 
 # BCR (post-QC) counts
 bcr_counts <- bcr_data_qc %>%
   imap_dfr(~ .x %>%
+             filter(
+               !(manual_ADT_ID %in% c("Negative", "Doublet"))
+             ) %>% 
              count(L3_GCB_annotation, name = "n") %>%
              mutate(Patient = .y)) %>%
   mutate(Source = "BCR (QC)")
@@ -379,14 +425,29 @@ bcr_counts <- bcr_data_qc %>%
 # BCR (post-QC) counts with non-NA c_call
 bcr_ccall_counts <- bcr_data_qc %>%
   imap_dfr(~ .x %>%
-             filter(!is.na(c_call)) %>%
+             filter(
+               !is.na(c_call), 
+               !(manual_ADT_ID %in% c("Negative", "Doublet")),
+             ) %>%
              count(L3_GCB_annotation, name = "n") %>%
              mutate(Patient = .y)) %>%
   mutate(Source = "BCR (QC, c_call)")
 
-source_levels <- c("GEX", "BCR (QC)", "BCR (QC, c_call)")
+# BCR (post-QC) counts with non-NA ADT_manual_ID
+bcr_ADT_counts <- bcr_data_qc %>%
+  imap_dfr(~ .x %>%
+             filter(
+               !is.na(c_call),
+               !(manual_ADT_ID %in% c("Negative", "Doublet")),
+               !is.na(manual_ADT_ID)
+             ) %>%
+             count(L3_GCB_annotation, name = "n") %>%
+             mutate(Patient = .y)) %>%
+  mutate(Source = "BCR (QC, ADT)")
 
-plot_df <- bind_rows(gex_counts, bcr_counts, bcr_ccall_counts) %>%
+source_levels <- c("GEX", "BCR (QC)", "BCR (QC, c_call)", "BCR (QC, ADT)")
+
+plot_df <- bind_rows(gex_counts, bcr_counts, bcr_ccall_counts, bcr_ADT_counts) %>%
   mutate(Source = factor(Source, levels = source_levels)) %>%
   complete(Patient, L3_GCB_annotation, Source, fill = list(n = 0)) %>% 
   filter(
@@ -402,20 +463,126 @@ ggplot(plot_df, aes(x = L3_GCB_annotation, y = n, fill = Source)) +
   facet_wrap(~ Patient, ncol = 1) +
   scale_fill_manual(values = c("GEX" = "grey60",
                                "BCR (QC)" = "#2C7FB8",
-                               "BCR (QC, c_call)" = "#F28E2B")) +
+                               "BCR (QC, c_call)" = "#F28E2B",
+                               "BCR (QC, ADT)" = "forestgreen")) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
-  labs(x = "L3 GCB annotation", y = "Number of cells", fill = NULL) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "bottom",
         strip.background = element_rect(fill = "grey90")) + 
   labs(
-    title = "Light chain GC B cell filtering"
+    title = "Light chain GC B cell filtering",
+    subtitle = "ADT Negative and Doublet removed.",
+    x = "L3 GCB annotation", y = "Number of cells", fill = NULL
   )
 
 ggsave(glue("{outdir}/bcr_avail_light_chain.png"), width = 9, height = 8)
 
+# Save data 
+stats_data_light <- list(
+  "light" = list(
+    "bcr_data_tmp" = bcr_data_tmp,
+    "bcr_data" = bcr_data, 
+    "bcr_data_qc" = bcr_data_qc
+  )
+)
 
+stats_data <- c(stats_data, stats_data_light)
 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# Stats for combined heavy and light chain 
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
+# ADT filter applied to all counts (NA in manual_ADT_ID is kept)
+filter_adt <- function(df) {
+  df %>% filter(!(manual_ADT_ID %in% c("Negative", "Doublet")))
+}
 
+# Count unique cells per annotation and patient
+count_cells <- function(df_list, source) {
+  df_list %>%
+    imap_dfr(~ .x %>%
+               distinct(cell_id, L3_GCB_annotation) %>%
+               count(L3_GCB_annotation, name = "n") %>%
+               mutate(Patient = .y)) %>%
+    mutate(Source = source)
+}
+
+# ADT filtered heavy and light QC data
+heavy_qc <- map(stats_data$heavy$bcr_data_qc, filter_adt)
+light_qc <- map(stats_data$light$bcr_data_qc, filter_adt)
+
+# GEX counts (ADT filtered)
+gex_counts <- L3_GCB_annotation %>%
+  filter_adt() %>%
+  count(Patient, L3_GCB_annotation, name = "n") %>%
+  mutate(Source = "GEX")
+
+# Cells passing QC for both heavy and light chain (per patient)
+paired_cells <- imap(heavy_qc, ~ intersect(.x$cell_id, light_qc[[.y]]$cell_id))
+
+# Paired data: heavy + light rows for paired cells only (Immcantation format)
+bcr_paired <- imap(heavy_qc, ~ bind_rows(
+  .x %>% filter(cell_id %in% paired_cells[[.y]]),
+  light_qc[[.y]] %>% filter(cell_id %in% paired_cells[[.y]])
+))
+
+# Paired cells, using heavy chain rows (one row per cell, heavy c_call = isotype)
+paired_heavy_qc <- imap(heavy_qc, ~ .x %>% filter(cell_id %in% paired_cells[[.y]]))
+
+# Cumulative filtering steps
+paired_ccall  <- map(paired_heavy_qc, ~ filter(.x, !is.na(c_call)))
+paired_adt_id <- map(paired_ccall, ~ filter(.x, !is.na(manual_ADT_ID)))
+
+source_levels_paired <- c("GEX", "Heavy (QC)", "Light (QC)", "Paired (QC)",
+                          "Paired (QC, heavy c_call)", "Paired (QC, heavy c_call, ADT ID)")
+
+plot_df <- bind_rows(
+  gex_counts,
+  count_cells(heavy_qc, "Heavy (QC)"),
+  count_cells(light_qc, "Light (QC)"),
+  count_cells(paired_heavy_qc, "Paired (QC)"),
+  count_cells(paired_ccall, "Paired (QC, heavy c_call)"),
+  count_cells(paired_adt_id, "Paired (QC, heavy c_call, ADT ID)")
+) %>%
+  mutate(Source = factor(Source, levels = source_levels_paired)) %>%
+  complete(Patient, L3_GCB_annotation, Source, fill = list(n = 0)) %>%
+  filter(
+    !is.na(L3_GCB_annotation),
+    Patient %in% c("HH117", "HH119")
+  )
+
+ggplot(plot_df, aes(x = L3_GCB_annotation, y = n, fill = Source)) +
+  geom_col(position = position_dodge(width = 0.9), width = 0.85) +
+  geom_text(aes(label = n),
+            position = position_dodge(width = 0.9),
+            vjust = -0.3, size = 2) +
+  facet_wrap(~ Patient, ncol = 1) +
+  scale_fill_manual(values = c("GEX" = "grey60",
+                               "Heavy (QC)" = "#2C7FB8",
+                               "Light (QC)" = "#41AB5D",
+                               "Paired (QC)" = "#F28E2B",
+                               "Paired (QC, heavy c_call)" = "#B15928",
+                               "Paired (QC, heavy c_call, ADT ID)" = "#6A3D9A")) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
+  guides(fill = guide_legend(nrow = 2)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom",
+        strip.background = element_rect(fill = "grey90")) +
+  labs(
+    title = "Paired heavy and light chain GC B cell filtering",
+    subtitle = "ADT Negative and Doublet removed from all counts.",
+    x = "L3 GCB annotation", y = "Number of cells", fill = NULL
+  )
+
+ggsave(glue("{outdir}/bcr_avail_paired.png"), width = 12, height = 8)
+
+# Save
+stats_data$paired <- list(
+  "paired_cells" = paired_cells,
+  "bcr_paired" = bcr_paired,
+  "bcr_paired_adt_id" = imap(bcr_paired, ~ .x %>% filter(cell_id %in% paired_adt_id[[.y]]$cell_id))
+)

@@ -68,10 +68,39 @@ df_all %>%
   table()
 
 
+# 03_heavy_bcr_data_qc_annot.rds
+data <- readRDS("45_immcantation/out/rds/03_heavy_bcr_data_qc_annot.rds") 
+
+HH <- "HH119"
+GC_B_cells <- L3_GCB_annotation_clean %>% filter(!is.na(L3_GCB_annotation), L3_GCB_annotation == "BACH2+")
+df_heavy <- data[[HH]] %>% filter(locus == "IGH") 
+
+table(GC_B_cells$cell_id %in% df_heavy$cell_id)
+
+cell_id_heavy <- GC_B_cells$cell_id[GC_B_cells$cell_id %in% df_heavy$cell_id]
+length(cell_id_heavy)
 
 
 
 
+# 04_bcr_heavy_light.rds
+all_combined_list <- readRDS("45_immcantation/out/rds/04_bcr_heavy_light.rds")
+
+HH <- "HH119"
+GC_B_cells <- L3_GCB_annotation_clean %>% filter(!is.na(L3_GCB_annotation), L3_GCB_annotation == "BACH2+")
+df_heavy <- all_combined_list[[HH]] %>% filter(locus == "IGH") 
+df_light <- all_combined_list[[HH]] %>% filter(locus != "IGH") 
+
+table(GC_B_cells$cell_id %in% df_heavy$cell_id)
+table(GC_B_cells$cell_id %in% df_light$cell_id)
+
+cell_id_heavy <- GC_B_cells$cell_id[GC_B_cells$cell_id %in% df_heavy$cell_id]
+cell_id_light <- GC_B_cells$cell_id[GC_B_cells$cell_id %in% df_light$cell_id]
+
+length(cell_id_heavy)
+intersect(cell_id_heavy, cell_id_light) %>% length()
+
+# df <- all_combined_list$HH119 %>% left_join(L3_GCB_annotation_clean, by = "cell_id")
 
 
 
