@@ -215,7 +215,7 @@ bcr_counts <- bcr_data_qc %>%
   imap_dfr(~ .x %>%
              filter(
                !(manual_ADT_ID %in% c("Negative", "Doublet"))
-             )
+             ) %>% 
            count(L3_GCB_annotation, name = "n") %>%
              mutate(Patient = .y)) %>%
   mutate(Source = "BCR (QC)")
@@ -274,7 +274,7 @@ ggplot(plot_df, aes(x = L3_GCB_annotation, y = n, fill = Source)) +
     x = "L3 GCB annotation", y = "Number of cells", fill = NULL
   )
 
-ggsave(glue("{outdir}/bcr_avail_heavy_chain.png"), width = 9, height = 8)
+ggsave(glue("{outdir}/bcr_avail_heavy_chain.png"), width = 12, height = 8)
 
 # Save data 
 stats_data <- list(
@@ -476,7 +476,7 @@ ggplot(plot_df, aes(x = L3_GCB_annotation, y = n, fill = Source)) +
     x = "L3 GCB annotation", y = "Number of cells", fill = NULL
   )
 
-ggsave(glue("{outdir}/bcr_avail_light_chain.png"), width = 9, height = 8)
+ggsave(glue("{outdir}/bcr_avail_light_chain.png"), width = 12, height = 8)
 
 # Save data 
 stats_data_light <- list(
