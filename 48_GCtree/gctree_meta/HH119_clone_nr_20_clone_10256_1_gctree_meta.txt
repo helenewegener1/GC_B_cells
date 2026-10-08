@@ -12,8 +12,8 @@ seq18,sequence_41,GC_B_cells,LZ,IGHG2,HH119-SI-PP_Fol-13,1,4,2,2
 seq2,sequence_4:sequence_16:sequence_22,GC_B_cells,LZ,IGHG2:NA,HH119-SI-PP_Fol-13,1,4,4,2
 seq3,sequence_10:sequence_17,GC_B_cells,DZ:LZ,IGHG2:IGHG1,HH119-SI-PP_Fol-11,1,3,3,1
 seq4,sequence_11,GC_B_cells,LZ,IGHG2,HH119-SI-PP_Fol-13,1,4,2,2
-seq5,sequence_19,GC_B_cells,LZ,IGHG1,HH119-SI-PP_Fol-13,1,4,1,2
-seq6,sequence_23:sequence_24:sequence_37,GC_B_cells,LZ:Pre_MBC,IGHG2,HH119-SI-PP_Fol-13,1,5,2,2
+seq5,sequence_19,GC_B_cells,LZ_transitioning,IGHG1,HH119-SI-PP_Fol-13,1,5,1,2
+seq6,sequence_23:sequence_24:sequence_37,GC_B_cells,LZ,IGHG2,HH119-SI-PP_Fol-13,1,4,2,2
 seq7,sequence_25,GC_B_cells,DZ,IGHG2,HH119-SI-PP_Fol-13,1,1,2,2
 seq8,sequence_26,PCs,PCs,IGHG2,HH119-SI-PP_Fol-13,2,6,2,2
 seq9,sequence_27,GC_B_cells,LZ,IGHG2,HH119-SI-PP_Fol-13,1,4,2,2

@@ -18,7 +18,9 @@ fasta_files <- list.files(fasta_path)
 # resolve_LC_list_germlined$HH117$clone_subgroup_id_90_similarity
 
 # Load finer annotations
-L3_GCB_annotation <- readRDS("00_data/GCB_meta_GL.rds")
+# L3_GCB_annotation <- readRDS("00_data/GCB_meta_GL.rds")
+L3_GCB_annotation <- readRDS("00_data/GCB_meta_GL_new.rds")
+L3_GCB_annotation$cell_id <- glue("{L3_GCB_annotation$Sample_name}_{rownames(L3_GCB_annotation)}") %>% str_remove("_\\d+")
 PC_annotation <- readRDS("00_data/PC_meta_GL.rds")
 
 # Wrangle
@@ -42,9 +44,12 @@ PC_annotation_clean <- PC_annotation %>% select(cell_id, RNA_snn_res.0.4.merged)
 # )
 
 clone_nrs <- 2:20
-
 # patients <- c("HH151", "HH153")
-patients <- c("HH117", "HH119")
+# patients <- c("HH117", "HH119")
+patients <- c("HH117", "HH119", "HH151", "HH153")
+
+clone_nrs <- 1 
+patients <- c("HH117", "HH151", "HH153")
 
 for (HH in patients){
   
@@ -67,7 +72,7 @@ for (HH in patients){
       mutate(
         L3_annotation = case_when(
           !is.na(L3_GCB_annotation) ~ L3_GCB_annotation, 
-          !is.na(RNA_snn_res.0.4.merged) ~ RNA_snn_res.0.4.merged,
+          # !is.na(RNA_snn_res.0.4.merged) ~ RNA_snn_res.0.4.merged,
           .default = L1_annotation
         )
       ) %>% 

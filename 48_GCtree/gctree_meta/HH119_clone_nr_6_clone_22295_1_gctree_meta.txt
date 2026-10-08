@@ -12,7 +12,7 @@ seq18,sequence_29,GC_B_cells,DZ_cycling,IGHG1,HH119-SI-PP_Fol-10,1,3,1,1
 seq19,sequence_30,GC_B_cells,LZ,IGHG1,HH119-SI-PP_Fol-10,1,7,1,1
 seq2,sequence_2:sequence_11:sequence_12:sequence_13:sequence_16:sequence_20:sequence_47:sequence_53:sequence_57:sequence_59:sequence_68,GC_B_cells,Pre_MBC:DZ_cycling:LZ:DZ,IGHG1,HH119-SI-PP_Fol-14:HH119-SI-PP_Fol-10,1,11,1,2
 seq20,sequence_31,GC_B_cells,DZ,IGHG1,HH119-SI-PP_Fol-10,1,2,1,1
-seq21,sequence_32:sequence_42:sequence_60:sequence_61,GC_B_cells,DZ_cycling,IGHG1,HH119-SI-PP_Fol-10,1,3,1,1
+seq21,sequence_32:sequence_42:sequence_60:sequence_61,GC_B_cells,DZ_cycling:DZ,IGHG1,HH119-SI-PP_Fol-10,1,4,1,1
 seq22,sequence_33,GC_B_cells,LZ,IGHG1,HH119-SI-PP_Fol-9,1,7,1,3
 seq23,sequence_34,PCs,PCs,IGHG1,HH119-SI-PP_Fol-10,2,10,1,1
 seq24,sequence_36,GC_B_cells,LZ,IGHG1,HH119-SI-PP_Fol-10,1,7,1,1
