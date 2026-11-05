@@ -7,47 +7,51 @@ library(glue)
 # Load data
 # ------------------------------------------------------------------------------
 
-resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
-annotation <- readRDS("00_data/GCB_meta_GL_new.rds")
-
-table(resolve_LC_list_germlined$HH117$locus, resolve_LC_list_germlined$HH117$sample_clean_fol)
-
-patients <- names(resolve_LC_list_germlined)
-
-# Prep outdir
+# resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
+# annotation <- readRDS("00_data/GCB_meta_GL_new.rds")
+# 
+# table(resolve_LC_list_germlined$HH117$locus, resolve_LC_list_germlined$HH117$sample_clean_fol)
+# 
+# patients <- names(resolve_LC_list_germlined)
+# 
+# # Prep outdir
 outdir_fasta <- glue("50_BACH2/fasta/")
 dir.create(outdir_fasta, recursive = TRUE, showWarnings = FALSE)
-
-# Not germline resolved
-rds_files <- list.files("45_immcantation/out/rds") 
-resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
-patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
-patients
-
-# Add finer annotation 
-annotation$cell_id <- rownames(annotation) %>% str_remove("_\\d+")
-annotation$cell_id <- glue("{annotation$Sample_name}_{annotation$cell_id}") %>% str_remove("_(Blue|Red|Grenn|Yellow)")
-annotation_clean <- annotation %>% select(cell_id, L3_GCB_annotation)
-
-# table(annotation$cell_id %in% resolve_LC_list_germlined[["HH153"]]$cell_id)
-
-resolve_LC_list_germlined <- lapply(patients, function(HH){
-  
-  df <- resolve_LC_list_germlined[[HH]] %>% 
-    left_join(annotation_clean, by = "cell_id") %>% 
-    mutate(
-      L1_L3_annotation = case_when(
-        !is.na(L3_GCB_annotation) ~ L3_GCB_annotation, 
-        .default = L1_annotation
-      )
-    )
-  
-  df
-  
-}) %>% 
-  setNames(patients)
-
-resolve_LC_list_germlined$HH117 %>% filter(locus == "IGH") %>% pull(L1_L3_annotation) %>% table(useNA = "always")
+# 
+# # Not germline resolved
+# rds_files <- list.files("45_immcantation/out/rds") 
+# resolve_LC_files <- grep("resolve_LC\\.", rds_files, value = TRUE)
+# patients <- lapply(resolve_LC_files, function(x) str_split_i(x, "_", 2)) %>% unlist()
+# patients
+# 
+# # Add finer annotation 
+# annotation$cell_id <- rownames(annotation) %>% str_remove("_\\d+")
+# annotation$cell_id <- glue("{annotation$Sample_name}_{annotation$cell_id}") %>% str_remove("_(Blue|Red|Grenn|Yellow)")
+# annotation_clean <- annotation %>% select(cell_id, L3_GCB_annotation)
+# 
+# # table(annotation$cell_id %in% resolve_LC_list_germlined[["HH153"]]$cell_id)
+# 
+# resolve_LC_list_germlined <- lapply(patients, function(HH){
+#   
+#   clones <- resolve_LC_list_germlined[[HH]] %>% 
+#     left_join(annotation_clean, by = "cell_id") %>% 
+#     mutate(
+#       L1_L3_annotation = case_when(
+#         !is.na(L3_GCB_annotation) ~ L3_GCB_annotation, 
+#         .default = L1_annotation
+#       )
+#     )
+#   
+#   clones
+#   
+# }) %>% 
+#   setNames(patients)
+# 
+# resolve_LC_list_germlined$HH117 %>% filter(locus == "IGH") %>% pull(L1_L3_annotation) %>% table(useNA = "always")
+# 
+# saveRDS(resolve_LC_list_germlined, "50_BACH2/out/resolve_LC_list_germlined_L1_L3.rds")
+resolve_LC_list_germlined <- readRDS("50_BACH2/out/resolve_LC_list_germlined_L1_L3.rds")
+patients <- names(resolve_LC_list_germlined)
 
 # ------------------------------------------------------------------------------
 # Clones with BACH2+ and/or BACH2_cycling cells
@@ -56,14 +60,31 @@ resolve_LC_list_germlined$HH117 %>% filter(locus == "IGH") %>% pull(L1_L3_annota
 BACH2_clones <- lapply(patients, function(HH){
   
   # HH <- "HH153"
-  df <- resolve_LC_list_germlined[[HH]] %>% 
+  clones <- resolve_LC_list_germlined[[HH]] %>% 
     filter(locus == "IGH") %>% 
     count(clone_subgroup_id_90_similarity, L1_L3_annotation) %>% 
     filter(L1_L3_annotation %in% c("BACH2+", "BACH2_cycling")) %>% 
     pull(clone_subgroup_id_90_similarity) %>% 
     unique()
   
-  df 
+  # Filter "against" singletons 
+  clones_clean <- resolve_LC_list_germlined[[HH]] %>% 
+    filter(
+      locus == "IGH",
+      clone_subgroup_id_90_similarity %in% clones
+    ) %>% 
+    count(clone_subgroup_id_90_similarity, sequence_alignment, sort = TRUE) %>% 
+    filter(n>1) %>% 
+    pull(clone_subgroup_id_90_similarity) %>% 
+    unique()
+  
+  
+  # Exclude large clone 
+  if (HH == "HH119"){
+    clones_clean <- clones_clean[clones_clean != "21854_1"]
+  } 
+  
+  clones_clean 
   
 }) %>% 
   setNames(patients)
