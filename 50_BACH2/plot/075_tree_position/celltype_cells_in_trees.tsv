@@ -1,0 +1,15 @@
+cell_type	n_trees	n_cells_clone	n_cells_tree	n_cells_on_GL
+DZ_cycling	61	994	957	0
+LZ	56	599	589	0
+PCs	39	438	431	0
+DZ	43	201	196	0
+BACH2_cycling	43	109	106	0
+LZ_transitioning	25	57	56	0
+BACH2+	33	53	49	0
+GC_B_cells	3	32	3	0
+Memory_B_cells	12	23	22	0
+Pre_MBC	8	12	12	0
+Pre_PB	8	8	8	0
+Pre_MBC_cycling	5	7	7	0
+Naive_B_cells	1	1	1	0
+Unconventional_B_cells	0	1	0	0
