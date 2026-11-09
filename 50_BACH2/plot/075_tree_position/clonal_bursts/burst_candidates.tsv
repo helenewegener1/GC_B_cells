@@ -1,0 +1,131 @@
+patient	clone	clone_nr	clone_full_name	burst_node	burst_n_children	burst_parent_n_cells	burst_mut_from_GL	n_cells_parent	n_cells_offspring	offspring_types
+HH117	6270_1	10	HH117_clone_nr_10_clone_6270_1	seq2	5	1	42	1	4	LZ, DZ_cycling, DZ
+HH117	715_1	11	HH117_clone_nr_11_clone_715_1	3	4	0	32	0	3	DZ_cycling, BACH2_cycling
+HH117	7509_1	12	HH117_clone_nr_12_clone_7509_1	seq2	3	2	46	2	3	LZ, DZ_cycling, PCs
+HH117	1881_1	1	HH117_clone_nr_1_clone_1881_1	11	3	0	55	0	13	PCs
+HH117	1881_1	1	HH117_clone_nr_1_clone_1881_1	3	4	0	64	0	4	LZ, BACH2+, DZ
+HH117	1881_1	1	HH117_clone_nr_1_clone_1881_1	2	3	0	65	0	3	LZ, DZ_cycling, DZ
+HH117	1881_1	1	HH117_clone_nr_1_clone_1881_1	seq10	3	2	73	2	3	LZ, DZ_cycling
+HH117	1881_1	1	HH117_clone_nr_1_clone_1881_1	6	6	0	65	0	8	DZ_cycling, DZ
+HH117	1881_1	1	HH117_clone_nr_1_clone_1881_1	5	5	0	67	0	6	LZ, DZ_cycling, DZ
+HH117	1951_1	2	HH117_clone_nr_2_clone_1951_1	seq8	3	2	65	2	3	LZ, DZ_cycling
+HH117	2667_1	3	HH117_clone_nr_3_clone_2667_1	seq35	13	1	41	1	8	LZ, DZ_cycling, LZ_transitioning, Pre_MBC, Memory_B_cells
+HH117	2667_1	3	HH117_clone_nr_3_clone_2667_1	11	3	0	42	0	5	LZ, DZ_cycling
+HH117	2667_1	3	HH117_clone_nr_3_clone_2667_1	10	4	0	43	0	2	DZ_cycling
+HH117	2667_1	3	HH117_clone_nr_3_clone_2667_1	seq33	3	1	43	1	2	DZ_cycling
+HH117	2667_1	3	HH117_clone_nr_3_clone_2667_1	12	3	0	44	0	4	LZ, DZ_cycling, BACH2_cycling
+HH117	2667_1	3	HH117_clone_nr_3_clone_2667_1	seq13	4	2	45	2	4	LZ, DZ_cycling
+HH117	4261_1	4	HH117_clone_nr_4_clone_4261_1	8	4	0	46	0	2	LZ, DZ_cycling
+HH117	4261_1	4	HH117_clone_nr_4_clone_4261_1	seq37	6	2	55	2	7	DZ_cycling, DZ, PCs
+HH117	4261_1	4	HH117_clone_nr_4_clone_4261_1	seq36	3	4	63	4	5	LZ, DZ_cycling, PCs
+HH117	4261_1	4	HH117_clone_nr_4_clone_4261_1	3	4	0	64	0	9	LZ, DZ_cycling, LZ_transitioning
+HH117	4261_1	4	HH117_clone_nr_4_clone_4261_1	seq8	7	4	64	4	7	DZ_cycling, DZ, LZ_transitioning
+HH117	5959_1	6	HH117_clone_nr_6_clone_5959_1	seq3	3	2	35	2	6	LZ, DZ_cycling
+HH117	5959_1	6	HH117_clone_nr_6_clone_5959_1	seq1	8	4	36	4	9	LZ, DZ_cycling, BACH2+, LZ_transitioning
+HH117	5834_1	9	HH117_clone_nr_9_clone_5834_1	seq5	3	2	96	2	3	LZ, DZ_cycling
+HH119	8457_1	10	HH119_clone_nr_10_clone_8457_1	seq1	22	9	45	9	18	LZ, DZ_cycling, DZ, LZ_transitioning, BACH2_cycling, PCs
+HH119	8457_1	10	HH119_clone_nr_10_clone_8457_1	seq31	3	2	47	2	4	DZ_cycling, DZ, PCs
+HH119	22776_1	11	HH119_clone_nr_11_clone_22776_1	seq2	7	8	36	8	7	LZ, DZ_cycling, DZ, LZ_transitioning
+HH119	26698_1	12	HH119_clone_nr_12_clone_26698_1	1	4	0	67	0	4	LZ, DZ_cycling
+HH119	26698_1	12	HH119_clone_nr_12_clone_26698_1	seq19	3	1	73	1	4	LZ, DZ_cycling
+HH119	26698_1	12	HH119_clone_nr_12_clone_26698_1	seq6	8	1	69	1	13	LZ, DZ_cycling, DZ, LZ_transitioning
+HH119	26698_1	12	HH119_clone_nr_12_clone_26698_1	seq10	3	2	71	2	3	LZ, BACH2+, DZ
+HH119	28739_1	13	HH119_clone_nr_13_clone_28739_1	seq9	4	2	69	2	12	LZ, DZ_cycling, DZ
+HH119	28739_1	13	HH119_clone_nr_13_clone_28739_1	seq5	3	7	70	7	4	DZ_cycling, BACH2+
+HH119	3804_1	14	HH119_clone_nr_14_clone_3804_1	1	4	0	58	0	4	LZ, DZ_cycling, DZ
+HH119	3804_1	14	HH119_clone_nr_14_clone_3804_1	5	3	0	56	0	4	LZ
+HH119	3804_1	14	HH119_clone_nr_14_clone_3804_1	22	3	0	47	0	0	NA
+HH119	3804_1	14	HH119_clone_nr_14_clone_3804_1	20	7	0	58	0	6	LZ, DZ_cycling, DZ
+HH119	8177_1	15	HH119_clone_nr_15_clone_8177_1	8	3	0	82	0	1	PCs
+HH119	8177_1	15	HH119_clone_nr_15_clone_8177_1	seq10	4	2	90	2	5	LZ, DZ_cycling, DZ
+HH119	8177_1	15	HH119_clone_nr_15_clone_8177_1	5	3	0	92	0	10	DZ_cycling, DZ, PCs
+HH119	8177_1	15	HH119_clone_nr_15_clone_8177_1	seq4	3	1	93	1	4	LZ
+HH119	8177_1	15	HH119_clone_nr_15_clone_8177_1	seq7	6	7	96	7	9	DZ_cycling, BACH2+, DZ
+HH119	24431_1	16	HH119_clone_nr_16_clone_24431_1	3	3	0	43	0	6	LZ, DZ_cycling, BACH2+
+HH119	24431_1	16	HH119_clone_nr_16_clone_24431_1	1	5	0	45	0	6	LZ, DZ, BACH2_cycling
+HH119	24431_1	16	HH119_clone_nr_16_clone_24431_1	seq3	7	5	45	5	10	LZ, DZ_cycling
+HH119	24431_1	16	HH119_clone_nr_16_clone_24431_1	seq15	8	3	46	3	7	LZ, DZ_cycling, DZ, LZ_transitioning
+HH119	1830_1	18	HH119_clone_nr_18_clone_1830_1	6	3	0	48	0	2	LZ, BACH2+
+HH119	1830_1	18	HH119_clone_nr_18_clone_1830_1	1	3	0	51	0	6	LZ, DZ_cycling, DZ
+HH119	27383_1	1	HH119_clone_nr_1_clone_27383_1	seq13	8	8	78	8	91	LZ, DZ_cycling, DZ, LZ_transitioning, BACH2_cycling, Pre_MBC_cycling, Pre_PB, PCs, GC_B_cells
+HH119	27383_1	1	HH119_clone_nr_1_clone_27383_1	seq47	3	2	79	2	7	DZ_cycling, PCs
+HH119	27383_1	1	HH119_clone_nr_1_clone_27383_1	5	4	0	80	0	17	LZ, PCs
+HH119	27383_1	1	HH119_clone_nr_1_clone_27383_1	seq2	16	75	79	75	49	LZ, DZ_cycling, DZ, PCs
+HH119	19562_1	22	HH119_clone_nr_22_clone_19562_1	2	5	0	46	0	4	LZ, DZ_cycling
+HH119	19562_1	22	HH119_clone_nr_22_clone_19562_1	seq2	5	3	49	3	5	LZ, DZ_cycling, DZ
+HH119	22252_1	23	HH119_clone_nr_23_clone_22252_1	4	3	0	21	0	2	PCs
+HH119	22252_1	23	HH119_clone_nr_23_clone_22252_1	2	3	0	23	0	2	DZ_cycling, PCs
+HH119	25333_1	25	HH119_clone_nr_25_clone_25333_1	seq3	4	3	31	3	4	DZ_cycling, BACH2_cycling, PCs
+HH119	26121_1	29	HH119_clone_nr_29_clone_26121_1	seq10	3	1	55	1	3	LZ, BACH2+, DZ
+HH119	2812_1	30	HH119_clone_nr_30_clone_2812_1	2	5	0	119	0	4	LZ, DZ_cycling
+HH119	5037_1	31	HH119_clone_nr_31_clone_5037_1	seq1	3	2	36	2	3	LZ, DZ_cycling, DZ
+HH119	29181_1	3	HH119_clone_nr_3_clone_29181_1	seq1	3	16	84	16	4	LZ, DZ_cycling, DZ
+HH119	15039_1	5	HH119_clone_nr_5_clone_15039_1	seq2	12	12	47	12	20	LZ, DZ, LZ_transitioning, PCs
+HH119	15039_1	5	HH119_clone_nr_5_clone_15039_1	seq17	4	5	50	5	4	LZ, DZ_cycling, PCs
+HH119	15039_1	5	HH119_clone_nr_5_clone_15039_1	seq5	3	7	52	7	5	LZ, DZ_cycling, LZ_transitioning
+HH119	15039_1	5	HH119_clone_nr_5_clone_15039_1	seq9	9	7	48	7	10	LZ, DZ_cycling, DZ, PCs
+HH119	26043_1	6	HH119_clone_nr_6_clone_26043_1	seq2	6	3	50	3	17	LZ, DZ_cycling, DZ, LZ_transitioning, BACH2_cycling
+HH119	26043_1	6	HH119_clone_nr_6_clone_26043_1	seq21	5	1	51	1	7	LZ, DZ_cycling
+HH119	26043_1	6	HH119_clone_nr_6_clone_26043_1	seq6	3	12	51	12	5	LZ, DZ_cycling, DZ
+HH119	8506_1	7	HH119_clone_nr_7_clone_8506_1	6	3	0	49	0	2	PCs
+HH119	8506_1	7	HH119_clone_nr_7_clone_8506_1	4	4	0	65	0	3	LZ, DZ_cycling, DZ
+HH119	8506_1	7	HH119_clone_nr_7_clone_8506_1	3	3	0	66	0	2	LZ, DZ_cycling
+HH119	8506_1	7	HH119_clone_nr_7_clone_8506_1	seq29	3	1	75	1	5	LZ, DZ, LZ_transitioning
+HH119	8506_1	7	HH119_clone_nr_7_clone_8506_1	seq7	10	6	76	6	19	LZ, DZ_cycling, DZ, Pre_MBC
+HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	11	3	0	67	0	0	NA
+HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	seq6	5	3	78	3	3	LZ, DZ_cycling, DZ
+HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	3	3	0	79	0	7	LZ, DZ_cycling
+HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	4	3	0	83	0	9	DZ_cycling, DZ
+HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	seq2	12	11	77	11	11	LZ, DZ_cycling, DZ
+HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	8	3	0	78	0	3	LZ, DZ_cycling
+HH153	3482_1	10	HH153_clone_nr_10_clone_3482_1	seq1	14	15	47	15	14	LZ, DZ_cycling, BACH2+, LZ_transitioning
+HH153	234_1	11	HH153_clone_nr_11_clone_234_1	seq1	3	12	57	12	3	DZ_cycling, BACH2+
+HH153	324_1	12	HH153_clone_nr_12_clone_324_1	5	3	0	32	0	13	LZ, DZ_cycling, DZ, Pre_MBC_cycling
+HH153	324_1	12	HH153_clone_nr_12_clone_324_1	seq8	3	4	39	4	2	DZ_cycling
+HH153	149_1	13	HH153_clone_nr_13_clone_149_1	seq13	8	8	60	8	9	LZ, DZ_cycling, DZ
+HH153	149_1	13	HH153_clone_nr_13_clone_149_1	seq3	5	4	69	4	5	LZ, DZ_cycling
+HH153	149_1	13	HH153_clone_nr_13_clone_149_1	seq14	6	3	57	3	7	LZ, DZ_cycling
+HH153	3526_1	14	HH153_clone_nr_14_clone_3526_1	seq1	5	8	30	8	4	LZ, DZ, PCs
+HH153	3526_1	14	HH153_clone_nr_14_clone_3526_1	1	3	0	31	0	3	LZ
+HH153	2512_1	15	HH153_clone_nr_15_clone_2512_1	3	3	0	45	0	3	LZ, DZ_cycling
+HH153	2512_1	15	HH153_clone_nr_15_clone_2512_1	seq3	6	1	46	1	11	DZ_cycling
+HH153	1283_1	16	HH153_clone_nr_16_clone_1283_1	seq4	10	6	30	6	10	LZ, DZ_cycling, BACH2_cycling
+HH153	215_1	17	HH153_clone_nr_17_clone_215_1	seq1	8	6	43	6	11	LZ, DZ_cycling, Pre_MBC_cycling, Pre_PB
+HH153	215_1	17	HH153_clone_nr_17_clone_215_1	1	4	0	44	0	5	DZ_cycling, BACH2_cycling, PCs
+HH153	1841_1	18	HH153_clone_nr_18_clone_1841_1	seq6	5	4	25	4	5	LZ, DZ_cycling, LZ_transitioning
+HH153	2551_1	19	HH153_clone_nr_19_clone_2551_1	seq1	6	4	54	4	6	LZ, DZ_cycling, BACH2+
+HH153	188_1	1	HH153_clone_nr_1_clone_188_1	6	3	0	29	0	8	DZ_cycling, BACH2_cycling, PCs
+HH153	188_1	1	HH153_clone_nr_1_clone_188_1	seq1	48	88	42	88	49	LZ, DZ_cycling, BACH2+, DZ, BACH2_cycling, PCs
+HH153	1221_1	20	HH153_clone_nr_20_clone_1221_1	seq2	8	3	35	3	8	DZ_cycling, DZ, BACH2_cycling, Memory_B_cells
+HH153	1559_1	21	HH153_clone_nr_21_clone_1559_1	seq2	3	3	52	3	3	LZ, DZ_cycling
+HH153	1268_1	24	HH153_clone_nr_24_clone_1268_1	seq16	4	1	33	1	3	DZ_cycling, BACH2+
+HH153	1268_1	24	HH153_clone_nr_24_clone_1268_1	seq12	3	1	34	1	2	DZ_cycling
+HH153	1268_1	24	HH153_clone_nr_24_clone_1268_1	3	3	0	34	0	3	DZ_cycling, BACH2+
+HH153	1268_1	24	HH153_clone_nr_24_clone_1268_1	seq3	4	1	36	1	4	DZ_cycling, LZ_transitioning
+HH153	1402_1	25	HH153_clone_nr_25_clone_1402_1	3	3	0	39	0	1	BACH2_cycling
+HH153	1402_1	25	HH153_clone_nr_25_clone_1402_1	seq7	3	2	43	2	3	LZ, DZ
+HH153	2601_1	26	HH153_clone_nr_26_clone_2601_1	seq8	4	1	49	1	3	LZ, DZ_cycling
+HH153	2934_1	27	HH153_clone_nr_27_clone_2934_1	seq5	4	2	37	2	4	DZ_cycling, BACH2_cycling
+HH153	3105_1	2	HH153_clone_nr_2_clone_3105_1	3	3	0	36	0	72	LZ, DZ_cycling, BACH2+, DZ, BACH2_cycling, Pre_MBC, PCs, Memory_B_cells
+HH153	3105_1	2	HH153_clone_nr_2_clone_3105_1	seq2	27	70	37	70	28	LZ, DZ_cycling, DZ, BACH2_cycling, PCs
+HH153	3105_1	2	HH153_clone_nr_2_clone_3105_1	seq12	3	1	38	1	3	DZ_cycling, LZ_transitioning, BACH2_cycling
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq72	4	2	33	2	27	LZ, DZ_cycling, BACH2+, LZ_transitioning, BACH2_cycling, PCs
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq2	29	25	34	25	24	LZ, DZ_cycling, DZ, LZ_transitioning, BACH2_cycling
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq80	3	2	35	2	2	LZ
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq45	4	1	37	1	50	LZ, DZ_cycling, BACH2+, DZ, PCs
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq6	44	47	38	47	49	LZ, DZ_cycling, DZ, LZ_transitioning, Pre_PB
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	10	3	0	39	0	3	DZ_cycling, BACH2_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq44	7	5	27	5	18	LZ, DZ_cycling, DZ, Pre_MBC, Pre_MBC_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq5	6	11	30	11	6	LZ, DZ_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq7	7	10	29	10	7	LZ, DZ_cycling, DZ, BACH2_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq4	3	8	33	8	3	DZ_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq8	13	13	31	13	53	LZ, DZ_cycling, BACH2+, DZ, LZ_transitioning, BACH2_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq1	35	41	32	41	37	LZ, DZ_cycling, BACH2+, DZ, BACH2_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	3	4	0	33	0	4	DZ_cycling, BACH2_cycling
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq17	5	7	33	7	5	DZ_cycling, DZ, BACH2_cycling
+HH153	3058_1	5	HH153_clone_nr_5_clone_3058_1	seq27	3	1	51	1	33	LZ, DZ_cycling, DZ, BACH2_cycling, PCs, GC_B_cells
+HH153	3058_1	5	HH153_clone_nr_5_clone_3058_1	seq1	20	31	52	31	20	LZ, DZ_cycling, DZ, LZ_transitioning
+HH153	2209_1	6	HH153_clone_nr_6_clone_2209_1	seq38	5	7	35	7	8	LZ, DZ_cycling, DZ
+HH153	2209_1	6	HH153_clone_nr_6_clone_2209_1	seq5	25	28	28	28	26	LZ, DZ_cycling, BACH2+, LZ_transitioning, BACH2_cycling, Pre_MBC
+HH153	3107_1	7	HH153_clone_nr_7_clone_3107_1	seq2	4	26	46	26	4	LZ, DZ_cycling, DZ
+HH153	3100_1	9	HH153_clone_nr_9_clone_3100_1	seq5	5	19	35	19	3	DZ_cycling, BACH2_cycling

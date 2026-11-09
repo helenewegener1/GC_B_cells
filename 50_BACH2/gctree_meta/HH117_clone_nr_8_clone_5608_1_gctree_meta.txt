@@ -1,0 +1,2 @@
+seq_unique,seq_name,L1_annotation,L1_L3_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,L1_L3_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2,GC_B_cells,LZ:BACH2_cycling,NA:IGHA1,HH117-SI-PP-nonINF_Fol-4,1,1,1,1

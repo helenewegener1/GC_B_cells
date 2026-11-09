@@ -1,0 +1,2 @@
+seq_unique,seq_name,L1_annotation,L1_L3_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,L1_L3_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2,GC_B_cells:PCs,BACH2+:PCs,IGHM/D,HH119-SI-PP_Fol-10:HH119-SI-PP_Fol-6,1,1,1,1

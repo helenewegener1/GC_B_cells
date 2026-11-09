@@ -1,4 +1,4 @@
-patient	clone	clone_nr	clone_full_name	n_cells	n_nodes	n_observed_nodes	n_cells_on_GL	max_mut_from_GL	n_bursts
+patient	clone	clone_nr	clone_full_name	n_cells	n_nodes	n_observed_nodes	n_cells_on_GL	max_mut_from_GL	n_burst_candidates
 HH117	6270_1	10	HH117_clone_nr_10_clone_6270_1	13	16	12	0	50	1
 HH117	715_1	11	HH117_clone_nr_11_clone_715_1	11	15	10	0	40	1
 HH117	7509_1	12	HH117_clone_nr_12_clone_7509_1	12	17	11	0	51	1
@@ -38,9 +38,6 @@ HH119	15039_1	5	HH119_clone_nr_5_clone_15039_1	83	51	45	0	57	4
 HH119	26043_1	6	HH119_clone_nr_6_clone_26043_1	42	25	21	0	80	3
 HH119	8506_1	7	HH119_clone_nr_7_clone_8506_1	94	65	48	0	83	5
 HH119	22295_1	8	HH119_clone_nr_8_clone_22295_1	68	55	43	0	90	6
-HH151	3084_1	1	HH151_clone_nr_1_clone_3084_1	4	4	2	0	47	0
-HH151	4747_1	2	HH151_clone_nr_2_clone_4747_1	14	21	12	0	68	0
-HH151	6909_1	3	HH151_clone_nr_3_clone_6909_1	13	23	12	0	51	1
 HH153	3482_1	10	HH153_clone_nr_10_clone_3482_1	34	21	18	0	50	1
 HH153	234_1	11	HH153_clone_nr_11_clone_234_1	16	6	5	0	59	1
 HH153	324_1	12	HH153_clone_nr_12_clone_324_1	29	18	12	0	48	2

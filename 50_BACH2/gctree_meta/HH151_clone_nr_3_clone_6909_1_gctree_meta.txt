@@ -1,0 +1,13 @@
+seq_unique,seq_name,L1_annotation,L1_L3_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,L1_L3_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1:sequence_2,GC_B_cells,BACH2_cycling,IGHG1,HH151-SI-PP-nonINF_Fol-12,1,1,3,3
+seq10,sequence_11,PCs,PCs,IGHG1,HH151-SILP-INF,2,2,3,1
+seq11,sequence_12,PCs,PCs,IGHG1,HH151-SILP-INF,2,2,3,1
+seq12,sequence_13,PCs,PCs,IGHG1,HH151-SILP-nonINF,2,2,3,2
+seq2,sequence_3,PCs,PCs,IGHG1,HH151-SILP-INF,2,2,3,1
+seq3,sequence_4,PCs,PCs,IGHG1,HH151-SILP-INF,2,2,3,1
+seq4,sequence_5,PCs,PCs,IGHG1,HH151-SILP-nonINF,2,2,3,2
+seq5,sequence_6,PCs,PCs,IGHG1,HH151-SILP-nonINF,2,2,3,2
+seq6,sequence_7,PCs,PCs,IGHA2,HH151-SILP-nonINF,2,2,2,2
+seq7,sequence_8,PCs,PCs,IGHG1,HH151-SILP-nonINF,2,2,3,2
+seq8,sequence_9,PCs,PCs,IGHA1,HH151-SILP-nonINF,2,2,1,2
+seq9,sequence_10,PCs,PCs,IGHG1,HH151-SILP-INF,2,2,3,1

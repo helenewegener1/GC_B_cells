@@ -1,10 +1,10 @@
 cell_type	n_trees_tested	n_closer_to_GL	n_further_from_GL	n_clustered
-BACH2+	32	1	1	0
-BACH2_cycling	42	1	1	1
-DZ_cycling	60	3	5	10
-LZ	56	3	4	6
-PCs	39	7	4	4
-DZ	43	0	3	0
+BACH2+	32	0	2	0
+BACH2_cycling	39	2	1	0
+DZ_cycling	60	2	5	9
+LZ	56	4	4	6
+PCs	36	7	4	4
+DZ	43	0	3	1
 LZ_transitioning	25	0	1	1
 Memory_B_cells	12	1	1	0
 Pre_MBC	8	1	0	1

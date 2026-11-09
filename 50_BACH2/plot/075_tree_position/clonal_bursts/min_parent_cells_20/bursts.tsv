@@ -1,0 +1,10 @@
+patient	clone	clone_nr	clone_full_name	burst_node	burst_n_children	burst_parent_n_cells	burst_mut_from_GL	n_cells_parent	n_cells_offspring	offspring_types
+HH119	27383_1	1	HH119_clone_nr_1_clone_27383_1	seq2	16	75	79	75	49	LZ, DZ_cycling, DZ, PCs
+HH153	188_1	1	HH153_clone_nr_1_clone_188_1	seq1	48	88	42	88	49	LZ, DZ_cycling, BACH2+, DZ, BACH2_cycling, PCs
+HH153	3105_1	2	HH153_clone_nr_2_clone_3105_1	seq2	27	70	37	70	28	LZ, DZ_cycling, DZ, BACH2_cycling, PCs
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq2	29	25	34	25	24	LZ, DZ_cycling, DZ, LZ_transitioning, BACH2_cycling
+HH153	2204_1	3	HH153_clone_nr_3_clone_2204_1	seq6	44	47	38	47	49	LZ, DZ_cycling, DZ, LZ_transitioning, Pre_PB
+HH153	125_1	4	HH153_clone_nr_4_clone_125_1	seq1	35	41	32	41	37	LZ, DZ_cycling, BACH2+, DZ, BACH2_cycling
+HH153	3058_1	5	HH153_clone_nr_5_clone_3058_1	seq1	20	31	52	31	20	LZ, DZ_cycling, DZ, LZ_transitioning
+HH153	2209_1	6	HH153_clone_nr_6_clone_2209_1	seq5	25	28	28	28	26	LZ, DZ_cycling, BACH2+, LZ_transitioning, BACH2_cycling, Pre_MBC
+HH153	3107_1	7	HH153_clone_nr_7_clone_3107_1	seq2	4	26	46	26	4	LZ, DZ_cycling, DZ

@@ -1,0 +1,14 @@
+seq_unique,seq_name,L1_annotation,L1_L3_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,L1_L3_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1,GC_B_cells,DZ_cycling,IGHG2,HH119-SI-MILF,1,3,2,2
+seq10,sequence_16,GC_B_cells,LZ,IGHG2,HH119-SI-MILF,1,4,2,2
+seq11,sequence_18,GC_B_cells,DZ_cycling,IGHG2,HH119-SI-MILF,1,3,2,2
+seq12,sequence_19,PCs,PCs,IGHG2,HH119-SILP,3,7,2,1
+seq13,sequence_21,GC_B_cells,DZ,IGHG2,HH119-SI-MILF,1,2,2,2
+seq2,sequence_2:sequence_3:sequence_5:sequence_10:sequence_11:sequence_13:sequence_20:sequence_22,GC_B_cells:PCs,LZ:BACH2+:DZ_cycling:PCs,IGHG2:NA,HH119-SI-MILF:HH119-SILP,2,5,3,3
+seq3,sequence_4,GC_B_cells,BACH2_cycling,IGHG2,HH119-SI-MILF,1,1,2,2
+seq4,sequence_6,GC_B_cells,DZ,IGHG2,HH119-SI-MILF,1,2,2,2
+seq5,sequence_7,GC_B_cells,LZ,IGHG2,HH119-SI-MILF,1,4,2,2
+seq6,sequence_8,GC_B_cells,DZ_cycling,IGHG2,HH119-SI-MILF,1,3,2,2
+seq7,sequence_9:sequence_12:sequence_17,GC_B_cells,LZ_transitioning:LZ,IGHG1:IGHM/D:IGHG2,HH119-SI-MILF,1,6,1,2
+seq8,sequence_14,GC_B_cells,DZ,IGHG2,HH119-SI-MILF,1,2,2,2
+seq9,sequence_15,GC_B_cells,DZ_cycling,IGHG2,HH119-SI-MILF,1,3,2,2

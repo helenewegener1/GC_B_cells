@@ -1,0 +1,8 @@
+seq_unique,seq_name,L1_annotation,L1_L3_annotation,c_call_grouped,sample_clean_fol,L1_annotation_int,L1_L3_annotation_int,c_call_grouped_int,sample_clean_fol_int
+seq1,sequence_1,GC_B_cells,DZ_cycling,IGHA2,HH119-SI-PP_Fol-13,1,2,2,2
+seq2,sequence_2,GC_B_cells,BACH2+,IGHA2,HH119-SI-PP_Fol-13,1,1,2,2
+seq3,sequence_3,PCs,PCs,IGHA2,HH119-SILP,2,3,2,1
+seq4,sequence_4:sequence_7:sequence_10:sequence_11,PCs,PCs,IGHA1:IGHA2,HH119-SILP,2,3,1,1
+seq5,sequence_5:sequence_9,PCs,PCs,IGHA1:IGHA2,HH119-SILP,2,3,1,1
+seq6,sequence_6,PCs,PCs,IGHA2,HH119-SILP,2,3,2,1
+seq7,sequence_8,PCs,PCs,IGHA2,HH119-SILP,2,3,2,1

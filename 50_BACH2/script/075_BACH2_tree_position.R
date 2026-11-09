@@ -36,6 +36,7 @@ set.seed(1)
 
 # resolve_LC_list_germlined <- readRDS("45_immcantation/out/rds/06_resolve_LC_germlined.rds")
 resolve_LC_list_germlined <- readRDS("50_BACH2/out/resolve_LC_list_germlined_L1_L3.rds")
+resolve_LC_list_germlined <- resolve_LC_list_germlined[names(resolve_LC_list_germlined) != "HH151"]
 
 # Named list: clone_full_name -> named vector (GCtree sequence id -> sequence_alignment)
 seq_dir <- readRDS("50_BACH2/out/rds/seq_dir.rds")
@@ -63,6 +64,8 @@ burst_exclude_GL <- TRUE                     # the GL node holds unmutated cells
 # All clones with a GCtree output folder
 samples <- list.dirs(tree_dir, full.names = FALSE, recursive = FALSE) %>%
   str_subset("^HH[0-9]+_clone_nr_[0-9]+_clone_")
+
+samples <- samples[str_detect(samples, "HH151", negate = TRUE)]
 
 # ------------------------------------------------------------------------------
 # Helpers
@@ -469,39 +472,66 @@ write_delim(test_results, glue("{outdir_position}/position_wilcox_all_patients.t
 write_delim(test_results_patient, glue("{outdir_position}/position_wilcox_per_patient.tsv"), delim = "\t")
 
 # Plot
-label_pos <- df_per_tree %>%
+# P-value labels per patient and metric
+label_pos_patient <- df_per_tree %>%
   group_by(metric) %>%
   summarise(y = max(value, na.rm = TRUE) * 1.1, .groups = "drop") %>%
-  right_join(test_results, by = "metric") %>%
+  right_join(test_results_patient, by = "metric") %>%
   mutate(p_label = case_when(
     is.na(p_adj) ~ "",
     p_adj < 0.001 ~ "p < 0.001",
     TRUE ~ glue("p = {signif(p_adj, 2)}")
-  ))
+  )) %>% 
+  filter(cell_type_focal != "GC_B_cells")
 
 df_per_tree %>%
+  filter(cell_type_focal != "GC_B_cells") %>% 
   ggplot(aes(x = cell_type_focal, y = value, color = group)) +
-  geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
-  geom_point(aes(shape = patient), position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75), alpha = 0.5) +
-  geom_text(data = label_pos, aes(x = cell_type_focal, y = y, label = p_label), inherit.aes = FALSE, size = 2.8) +
-  facet_wrap(~ metric, scales = "free_y", ncol = 1, labeller = as_labeller(metric_labels)) +
+  # geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
+  # geom_point(position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75), alpha = 0.5) +
+  geom_point(position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.75), alpha = 0.5) +
+  stat_summary(
+    fun = median, fun.min = median, fun.max = median,
+    geom = "crossbar", width = 0.5, linewidth = 0.4,
+    position = position_dodge(width = 0.75)
+  ) +
+  geom_text(data = label_pos_patient, aes(x = cell_type_focal, y = y, label = p_label), inherit.aes = FALSE, size = 2.5) +
+  facet_grid(
+    rows = vars(metric),
+    cols = vars(patient),
+    scales = "free_y",
+    labeller = labeller(metric = as_labeller(metric_labels))
+  ) +
   scale_color_manual(values = c("Subtype" = "#D55E00", "Rest of tree" = "grey40")) +
   labs(
-    title = "Position of cell subtypes in GCtrees",
-    subtitle = "One point per tree.\nP-values: paired Wilcoxon test, subtype vs. rest of the same tree (BH adjusted per metric)",
+    title = "Position of cell subtypes in GCtrees, per patient",
+    subtitle = "One point per tree.\nP-values: paired Wilcoxon test per patient, subtype vs. rest of the same tree (BH adjusted per metric)",
     x = NULL,
     y = NULL,
-    color = NULL,
-    shape = "Patient"
+    color = NULL
   ) +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "bottom")
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text.y = element_text(size = 7),
+    legend.position = "bottom"
+  )
 
-ggsave(glue("{outdir_position}/position_boxplot.png"), width = max(8, 1.2 * length(celltype_order)), height = 14)
+ggsave(
+  glue("{outdir_position}/position_boxplot_per_patient.png"),
+  width = max(12, 0.9 * length(celltype_order) * n_distinct(df_per_tree$patient)),
+  height = 14
+)
 
-# Per-tree permutation results
+
+# ---- Relative depth per tree: subtype vs. rest of the tree ----
+min_cells_perm_plot <- 3   # min cells of the subtype in a tree to show its permutation result
+
 position_tests_all %>%
-  filter(cell_type %in% unique(df_per_tree$cell_type_focal)) %>%
+  filter(
+    cell_type %in% unique(df_per_tree$cell_type_focal),
+    n_type >= min_cells_perm_plot
+  ) %>%
   mutate(
     cell_type = factor(cell_type, levels = celltype_order),
     result = case_when(
@@ -510,13 +540,21 @@ position_tests_all %>%
       TRUE ~ "n.s."
     )
   ) %>%
-  ggplot(aes(x = cell_type, y = delta_median_rel_depth, color = result, size = n_type)) +
+  ggplot(aes(x = cell_type, y = delta_median_rel_depth)) +
   geom_hline(yintercept = 0, color = "grey") +
-  geom_jitter(width = 0.15, height = 0, alpha = 0.7) +
+  geom_jitter(aes(color = result, size = n_type), width = 0.15, height = 0, alpha = 0.7) +
+  stat_summary(
+    fun = median, fun.min = median, fun.max = median,
+    geom = "crossbar", width = 0.5, linewidth = 0.4
+  ) +
+  facet_grid(rows = vars(patient)) +
   scale_color_manual(values = c("Closer to GL (p < 0.05)" = "#0072B2", "Further from GL (p < 0.05)" = "#D55E00", "n.s." = "grey60")) +
   labs(
     title = "Relative depth per tree: subtype vs. rest of the tree",
-    subtitle = glue("Below 0: subtype closer to GL.\nOne-sided label permutation tests ({n_perm} permutations)"),
+    subtitle = glue(
+      "Below 0: subtype closer to GL. Line: median over trees. Trees with >= {min_cells_perm_plot} cells of the subtype.\n",
+      "One-sided label permutation tests ({n_perm} permutations)"
+    ),
     x = NULL,
     y = "Median relative depth, subtype minus rest",
     color = "Permutation test",
@@ -525,22 +563,40 @@ position_tests_all %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(glue("{outdir_position}/position_permutation_depth.png"), width = max(8, 1.2 * length(celltype_order)), height = 6)
+ggsave(
+  glue("{outdir_position}/position_permutation_depth.png"),
+  width = max(8, 1.2 * length(celltype_order)),
+  height = 3 * n_distinct(position_tests_all$patient) + 2
+)
+
+# ---- Clustering of each subtype within its tree ----
 
 position_tests_all %>%
-  filter(cell_type %in% unique(df_per_tree$cell_type_focal), !is.na(p_clustered)) %>%
+  filter(
+    cell_type %in% unique(df_per_tree$cell_type_focal),
+    n_type >= min_cells_perm_plot,
+    !is.na(p_clustered)
+  ) %>%
   mutate(
     cell_type = factor(cell_type, levels = celltype_order),
     mpd_ratio = mpd / mpd_null_mean,
     result = if_else(p_clustered < 0.05, "Clustered (p < 0.05)", "n.s.")
   ) %>%
-  ggplot(aes(x = cell_type, y = mpd_ratio, color = result, size = n_type)) +
+  ggplot(aes(x = cell_type, y = mpd_ratio)) +
   geom_hline(yintercept = 1, color = "grey") +
-  geom_jitter(width = 0.15, height = 0, alpha = 0.7) +
+  geom_jitter(aes(color = result, size = n_type), width = 0.15, height = 0, alpha = 0.7) +
+  stat_summary(
+    fun = median, fun.min = median, fun.max = median,
+    geom = "crossbar", width = 0.5, linewidth = 0.4
+  ) +
+  facet_grid(rows = vars(patient)) +
   scale_color_manual(values = c("Clustered (p < 0.05)" = "#D55E00", "n.s." = "grey60")) +
   labs(
     title = "Clustering of each subtype within its tree",
-    subtitle = glue("Below 1: cells of the subtype closer to each other than random cells.\nOne-sided label permutation test ({n_perm} permutations)"),
+    subtitle = glue(
+      "Below 1: cells of the subtype closer to each other than random cells. Line: median over trees.\n",
+      "Trees with >= {min_cells_perm_plot} cells of the subtype. One-sided label permutation test ({n_perm} permutations)"
+    ),
     x = NULL,
     y = "Mean pairwise distance / permutation mean",
     color = "Permutation test",
@@ -549,7 +605,11 @@ position_tests_all %>%
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(glue("{outdir_position}/position_permutation_clustering.png"), width = max(8, 1.2 * length(celltype_order)), height = 6)
+ggsave(
+  glue("{outdir_position}/position_permutation_clustering.png"),
+  width = max(8, 1.2 * length(celltype_order)),
+  height = 3 * n_distinct(position_tests_all$patient) + 2
+)
 
 # ==============================================================================
 # 2) Upstream / downstream subtypes
@@ -559,17 +619,119 @@ ggsave(glue("{outdir_position}/position_permutation_clustering.png"), width = ma
 # unique subtypes present on each node (as in 06_analyse_trees.R).
 #   Upstream of X   : subtypes on the ancestor nodes of nodes that contain X
 #   Downstream of X : subtypes on the descendant nodes of nodes that contain X
-# O/E: observed pairs / pairs expected from the row and column totals
+#
+# Permutation test: within each tree, the subtype composition of the observed
+# nodes is shuffled between node positions (each node keeps its own set of
+# subtypes; the GL node is kept fixed), and the pair counts are recomputed.
+# Expected = mean over permutations. This keeps the tree structure and the
+# subtypes present in each clone, and asks whether the subtypes on ancestor and
+# descendant nodes are related. Shuffling single cells instead would break up
+# nodes whose cells share a subtype and inflate the expected counts.
+#
+# Subtypes in relation_exclude_types are kept on the tree (so they still occupy
+# nodes, in the observed data and in the permutations) but removed from the
+# pair counts and plots.
 
 outdir_relations <- glue("{outdir}/upstream_downstream")
 dir.create(outdir_relations, recursive = TRUE, showWarnings = FALSE)
 
-write_delim(relations_all, glue("{outdir_relations}/relations_all.tsv"), delim = "\t")
+relation_exclude_types <- c("GC_B_cells")
+n_perm_relations <- 1000
 
-relation_sets <- list(
-  direct = relations_all %>% filter(step == 1),
-  any = relations_all
+celltype_order_rel <- setdiff(celltype_order, relation_exclude_types)
+
+# Tree structure: all (ancestor node, descendant node) pairs between observed nodes
+node_pairs <- relations_all %>%
+  distinct(clone_full_name, ancestor, descendant, step)
+
+# Unique subtypes per observed node
+node_types <- cells_all %>%
+  distinct(clone_full_name, node, cell_type)
+
+# Observed nodes that are shuffled (GL stays at the root)
+nodes_to_shuffle <- node_types %>%
+  distinct(clone_full_name, node) %>%
+  filter(node != "GL")
+
+# Count subtype pairs, for nearest observed ancestor ("direct") and any observed ancestor ("any")
+count_relation_pairs <- function(node_types){
+  
+  pairs <- node_pairs %>%
+    inner_join(
+      node_types %>% dplyr::rename(ancestor = node, ancestor_type = cell_type),
+      by = c("clone_full_name", "ancestor"), relationship = "many-to-many"
+    ) %>%
+    inner_join(
+      node_types %>% dplyr::rename(descendant = node, descendant_type = cell_type),
+      by = c("clone_full_name", "descendant"), relationship = "many-to-many"
+    ) %>%
+    filter(
+      !ancestor_type %in% relation_exclude_types,
+      !descendant_type %in% relation_exclude_types
+    )
+  
+  bind_rows(
+    pairs %>% filter(step == 1) %>% mutate(relation = "direct"),
+    pairs %>% mutate(relation = "any")
+  ) %>%
+    dplyr::count(relation, ancestor_type, descendant_type, name = "n")
+}
+
+relation_grid <- expand_grid(
+  relation = c("direct", "any"),
+  ancestor_type = celltype_order_rel,
+  descendant_type = celltype_order_rel
 )
+
+# Observed
+observed_pairs <- count_relation_pairs(node_types) %>%
+  right_join(relation_grid, by = c("relation", "ancestor_type", "descendant_type")) %>%
+  mutate(n = replace_na(n, 0L))
+
+# Permutations: move each node's set of subtypes to a random observed node position of the same tree
+null_pairs <- map_dfr(seq_len(n_perm_relations), function(i){
+  
+  if (i %% 100 == 0) message(glue("Permutation {i}/{n_perm_relations}"))
+  
+  new_positions <- nodes_to_shuffle %>%
+    group_by(clone_full_name) %>%
+    mutate(new_node = if (n() > 1) sample(node) else node) %>%
+    ungroup()
+  
+  node_types %>%
+    left_join(new_positions, by = c("clone_full_name", "node")) %>%
+    mutate(node = coalesce(new_node, node)) %>%
+    select(-new_node) %>%
+    count_relation_pairs() %>%
+    mutate(perm = i)
+})
+
+null_pairs <- null_pairs %>%
+  right_join(expand_grid(relation_grid, perm = seq_len(n_perm_relations)),
+             by = c("relation", "ancestor_type", "descendant_type", "perm")) %>%
+  mutate(n = replace_na(n, 0L)) %>%
+  dplyr::rename(n_null = n)
+
+# Permutation p-values per pair of subtypes
+perm_results <- null_pairs %>%
+  left_join(observed_pairs, by = c("relation", "ancestor_type", "descendant_type")) %>%
+  group_by(relation, ancestor_type, descendant_type) %>%
+  summarise(
+    n = first(n),
+    expected_perm = mean(n_null),
+    p_enriched = (sum(n_null >= n) + 1) / (n_perm_relations + 1),
+    p_depleted = (sum(n_null <= n) + 1) / (n_perm_relations + 1),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    log2_OE_perm = log2((n + 0.5) / (expected_perm + 0.5)),
+    p_two_sided = pmin(1, 2 * pmin(p_enriched, p_depleted))
+  ) %>%
+  group_by(relation) %>%
+  mutate(p_adj = p.adjust(p_two_sided, method = "BH")) %>%
+  ungroup()
+
+write_delim(perm_results, glue("{outdir_relations}/pair_permutation_results.tsv"), delim = "\t")
 
 relation_titles <- c(
   direct = "nearest observed ancestor",
@@ -577,17 +739,17 @@ relation_titles <- c(
 )
 
 plot_relation_heatmap <- function(df, fill_col, fill_label, title, subtitle, diverging = FALSE){
-
+  
   p <- df %>%
     ggplot(aes(x = col_type, y = row_type, fill = .data[[fill_col]])) +
     geom_tile(color = "white") +
     geom_text(aes(label = label), size = 3) +
-    scale_x_discrete(position = "top") +
-    scale_y_discrete(limits = rev) +
+    scale_x_discrete(position = "top", drop = FALSE) +
+    scale_y_discrete(limits = rev, drop = FALSE) +
     labs(title = title, subtitle = subtitle, fill = fill_label) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 45, hjust = 0), panel.grid = element_blank())
-
+  
   if (diverging){
     lim <- max(abs(df[[fill_col]]), na.rm = TRUE)
     p + scale_fill_gradient2(low = "#0072B2", mid = "white", high = "#D55E00", midpoint = 0, limits = c(-lim, lim))
@@ -596,91 +758,239 @@ plot_relation_heatmap <- function(df, fill_col, fill_label, title, subtitle, div
   }
 }
 
-for (relation in names(relation_sets)){
+n_size <- 0.8 * length(celltype_order_rel) + 3
 
-  # relation <- "direct"
-
-  pair_counts <- relation_sets[[relation]] %>%
-    dplyr::count(ancestor_type, descendant_type, name = "n") %>%
-    complete(
-      ancestor_type = celltype_order,
-      descendant_type = celltype_order,
-      fill = list(n = 0)
-    ) %>%
+for (relation_name in names(relation_titles)){
+  
+  # relation_name <- "direct"
+  
+  pair_counts <- perm_results %>%
+    filter(relation == relation_name) %>%
     mutate(
-      expected = sum(n) *
+      expected_marginal = sum(n) *
         (ave(n, ancestor_type, FUN = sum) / sum(n)) *
         (ave(n, descendant_type, FUN = sum) / sum(n)),
-      log2_OE = log2((n + 0.5) / (expected + 0.5))
+      log2_OE_marginal = log2((n + 0.5) / (expected_marginal + 0.5))
     )
-
+  
   # Number of trees each pair is seen in
-  pair_trees <- relation_sets[[relation]] %>%
+  pair_trees <- relations_all %>%
+    filter(
+      relation_name == "any" | step == 1,
+      !ancestor_type %in% relation_exclude_types,
+      !descendant_type %in% relation_exclude_types
+    ) %>%
     distinct(clone_full_name, ancestor_type, descendant_type) %>%
     dplyr::count(ancestor_type, descendant_type, name = "n_trees")
-
+  
   pair_counts <- pair_counts %>%
     left_join(pair_trees, by = c("ancestor_type", "descendant_type")) %>%
-    mutate(n_trees = replace_na(n_trees, 0))
-
-  write_delim(pair_counts, glue("{outdir_relations}/pair_counts_{relation}.tsv"), delim = "\t")
-
+    mutate(n_trees = replace_na(n_trees, 0L))
+  
+  write_delim(pair_counts, glue("{outdir_relations}/pair_counts_{relation_name}.tsv"), delim = "\t")
+  
   # Upstream: rows = subtype, columns = subtypes found upstream (fraction per row)
   upstream <- pair_counts %>%
     group_by(descendant_type) %>%
     mutate(frac = if (sum(n) > 0) n / sum(n) else 0) %>%
     ungroup() %>%
     transmute(
-      row_type = factor(descendant_type, levels = celltype_order),
-      col_type = factor(ancestor_type, levels = celltype_order),
-      frac, n, log2_OE,
+      row_type = factor(descendant_type, levels = celltype_order_rel),
+      col_type = factor(ancestor_type, levels = celltype_order_rel),
+      frac, n,
       label = if_else(n > 0, glue("{round(100 * frac)}%\n({n})"), "")
     )
-
+  
   # Downstream: rows = subtype, columns = subtypes found downstream (fraction per row)
   downstream <- pair_counts %>%
     group_by(ancestor_type) %>%
     mutate(frac = if (sum(n) > 0) n / sum(n) else 0) %>%
     ungroup() %>%
     transmute(
-      row_type = factor(ancestor_type, levels = celltype_order),
-      col_type = factor(descendant_type, levels = celltype_order),
-      frac, n, log2_OE,
+      row_type = factor(ancestor_type, levels = celltype_order_rel),
+      col_type = factor(descendant_type, levels = celltype_order_rel),
+      frac, n, log2_OE_marginal, log2_OE_perm, p_adj,
       label = if_else(n > 0, glue("{round(100 * frac)}%\n({n})"), "")
     )
-
-  n_size <- 0.8 * length(celltype_order) + 3
-
+  
   plot_relation_heatmap(
     upstream, "frac", "Fraction of row",
-    title = glue("Subtypes upstream of each subtype ({relation_titles[[relation]]})"),
+    title = glue("Subtypes upstream of each subtype ({relation_titles[[relation_name]]})"),
     subtitle = "Rows: subtype on the descendant node. Columns: subtype on the ancestor node.\nLabel: % of row (N node pairs)"
   ) +
     labs(x = "Upstream subtype", y = "Subtype")
-
-  ggsave(glue("{outdir_relations}/upstream_{relation}.png"), width = n_size + 2, height = n_size)
-
+  
+  ggsave(glue("{outdir_relations}/upstream_{relation_name}.png"), width = n_size + 2, height = n_size)
+  
   plot_relation_heatmap(
     downstream, "frac", "Fraction of row",
-    title = glue("Subtypes downstream of each subtype ({relation_titles[[relation]]})"),
+    title = glue("Subtypes downstream of each subtype ({relation_titles[[relation_name]]})"),
     subtitle = "Rows: subtype on the ancestor node. Columns: subtype on the descendant node.\nLabel: % of row (N node pairs)"
   ) +
     labs(x = "Downstream subtype", y = "Subtype")
-
-  ggsave(glue("{outdir_relations}/downstream_{relation}.png"), width = n_size + 2, height = n_size)
-
-  # Observed / expected, ancestor (rows) -> descendant (columns)
+  
+  ggsave(glue("{outdir_relations}/downstream_{relation_name}.png"), width = n_size + 2, height = n_size)
+  
+  # Observed / expected from the subtype totals (no permutation)
   downstream %>%
     mutate(label = if_else(n > 0, as.character(n), "")) %>%
     plot_relation_heatmap(
-      "log2_OE", "log2(O/E)",
-      title = glue("Ancestor -> descendant subtype pairs vs. expectation ({relation_titles[[relation]]})"),
-      subtitle = "Red: pair seen more often than expected from the subtype totals.\nLabel: N node pairs",
+      "log2_OE_marginal", "log2(O/E)",
+      title = glue("Ancestor -> descendant subtype pairs vs. subtype totals ({relation_titles[[relation_name]]})"),
+      subtitle = "Expected from the row and column totals.\nRed: pair seen more often than expected. Label: N node pairs",
       diverging = TRUE
     ) +
     labs(x = "Descendant subtype", y = "Ancestor subtype")
+  
+  ggsave(glue("{outdir_relations}/ancestor_descendant_OE_{relation_name}.png"), width = n_size + 2, height = n_size)
+  
+  # Observed / expected from the within-tree permutations, with significance
+  downstream %>%
+    mutate(label = case_when(
+      n == 0 ~ "",
+      p_adj < 0.001 ~ glue("{n}\n***"),
+      p_adj < 0.01 ~ glue("{n}\n**"),
+      p_adj < 0.05 ~ glue("{n}\n*"),
+      TRUE ~ as.character(n)
+    )) %>%
+    plot_relation_heatmap(
+      "log2_OE_perm", "log2(O/E)",
+      title = glue("Ancestor -> descendant subtype pairs vs. permutation ({relation_titles[[relation_name]]})"),
+      subtitle = glue(
+        "Expected: mean of {n_perm_relations} permutations of node subtype composition within each tree (GL fixed).\n",
+        "Red: pair seen more often than expected. Label: N node pairs; * BH-adjusted two-sided p < 0.05, ** < 0.01, *** < 0.001"
+      ),
+      diverging = TRUE
+    ) +
+    labs(x = "Descendant subtype", y = "Ancestor subtype")
+  
+  ggsave(glue("{outdir_relations}/ancestor_descendant_OE_permutation_{relation_name}.png"), width = n_size + 2.5, height = n_size)
+}
 
-  ggsave(glue("{outdir_relations}/ancestor_descendant_OE_{relation}.png"), width = n_size + 2, height = n_size)
+# ------------------------------------------------------------------------------
+# 2b) Upstream / downstream subtypes per patient, with permutation test
+# ------------------------------------------------------------------------------
+# Same counting and node-level permutation as above, but pairs are counted and
+# tested separately for each patient. BH adjustment within patient and relation.
+
+tree_patient <- cells_all %>%
+  distinct(clone_full_name, patient)
+
+patients_rel <- sort(unique(tree_patient$patient))
+
+count_relation_pairs_patient <- function(node_types){
+  
+  pairs <- node_pairs %>%
+    inner_join(
+      node_types %>% dplyr::rename(ancestor = node, ancestor_type = cell_type),
+      by = c("clone_full_name", "ancestor"), relationship = "many-to-many"
+    ) %>%
+    inner_join(
+      node_types %>% dplyr::rename(descendant = node, descendant_type = cell_type),
+      by = c("clone_full_name", "descendant"), relationship = "many-to-many"
+    ) %>%
+    filter(
+      !ancestor_type %in% relation_exclude_types,
+      !descendant_type %in% relation_exclude_types
+    ) %>%
+    left_join(tree_patient, by = "clone_full_name")
+  
+  bind_rows(
+    pairs %>% filter(step == 1) %>% mutate(relation = "direct"),
+    pairs %>% mutate(relation = "any")
+  ) %>%
+    dplyr::count(patient, relation, ancestor_type, descendant_type, name = "n")
+}
+
+relation_grid_patient <- expand_grid(patient = patients_rel, relation_grid)
+
+# Observed
+observed_pairs_patient <- count_relation_pairs_patient(node_types) %>%
+  right_join(relation_grid_patient, by = c("patient", "relation", "ancestor_type", "descendant_type")) %>%
+  mutate(n = replace_na(n, 0L))
+
+# Permutations: move each node's set of subtypes to a random observed node position of the same tree
+null_pairs_patient <- map_dfr(seq_len(n_perm_relations), function(i){
+  
+  if (i %% 100 == 0) message(glue("Per-patient permutation {i}/{n_perm_relations}"))
+  
+  new_positions <- nodes_to_shuffle %>%
+    group_by(clone_full_name) %>%
+    mutate(new_node = if (n() > 1) sample(node) else node) %>%
+    ungroup()
+  
+  node_types %>%
+    left_join(new_positions, by = c("clone_full_name", "node")) %>%
+    mutate(node = coalesce(new_node, node)) %>%
+    select(-new_node) %>%
+    count_relation_pairs_patient() %>%
+    mutate(perm = i)
+})
+
+null_pairs_patient <- null_pairs_patient %>%
+  right_join(
+    expand_grid(relation_grid_patient, perm = seq_len(n_perm_relations)),
+    by = c("patient", "relation", "ancestor_type", "descendant_type", "perm")
+  ) %>%
+  mutate(n = replace_na(n, 0L)) %>%
+  dplyr::rename(n_null = n)
+
+# Permutation p-values per patient and pair of subtypes
+perm_results_patient <- null_pairs_patient %>%
+  left_join(observed_pairs_patient, by = c("patient", "relation", "ancestor_type", "descendant_type")) %>%
+  group_by(patient, relation, ancestor_type, descendant_type) %>%
+  summarise(
+    n = first(n),
+    expected_perm = mean(n_null),
+    p_enriched = (sum(n_null >= n) + 1) / (n_perm_relations + 1),
+    p_depleted = (sum(n_null <= n) + 1) / (n_perm_relations + 1),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    log2_OE_perm = log2((n + 0.5) / (expected_perm + 0.5)),
+    p_two_sided = pmin(1, 2 * pmin(p_enriched, p_depleted))
+  ) %>%
+  group_by(patient, relation) %>%
+  mutate(p_adj = p.adjust(p_two_sided, method = "BH")) %>%
+  ungroup()
+
+write_delim(perm_results_patient, glue("{outdir_relations}/pair_permutation_results_per_patient.tsv"), delim = "\t")
+
+# Plots: one panel per patient
+for (relation_name in names(relation_titles)){
+  
+  # relation_name <- "direct"
+  
+  perm_results_patient %>%
+    filter(relation == relation_name) %>%
+    mutate(
+      row_type = factor(ancestor_type, levels = celltype_order_rel),
+      col_type = factor(descendant_type, levels = celltype_order_rel),
+      label = case_when(
+        n == 0 ~ "",
+        p_adj < 0.001 ~ glue("{n}\n***"),
+        p_adj < 0.01 ~ glue("{n}\n**"),
+        p_adj < 0.05 ~ glue("{n}\n*"),
+        TRUE ~ as.character(n)
+      )
+    ) %>%
+    plot_relation_heatmap(
+      "log2_OE_perm", "log2(O/E)",
+      title = glue("Ancestor -> descendant subtype pairs vs. permutation, per patient ({relation_titles[[relation_name]]})"),
+      subtitle = glue(
+        "Expected: mean of {n_perm_relations} permutations of node subtype composition within each tree (GL fixed).\n",
+        "Red: pair seen more often than expected. Label: N node pairs; * BH-adjusted two-sided p < 0.05, ** < 0.01, *** < 0.001"
+      ),
+      diverging = TRUE
+    ) +
+    facet_wrap(~ patient, nrow = 1) +
+    labs(x = "Descendant subtype", y = "Ancestor subtype")
+  
+  ggsave(
+    glue("{outdir_relations}/ancestor_descendant_OE_permutation_per_patient_{relation_name}.png"),
+    width = n_size * length(patients_rel) + 2,
+    height = n_size
+  )
 }
 
 # ==============================================================================
@@ -711,13 +1021,13 @@ write_delim(burst_candidates, glue("{outdir_bursts_main}/burst_candidates.tsv"),
 burst_candidates %>%
   ggplot(aes(x = burst_parent_n_cells, y = burst_n_children)) +
   geom_jitter(width = 0.15, height = 0.15, alpha = 0.6) +
-  geom_vline(xintercept = burst_min_parent_cells_values, linetype = "dashed", color = "#D55E00") +
+  # geom_vline(xintercept = burst_min_parent_cells_values, linetype = "dashed", color = "#D55E00") + #Dashed lines: tested parent size thresholds
   scale_x_continuous(trans = "log1p", breaks = c(0, 1, 2, 5, 10, 20, 50, 100, 200, 500)) +
   facet_wrap(~ patient) +
   labs(
     title = "Candidate burst nodes",
-    subtitle = glue("All nodes with >= {burst_min_children} child nodes. Dashed lines: tested parent size thresholds"),
-    x = "N cells on the parent node",
+    subtitle = glue("All nodes with >= {burst_min_children} child nodes."),
+    x = "N cells on the parent node. (0 = internal node)",
     y = "N child nodes"
   ) +
   theme_bw()
@@ -741,7 +1051,7 @@ burst_threshold_overview %>%
   ggplot(aes(x = min_parent_cells, y = n_bursts, color = patient)) +
   geom_line() +
   geom_point() +
-  geom_vline(xintercept = burst_min_parent_cells_values, linetype = "dashed", color = "grey50") +
+  # geom_vline(xintercept = burst_min_parent_cells_values, linetype = "dashed", color = "grey50") +
   labs(
     title = "Number of clonal bursts by parent size threshold",
     subtitle = glue("Burst: node with >= threshold cells and >= {burst_min_children} child nodes"),
@@ -754,7 +1064,7 @@ burst_threshold_overview %>%
 ggsave(glue("{outdir_bursts_main}/burst_threshold_overview.png"), width = 8, height = 5)
 
 # ---- Analysis per threshold ----
-
+n_perm_bursts <- 1000
 for (min_parent_cells in burst_min_parent_cells_values){
 
   # min_parent_cells <- 10
@@ -883,26 +1193,6 @@ for (min_parent_cells in burst_min_parent_cells_values){
 
   ggsave(glue("{outdir_bursts}/burst_celltype_counts.png"), width = max(8, 0.9 * length(celltype_order)), height = 6)
 
-  # Enrichment of subtypes as burst parent and offspring
-  burst_enrichment %>%
-    mutate(label = glue("{n_in_role}/{n_cells}{if_else(p_adj < 0.05, '*', '')}")) %>%
-    ggplot(aes(x = cell_type, y = frac_in_role, fill = burst_role)) +
-    geom_col(width = 0.7) +
-    geom_hline(aes(yintercept = frac_in_role_all), linetype = "dashed", color = "grey30") +
-    geom_text(aes(label = label), vjust = -0.3, size = 3) +
-    facet_wrap(~ burst_role, ncol = 1, scales = "free_y") +
-    scale_fill_manual(values = c("Parent" = "#0072B2", "Offspring" = "#E69F00"), guide = "none") +
-    labs(
-      title = "Fraction of cells that are burst parent / offspring, per subtype",
-      subtitle = glue("Burst: {burst_definition}. Trees with >= 1 burst. Dashed line: all cells.\nLabel: N cells in role / N cells, * BH-adjusted Fisher p < 0.05"),
-      x = NULL,
-      y = "Fraction of cells"
-    ) +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-  ggsave(glue("{outdir_bursts}/burst_enrichment.png"), width = max(8, 0.9 * length(celltype_order)), height = 9)
-
   # Composition of each burst: parent and offspring subtypes per burst (largest bursts)
   burst_cells %>%
     mutate(burst_id = glue("{clone_full_name} | {burst_node}")) %>%
@@ -927,4 +1217,177 @@ for (min_parent_cells in burst_min_parent_cells_values){
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 6))
 
   ggsave(glue("{outdir_bursts}/burst_composition.png"), width = 14, height = 9)
+  
+  # ---- Permutation test ----
+  # Subtype labels are shuffled among the cells of each tree with >= 1 burst
+  # (bursts and their cells fixed). Statistic: N cells of each subtype that are
+  # burst parent / offspring. Computed per patient, and pooled over patients.
+  
+  role_cells <- cells_in_burst_trees %>%
+    select(patient, clone_full_name, sequence_id, cell_type) %>%
+    left_join(
+      burst_cells %>% filter(burst_role == "Parent") %>% distinct(clone_full_name, sequence_id) %>% mutate(is_parent = TRUE),
+      by = c("clone_full_name", "sequence_id")
+    ) %>%
+    left_join(
+      burst_cells %>% filter(burst_role == "Offspring") %>% distinct(clone_full_name, sequence_id) %>% mutate(is_offspring = TRUE),
+      by = c("clone_full_name", "sequence_id")
+    ) %>%
+    mutate(across(c(is_parent, is_offspring), ~ replace_na(.x, FALSE)))
+  
+  count_roles <- function(df){
+    df %>%
+      group_by(patient, cell_type) %>%
+      summarise(
+        n_cells = n(),
+        Parent = sum(is_parent),
+        Offspring = sum(is_offspring),
+        .groups = "drop"
+      ) %>%
+      pivot_longer(c(Parent, Offspring), names_to = "burst_role", values_to = "n_in_role")
+  }
+  
+  observed_roles <- count_roles(role_cells)
+  
+  null_roles <- map_dfr(seq_len(n_perm_bursts), function(i){
+    role_cells %>%
+      group_by(clone_full_name) %>%
+      mutate(cell_type = sample(cell_type)) %>%
+      ungroup() %>%
+      count_roles() %>%
+      mutate(perm = i)
+  })
+  
+  summarise_perm <- function(observed, null, ...){
+    null %>%
+      dplyr::rename(n_null = n_in_role) %>%
+      select(..., burst_role, perm, n_null) %>%
+      left_join(observed, by = c(sapply(rlang::ensyms(...), rlang::as_string), "burst_role")) %>%
+      group_by(..., burst_role) %>%
+      summarise(
+        n_cells = first(n_cells),
+        n_in_role = first(n_in_role),
+        expected_perm = mean(n_null),
+        p_enriched = (sum(n_null >= n_in_role) + 1) / (n_perm_bursts + 1),
+        p_depleted = (sum(n_null <= n_in_role) + 1) / (n_perm_bursts + 1),
+        .groups = "drop"
+      ) %>%
+      mutate(
+        frac_in_role = n_in_role / n_cells,
+        frac_expected = expected_perm / n_cells,
+        log2_OE_perm = log2((n_in_role + 0.5) / (expected_perm + 0.5)),
+        p_two_sided = pmin(1, 2 * pmin(p_enriched, p_depleted))
+      )
+  }
+  
+  # Per patient
+  burst_perm_patient <- summarise_perm(observed_roles, null_roles, patient, cell_type) %>%
+    group_by(patient, burst_role) %>%
+    mutate(p_adj = p.adjust(p_two_sided, method = "BH")) %>%
+    ungroup()
+  
+  # Pooled over patients (sum of the per-patient counts, per permutation)
+  observed_pooled <- observed_roles %>%
+    group_by(cell_type, burst_role) %>%
+    summarise(n_cells = sum(n_cells), n_in_role = sum(n_in_role), .groups = "drop")
+  
+  null_pooled <- null_roles %>%
+    group_by(cell_type, burst_role, perm) %>%
+    summarise(n_in_role = sum(n_in_role), .groups = "drop")
+  
+  burst_perm <- summarise_perm(observed_pooled, null_pooled, cell_type) %>%
+    group_by(burst_role) %>%
+    mutate(p_adj = p.adjust(p_two_sided, method = "BH")) %>%
+    ungroup()
+  
+  write_delim(burst_perm, glue("{outdir_bursts}/burst_enrichment_permutation.tsv"), delim = "\t")
+  write_delim(burst_perm_patient, glue("{outdir_bursts}/burst_enrichment_permutation_per_patient.tsv"), delim = "\t")
+  
+  stars <- function(p) case_when(p < 0.001 ~ "***", p < 0.01 ~ "**", p < 0.05 ~ "*", TRUE ~ "")
+  
+  # Trees and bursts per patient, for captions and facet labels
+  burst_tree_counts <- tree_summary_all %>%
+    dplyr::count(patient, name = "n_trees") %>%
+    left_join(
+      bursts %>%
+        group_by(patient) %>%
+        summarise(n_trees_burst = n_distinct(clone_full_name), n_bursts = n(), .groups = "drop"),
+      by = "patient"
+    ) %>%
+    mutate(
+      across(c(n_trees_burst, n_bursts), ~ replace_na(.x, 0L)),
+      label_short = glue("{patient}: {n_trees_burst}/{n_trees} trees with bursts ({n_bursts} bursts)"),
+      facet_label = glue("{patient}\n{n_trees_burst}/{n_trees} trees with bursts, {n_bursts} bursts")
+    )
+  
+  caption_trees <- burst_tree_counts %>%
+    filter(n_trees_burst > 0) %>%
+    pull(label_short) %>%
+    paste(collapse = "\n")
+  patient_labeller <- setNames(as.character(burst_tree_counts$facet_label), burst_tree_counts$patient)
+  
+  # Enrichment of subtypes as burst parent and offspring: observed vs. permutation, pooled
+  burst_perm %>%
+    mutate(
+      cell_type = factor(cell_type, levels = celltype_order),
+      burst_role = factor(burst_role, levels = c("Parent", "Offspring")),
+      label = glue("{n_in_role}/{n_cells}{stars(p_adj)}")
+    ) %>%
+    ggplot(aes(x = cell_type)) +
+    geom_col(aes(y = frac_in_role, fill = burst_role), width = 0.7) +
+    geom_point(aes(y = frac_expected), shape = 23, size = 2.5, fill = "white", color = "black") +
+    geom_text(aes(y = pmax(frac_in_role, frac_expected), label = label), vjust = -0.6, size = 3) +
+    facet_wrap(~ burst_role, ncol = 1, scales = "free_y") +
+    scale_fill_manual(values = c("Parent" = "#0072B2", "Offspring" = "#E69F00"), guide = "none") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.2))) +
+    labs(
+      title = "Fraction of cells that are burst parent / offspring, per subtype",
+      subtitle = glue(
+        "Burst: {burst_definition}. Trees with >= 1 burst. Diamond: expected from {n_perm_bursts} permutations of subtype labels within each tree.\n",
+        "Label: N cells in role / N cells (observed); * BH-adjusted two-sided permutation p < 0.05, ** < 0.01, *** < 0.001"
+      ),
+      caption = glue("Trees with clonal bursts per patient:\n{caption_trees}"),
+      x = NULL,
+      y = "Fraction of cells"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  ggsave(glue("{outdir_bursts}/burst_enrichment.png"), width = max(9, 0.9 * length(celltype_order)), height = 9)
+  
+  # Same, per patient
+  burst_perm_patient %>%
+    mutate(
+      cell_type = factor(cell_type, levels = celltype_order),
+      burst_role = factor(burst_role, levels = c("Parent", "Offspring")),
+      label = glue("{n_in_role}/{n_cells}{stars(p_adj)}")
+    ) %>%
+    ggplot(aes(x = cell_type)) +
+    geom_col(aes(y = frac_in_role, fill = burst_role), width = 0.7) +
+    geom_point(aes(y = frac_expected), shape = 23, size = 2, fill = "white", color = "black") +
+    geom_text(aes(y = pmax(frac_in_role, frac_expected), label = label), vjust = -0.6, size = 2.3) +
+    # facet_grid(rows = vars(burst_role), cols = vars(patient), scales = "free_y") +
+    facet_grid(rows = vars(burst_role), cols = vars(patient), scales = "free_y",
+               labeller = labeller(patient = patient_labeller)) +
+    scale_fill_manual(values = c("Parent" = "#0072B2", "Offspring" = "#E69F00"), guide = "none") +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.25))) +
+    labs(
+      title = "Fraction of cells that are burst parent / offspring, per subtype and patient",
+      subtitle = glue(
+        "Burst: {burst_definition}. Diamond: expected from {n_perm_bursts} permutations of subtype labels within each tree.\n",
+        "Label: N cells in role / N cells (observed); * BH-adjusted two-sided permutation p < 0.05, ** < 0.01, *** < 0.001"
+      ),
+      caption = glue("Trees with clonal bursts per patient:\n{caption_trees}"),
+      x = NULL,
+      y = "Fraction of cells"
+    ) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  ggsave(
+    glue("{outdir_bursts}/burst_enrichment_per_patient.png"),
+    width = max(12, 0.6 * length(celltype_order) * n_distinct(burst_perm_patient$patient)),
+    height = 8
+  )
+  
 }
